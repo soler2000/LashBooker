@@ -45,6 +45,7 @@ model User {
   id           String         @id @default(uuid())
   email        String         @unique
   passwordHash String?
+  mustChangePassword Boolean   @default(false)
   role         Role           @default(CLIENT)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
