@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminCalendarPage() {
   const bookings = await prisma.booking.findMany({
     include: { service: true, client: true },
