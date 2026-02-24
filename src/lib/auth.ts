@@ -15,7 +15,7 @@ const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 let hasWarnedMissingDatabaseUrl = false;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: hasDatabaseUrl ? PrismaAdapter(prisma) : undefined,
   session: { strategy: "jwt" },
   secret: (() => {
     const configuredSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
