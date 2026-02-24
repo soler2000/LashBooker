@@ -64,7 +64,7 @@ MVP booking platform for lash studios with deposit-backed appointments.
 Copy from `.env.example` and set values:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/lashbooker"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/lashbooker?sslmode=require"
 NEXTAUTH_SECRET="replace-with-strong-secret"
 NEXTAUTH_URL="http://localhost:3000"
 STRIPE_SECRET_KEY="sk_test_xxx"
@@ -106,23 +106,24 @@ Webhook endpoint implemented at:
 
 ---
 
-## 4) Production deployment (Render)
+## 4) Production deployment (Railway)
 
-This project is currently structured for a **Node web service + managed Postgres** deployment.
+This project is currently structured for a **Node web service + managed Postgres** deployment on Railway.
 
 ### A. Create infrastructure
 
-1. Create a Render **PostgreSQL** instance.
-2. Create a Render **Web Service** connected to this repository.
-3. Set build/start commands:
+1. Create a Railway **PostgreSQL** service.
+2. If you are running your own Postgres container in Railway, configure `PGDATA=/var/lib/postgresql/data` in that DB service so the volume mount path is used for data persistence.
+3. Create a Railway **Web Service** connected to this repository.
+4. Set build/start commands:
    - Build: `npm install && npx prisma generate && npm run build`
    - Start: `npx prisma migrate deploy && npm run start`
 
 ### B. Set production env vars
 
-In Render service settings, configure:
+In Railway service settings, configure:
 
-- `DATABASE_URL` (Render Postgres internal URL)
+- `DATABASE_URL` (Railway Postgres connection URL; keep SSL enabled, typically `?sslmode=require`)
 - `NEXTAUTH_SECRET` (strong random secret)
 - `NEXTAUTH_URL` (e.g. `https://app.yourdomain.com`)
 - `STRIPE_SECRET_KEY`
@@ -141,7 +142,7 @@ In Render service settings, configure:
 3. Subscribe at minimum to:
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
-4. Copy webhook signing secret into Render env as `STRIPE_WEBHOOK_SECRET`.
+4. Copy webhook signing secret into Railway env as `STRIPE_WEBHOOK_SECRET`.
 5. Redeploy service.
 
 ### D. Post-deploy verification
