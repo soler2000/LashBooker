@@ -11,6 +11,9 @@ const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+let hasWarnedMissingDatabaseUrl = false;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -39,6 +42,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
+        if (!hasDatabaseUrl) {
+          if (!hasWarnedMissingDatabaseUrl) {
+            console.warn("[auth] DATABASE_URL missing. Rejecting credentials sign-in requests.");
+            hasWarnedMissingDatabaseUrl = true;
+          }
+          return null;
+        }
+
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
