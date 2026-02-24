@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -8,10 +8,10 @@ export async function GET() {
     const services = await prisma.service.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } });
     return NextResponse.json(services);
   } catch (error) {
-    if (!process.env.DATABASE_URL) {
+    if (!hasDatabaseConfiguration()) {
       return NextResponse.json(
         {
-          error: "Server misconfiguration: DATABASE_URL is not set.",
+          error: "Server misconfiguration: database connection URL is not set.",
         },
         { status: 503 },
       );
