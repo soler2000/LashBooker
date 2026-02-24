@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
@@ -13,10 +14,23 @@ const loginSchema = z.object({
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  secret:
-    process.env.AUTH_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    (process.env.NODE_ENV === "development" ? "dev-only-auth-secret" : undefined),
+  secret: (() => {
+    const configuredSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+    if (configuredSecret) return configuredSecret;
+
+    const fallbackSecret = createHash("sha256")
+      .update([
+        process.env.RAILWAY_PROJECT_ID,
+        process.env.RAILWAY_SERVICE_ID,
+        process.env.NEXTAUTH_URL,
+        process.env.AUTH_URL,
+        "lashbooker-auth-fallback",
+      ].filter(Boolean).join("|"))
+      .digest("hex");
+
+    console.warn("[auth] AUTH_SECRET/NEXTAUTH_SECRET missing. Using deterministic fallback secret.");
+    return fallbackSecret;
+  })(),
   trustHost: true,
   providers: [
     Credentials({
