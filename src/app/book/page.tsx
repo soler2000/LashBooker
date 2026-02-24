@@ -14,12 +14,36 @@ export default function BookPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api/services").then((r) => r.json()).then(setServices);
+    fetch("/api/services")
+      .then(async (res) => {
+        const data = await res.json();
+
+        if (!res.ok || !Array.isArray(data)) {
+          setMessage(typeof data?.error === "string" ? data.error : "Unable to load services right now.");
+          setServices([]);
+          return;
+        }
+
+        setServices(data);
+      })
+      .catch(() => {
+        setMessage("Unable to load services right now.");
+        setServices([]);
+      });
   }, []);
 
   async function checkAvailability() {
     const res = await fetch(`/api/availability?serviceId=${serviceId}&date=${date}`);
-    setSlots(await res.json());
+    const data = await res.json();
+
+    if (!res.ok || !Array.isArray(data)) {
+      setSlots([]);
+      setMessage(typeof data?.error === "string" ? data.error : "Unable to check availability right now.");
+      return;
+    }
+
+    setSlots(data);
+    setMessage("");
   }
 
   return (
