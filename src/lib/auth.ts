@@ -4,14 +4,14 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 });
 
-const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const hasDatabaseUrl = hasDatabaseConfiguration();
 let hasWarnedMissingDatabaseUrl = false;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
