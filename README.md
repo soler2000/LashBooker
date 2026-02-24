@@ -76,7 +76,13 @@ S3_ACCESS_KEY=""
 S3_SECRET_KEY=""
 S3_BUCKET=""
 APP_BASE_URL="http://localhost:3000"
+DEFAULT_OWNER_EMAIL="owner@lashbooker.local"
+DEFAULT_OWNER_PASSWORD="ChangeMe123!"
 ```
+
+---
+
+After running `npm run prisma:seed`, you can sign in with the default owner account from `DEFAULT_OWNER_EMAIL` / `DEFAULT_OWNER_PASSWORD`. On first login, the app forces a password change before allowing access to other admin pages.
 
 ---
 
