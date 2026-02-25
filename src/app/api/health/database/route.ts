@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { ensureDatabaseAvailable, ensureDatabaseConfigured, getSchemaSetupHint } from "@/lib/prisma";
+import {
+  ensureDatabaseAvailable,
+  ensureDatabaseConfigured,
+  ensureDatabaseTableWritable,
+  getSchemaSetupHint,
+  verifyDatabaseWriteAccess,
+} from "@/lib/prisma";
 
 export async function GET() {
   try {
@@ -17,10 +23,13 @@ export async function GET() {
 
   try {
     await ensureDatabaseAvailable();
+    await ensureDatabaseTableWritable();
+    const writeAccess = await verifyDatabaseWriteAccess();
 
     return NextResponse.json({
       configured: true,
       available: true,
+      writeAccess,
     });
   } catch (error) {
     const schemaHint = getSchemaSetupHint(error);

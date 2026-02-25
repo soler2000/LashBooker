@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 
 const DATABASE_URL_ENV_KEYS = [
   "DATABASE_URL",
+  "database_URL",
   "DATABASE_PRIVATE_URL",
   "DATABASE_PUBLIC_URL",
   "POSTGRES_PRISMA_URL",
@@ -25,13 +26,32 @@ function resolveDatabaseUrl() {
   return `postgresql://${username}:${password}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require`;
 }
 
-function run(command, args) {
+function verifyDatabaseConnectionAndWrites() {
+  return run("npx", [
+    "prisma",
+    "db",
+    "execute",
+    "--stdin",
+    "--url",
+    process.env.DATABASE_URL,
+  ], `SELECT 1;
+CREATE TEMP TABLE codex_db_write_check(id INT);
+INSERT INTO codex_db_write_check(id) VALUES (1);
+SELECT id FROM codex_db_write_check LIMIT 1;`);
+}
+
+function run(command, args, stdin = "") {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
-      stdio: "inherit",
+      stdio: ["pipe", "inherit", "inherit"],
       env: process.env,
       shell: false,
     });
+
+    if (stdin) {
+      child.stdin.write(stdin);
+      child.stdin.end();
+    }
 
     child.on("exit", (code) => {
       if (code === 0) resolve();
@@ -54,6 +74,9 @@ async function main() {
   } else {
     console.info("[startup] Running prisma migrate deploy...");
     await run("npx", ["prisma", "migrate", "deploy"]);
+
+    console.info("[startup] Verifying database connectivity and write access...");
+    await verifyDatabaseConnectionAndWrites();
   }
 
   console.info("[startup] Starting Next.js server...");

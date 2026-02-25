@@ -142,7 +142,9 @@ Then configure the rest of the app variables:
 - Optional S3 vars for future journal image uploads:
   - `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`
 
-If the app still cannot connect, verify the Postgres service is in the same Railway project/environment and that the variable reference points to the correct service name (`Postgres` in the examples above). The startup script can fall back to `DATABASE_PRIVATE_URL`, `DATABASE_PUBLIC_URL`, `POSTGRES_URL`, or `POSTGRES_URL_NON_POOLING` when `DATABASE_URL` is missing, but setting `DATABASE_URL` explicitly is still recommended.
+If the app still cannot connect, verify the Postgres service is in the same Railway project/environment and that the variable reference points to the correct service name (`Postgres` in the examples above). The startup script can fall back to `database_URL`, `DATABASE_PRIVATE_URL`, `DATABASE_PUBLIC_URL`, `POSTGRES_URL`, or `POSTGRES_URL_NON_POOLING` when `DATABASE_URL` is missing, but setting `DATABASE_URL` explicitly is still recommended.
+
+On startup, the app now runs a DB write preflight (`SELECT 1`, temp table create, insert, and read). If this fails, startup exits early so connection problems are caught before serving traffic. You can also check `/api/health/database` for table write privilege diagnostics.
 
 ### C. Configure Stripe webhook (production)
 

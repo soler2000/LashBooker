@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const DATABASE_URL_ENV_KEYS = [
   "DATABASE_URL",
+  "database_URL",
   "DATABASE_PUBLIC_URL",
   "DATABASE_PRIVATE_URL",
   "POSTGRES_PRISMA_URL",
@@ -66,7 +67,7 @@ export function getSchemaSetupHint(error: unknown) {
 export function ensureDatabaseConfigured() {
   if (!hasDatabaseConfiguration()) {
     throw new Error(
-      "Database is not configured. Set DATABASE_URL (or DATABASE_PUBLIC_URL / DATABASE_PRIVATE_URL / POSTGRES_URL / POSTGRES_URL_NON_POOLING) before starting the app.",
+      "Database is not configured. Set DATABASE_URL (or database_URL / DATABASE_PUBLIC_URL / DATABASE_PRIVATE_URL / POSTGRES_URL / POSTGRES_URL_NON_POOLING) before starting the app.",
     );
   }
 }
@@ -74,4 +75,48 @@ export function ensureDatabaseConfigured() {
 export async function ensureDatabaseAvailable() {
   ensureDatabaseConfigured();
   await prisma.$queryRaw`SELECT 1`;
+}
+
+type DatabaseWriteVerification = {
+  tableExists: boolean;
+  canRead: boolean;
+  canInsert: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+};
+
+export async function verifyDatabaseWriteAccess(
+  tableReference = 'public."User"',
+): Promise<DatabaseWriteVerification> {
+  const [result] = await prisma.$queryRaw<DatabaseWriteVerification[]>`
+    SELECT
+      to_regclass(${tableReference}) IS NOT NULL AS "tableExists",
+      has_table_privilege(current_user, ${tableReference}, 'SELECT') AS "canRead",
+      has_table_privilege(current_user, ${tableReference}, 'INSERT') AS "canInsert",
+      has_table_privilege(current_user, ${tableReference}, 'UPDATE') AS "canUpdate",
+      has_table_privilege(current_user, ${tableReference}, 'DELETE') AS "canDelete"
+  `;
+
+  return (
+    result ?? {
+      tableExists: false,
+      canRead: false,
+      canInsert: false,
+      canUpdate: false,
+      canDelete: false,
+    }
+  );
+}
+
+export async function ensureDatabaseTableWritable(tableReference = 'public."User"') {
+  const verification = await verifyDatabaseWriteAccess(tableReference);
+  if (!verification.tableExists) {
+    throw new Error(`Database table ${tableReference} does not exist. Run Prisma migrations.`);
+  }
+
+  if (!verification.canRead || !verification.canInsert || !verification.canUpdate || !verification.canDelete) {
+    throw new Error(
+      `Database table ${tableReference} is not fully writable. Required privileges: SELECT, INSERT, UPDATE, DELETE.`,
+    );
+  }
 }
