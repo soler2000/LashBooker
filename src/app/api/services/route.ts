@@ -1,4 +1,4 @@
-import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
+import { getSchemaSetupHint, hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +8,11 @@ export async function GET() {
     const services = await prisma.service.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } });
     return NextResponse.json(services);
   } catch (error) {
+    const schemaHint = getSchemaSetupHint(error);
+    if (schemaHint) {
+      return NextResponse.json({ error: schemaHint }, { status: 503 });
+    }
+
     if (!hasDatabaseConfiguration()) {
       return NextResponse.json(
         {

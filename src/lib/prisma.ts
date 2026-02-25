@@ -37,7 +37,28 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export function hasDatabaseConfiguration() {
-  return Boolean(process.env.DATABASE_URL?.trim());
+  return Boolean(process.env.DATABASE_URL?.trim() || resolveDatabaseUrl());
+}
+
+type PrismaLikeError = {
+  code?: string;
+  meta?: {
+    table?: string;
+  };
+};
+
+export function isMissingDatabaseSchemaError(error: unknown) {
+  const prismaError = error as PrismaLikeError;
+  return prismaError?.code === "P2021" || prismaError?.code === "P2022";
+}
+
+export function getSchemaSetupHint(error: unknown) {
+  if (!isMissingDatabaseSchemaError(error)) return undefined;
+
+  const prismaError = error as PrismaLikeError;
+  const missingResource = prismaError.meta?.table ? ` (${prismaError.meta.table})` : "";
+
+  return `Database schema is missing${missingResource}. Run \`npx prisma db push\` and \`npm run prisma:seed\`.`;
 }
 
 export function ensureDatabaseConfigured() {
@@ -52,3 +73,9 @@ export async function ensureDatabaseAvailable() {
   ensureDatabaseConfigured();
   await prisma.$queryRaw`SELECT 1`;
 }
+
+export async function ensureDatabaseSchemaReady() {
+  await ensureDatabaseAvailable();
+  await prisma.service.findFirst({ select: { id: true } });
+}
+

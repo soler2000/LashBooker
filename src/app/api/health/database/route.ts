@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ensureDatabaseAvailable, ensureDatabaseConfigured } from "@/lib/prisma";
+import { ensureDatabaseConfigured, ensureDatabaseSchemaReady, getSchemaSetupHint } from "@/lib/prisma";
 
 export async function GET() {
   try {
@@ -16,18 +16,20 @@ export async function GET() {
   }
 
   try {
-    await ensureDatabaseAvailable();
+    await ensureDatabaseSchemaReady();
 
     return NextResponse.json({
       configured: true,
       available: true,
     });
   } catch (error) {
+    const schemaHint = getSchemaSetupHint(error);
+
     return NextResponse.json(
       {
         configured: true,
         available: false,
-        error: error instanceof Error ? error.message : "Database check failed",
+        error: schemaHint ?? (error instanceof Error ? error.message : "Database check failed"),
       },
       { status: 503 },
     );
