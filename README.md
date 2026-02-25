@@ -130,6 +130,16 @@ In Railway, open your **Web Service** → **Variables** and add references to yo
 3. Optionally add `DATABASE_PUBLIC_URL` as `${{Postgres.DATABASE_PUBLIC_URL}}` if you need to connect from outside Railway.
 4. Ensure the selected URL includes SSL (`sslmode=require`).
 
+If you need to define URLs manually, use your Railway hosts like this:
+
+```bash
+# Internal (for app runtime inside Railway)
+DATABASE_URL="postgresql://<USER>:<PASSWORD>@postgres.railway.internal:5432/<DB_NAME>?sslmode=require"
+
+# External (for local scripts or external SQL clients)
+DATABASE_PUBLIC_URL="postgresql://<USER>:<PASSWORD>@metro.proxy.rlwy.net:52424/<DB_NAME>?sslmode=require"
+```
+
 Then configure the rest of the app variables:
 
 - `NEXTAUTH_SECRET` (strong random secret)
