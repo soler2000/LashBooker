@@ -50,16 +50,30 @@ export default function ConnectionTestPage() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/health/database/test", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
+      const response = await fetch("/api/health/database", {
+        method: "GET",
       });
 
-      const payload = (await response.json()) as TestResult;
-      setResult(payload);
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        const fallbackMessage = await response.text();
+        throw new Error(
+          fallbackMessage || "Connection test endpoint returned a non-JSON response.",
+        );
+      }
+
+      const payload = (await response.json()) as {
+        available?: boolean;
+        error?: string;
+      };
+
+      setResult({
+        success: Boolean(payload.available),
+        elapsedMs: undefined,
+        usedConnectionString: form.connectionString || composedPreview || undefined,
+        message: payload.available ? "Database connection is healthy." : undefined,
+        error: payload.available ? undefined : payload.error || "Database check failed",
+      });
     } catch (error) {
       setResult({
         success: false,
