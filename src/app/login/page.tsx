@@ -1,4 +1,5 @@
 import { auth, signIn } from "@/lib/auth";
+import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -17,16 +18,36 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
     <form action={async (formData) => {
       "use server";
       try {
+        const hasDatabaseUrl = hasDatabaseConfiguration();
+        const email = String(formData.get("email") ?? "");
         const requestedRedirect = String(formData.get("redirectTo") ?? "/portal/appointments");
 
         await signIn("credentials", {
-          email: String(formData.get("email")),
+          email,
           password: String(formData.get("password")),
           redirect: false,
         });
 
-        const session = await auth();
-        const isAdmin = ["STAFF", "ADMIN", "OWNER"].includes(session?.user?.role ?? "CLIENT");
+        let isAdmin = false;
+        let mustChangePassword = false;
+
+        if (hasDatabaseUrl) {
+          const user = await prisma.user.findUnique({
+            where: { email },
+            select: { role: true, mustChangePassword: true },
+          });
+
+          isAdmin = ["STAFF", "ADMIN", "OWNER"].includes(user?.role ?? "CLIENT");
+          mustChangePassword = Boolean(user?.mustChangePassword);
+        } else {
+          const session = await auth();
+          isAdmin = ["STAFF", "ADMIN", "OWNER"].includes(session?.user?.role ?? "CLIENT");
+          mustChangePassword = Boolean(session?.user?.mustChangePassword);
+        }
+
+        if (mustChangePassword) {
+          redirect("/admin/change-password");
+        }
 
         if (requestedRedirect.startsWith("/")) {
           if (!requestedRedirect.startsWith("/admin") || isAdmin) {
