@@ -64,10 +64,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role?: string }).role ?? "CLIENT";
-        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword ?? false;
+        const userWithRole = user as { id?: string; role?: string; mustChangePassword?: boolean };
+
+        token.role = userWithRole.role;
+        token.mustChangePassword = userWithRole.mustChangePassword;
+
+        if ((!token.role || typeof token.mustChangePassword !== "boolean") && userWithRole.id && hasDatabaseUrl) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: userWithRole.id },
+            select: { role: true, mustChangePassword: true },
+          });
+
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.mustChangePassword = dbUser.mustChangePassword;
+          }
+        }
+
+        token.role = (token.role as string | undefined) ?? "CLIENT";
+        token.mustChangePassword = Boolean(token.mustChangePassword);
       }
       return token;
     },
