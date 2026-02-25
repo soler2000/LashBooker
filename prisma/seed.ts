@@ -32,9 +32,12 @@ async function main() {
       currency: "gbp",
       depositDefaultType: DepositType.PERCENT,
       depositDefaultValue: 30,
+      pendingPaymentExpiryMinutes: 30,
       reminderScheduleJson: JSON.stringify([48, 24]),
     },
-    update: {},
+    update: {
+      pendingPaymentExpiryMinutes: 30,
+    },
   });
 
   const services = [

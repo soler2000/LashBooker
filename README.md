@@ -175,6 +175,18 @@ If the app still cannot connect, verify the Postgres service is in the same Rail
 3. Create booking from `/book`.
 4. Confirm webhook marks booking status from `PENDING_PAYMENT` to `CONFIRMED`.
 
+
+### E. Configure cron jobs
+
+Set `CRON_SECRET` in your environment and configure your scheduler to call the jobs endpoints with `POST` and header `x-cron-secret: <CRON_SECRET>`.
+
+Recommended schedules:
+
+- `POST /api/jobs/reminders` every hour
+- `POST /api/jobs/expire-pending-bookings` every 5 minutes
+
+The pending-payment expiry job cancels bookings still in `PENDING_PAYMENT` after `BusinessSettings.pendingPaymentExpiryMinutes` (default `30`) and attempts to cancel associated Stripe PaymentIntents.
+
 ---
 
 ## 5) Useful commands
