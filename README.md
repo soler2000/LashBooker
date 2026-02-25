@@ -117,7 +117,7 @@ This project is currently structured for a **Node web service + managed Postgres
 3. Create a Railway **Web Service** connected to this repository.
 4. Set build/start commands:
    - Build: `npm install && npx prisma generate && npm run build`
-   - Start: `npx prisma migrate deploy && npm run start`
+   - Start: `npm run start` (this now runs `prisma migrate deploy` automatically before `next start`)
 
 ### B. Set production env vars
 
@@ -142,7 +142,7 @@ Then configure the rest of the app variables:
 - Optional S3 vars for future journal image uploads:
   - `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`
 
-If the app still cannot connect, verify the Postgres service is in the same Railway project/environment and that the variable reference points to the correct service name (`Postgres` in the examples above).
+If the app still cannot connect, verify the Postgres service is in the same Railway project/environment and that the variable reference points to the correct service name (`Postgres` in the examples above). The startup script can fall back to `DATABASE_PRIVATE_URL`, `DATABASE_PUBLIC_URL`, `POSTGRES_URL`, or `POSTGRES_URL_NON_POOLING` when `DATABASE_URL` is missing, but setting `DATABASE_URL` explicitly is still recommended.
 
 ### C. Configure Stripe webhook (production)
 
