@@ -5,11 +5,13 @@ import { redirect } from "next/navigation";
 type LoginPageProps = {
   searchParams?: {
     redirectTo?: string;
+    error?: string;
   };
 };
 
 export default function LoginPage({ searchParams }: LoginPageProps) {
   const redirectTo = searchParams?.redirectTo?.startsWith("/") ? searchParams.redirectTo : "/portal/appointments";
+  const showInvalidCredentialsError = searchParams?.error === "invalid_credentials";
 
   return (
     <form action={async (formData) => {
@@ -28,6 +30,11 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       }
     }} className="mx-auto mt-20 max-w-md space-y-4 rounded bg-white p-6 shadow">
       <h1 className="text-2xl font-semibold">Sign in</h1>
+      {showInvalidCredentialsError ? (
+        <p className="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
+          Invalid email or password. If this is a new environment, run the seed process to create the default owner account.
+        </p>
+      ) : null}
       <input name="redirectTo" type="hidden" value={redirectTo} />
       <input name="email" type="email" placeholder="Email" className="w-full rounded border p-2" required />
       <input name="password" type="password" placeholder="Password" className="w-full rounded border p-2" required />
