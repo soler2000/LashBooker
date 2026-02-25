@@ -5,6 +5,7 @@ const links = [
   ["Dashboard", "/admin/dashboard"],
   ["Calendar", "/admin/calendar"],
   ["Services", "/admin/services"],
+  ["Owner Settings", "/admin/settings"],
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
