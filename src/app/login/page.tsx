@@ -1,4 +1,4 @@
-import { signIn } from "@/lib/auth";
+import { auth, signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -17,11 +17,24 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
     <form action={async (formData) => {
       "use server";
       try {
+        const requestedRedirect = String(formData.get("redirectTo") ?? "/portal/appointments");
+
         await signIn("credentials", {
           email: String(formData.get("email")),
           password: String(formData.get("password")),
-          redirectTo: String(formData.get("redirectTo") ?? "/portal/appointments"),
+          redirect: false,
         });
+
+        const session = await auth();
+        const isAdmin = ["STAFF", "ADMIN", "OWNER"].includes(session?.user?.role ?? "CLIENT");
+
+        if (requestedRedirect.startsWith("/")) {
+          if (!requestedRedirect.startsWith("/admin") || isAdmin) {
+            redirect(requestedRedirect);
+          }
+        }
+
+        redirect(isAdmin ? "/admin/dashboard" : "/portal/appointments");
       } catch (error) {
         if (error instanceof AuthError && error.type === "CredentialsSignin") {
           redirect(`/login?error=invalid_credentials&redirectTo=${encodeURIComponent(String(formData.get("redirectTo") ?? "/portal/appointments"))}`);
