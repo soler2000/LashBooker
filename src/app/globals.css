@@ -8,5 +8,5 @@ body {
 }
 
 body {
-  @apply bg-black text-slate-100 antialiased;
+  @apply bg-black text-slate-900 antialiased;
 }
