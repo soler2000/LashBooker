@@ -10,8 +10,15 @@ export default auth((req) => {
   const role = req.auth?.user?.role;
   const mustChangePassword = req.auth?.user?.mustChangePassword;
 
+  const redirectToLogin = () => {
+    const loginUrl = new URL("/login", req.url);
+    const redirectTarget = `${req.nextUrl.pathname}${req.nextUrl.search}`;
+    loginUrl.searchParams.set("redirectTo", redirectTarget);
+    return NextResponse.redirect(loginUrl);
+  };
+
   if (pathname.startsWith(ADMIN_PREFIX)) {
-    if (!role) return NextResponse.redirect(new URL("/login", req.url));
+    if (!role) return redirectToLogin();
     if (!["STAFF", "ADMIN", "OWNER"].includes(role)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
@@ -22,7 +29,7 @@ export default auth((req) => {
   }
 
   if (pathname.startsWith(PORTAL_PREFIX)) {
-    if (!role) return NextResponse.redirect(new URL("/login?redirectTo=/portal/appointments", req.url));
+    if (!role) return redirectToLogin();
   }
 
   return NextResponse.next();

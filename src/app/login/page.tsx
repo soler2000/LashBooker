@@ -11,7 +11,7 @@ type LoginPageProps = {
 };
 
 export default function LoginPage({ searchParams }: LoginPageProps) {
-  const redirectTo = searchParams?.redirectTo?.startsWith("/") ? searchParams.redirectTo : "/portal/appointments";
+  const redirectTo = searchParams?.redirectTo?.startsWith("/") ? searchParams.redirectTo : "";
   const showInvalidCredentialsError = searchParams?.error === "invalid_credentials";
 
   return (
@@ -20,7 +20,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       try {
         const hasDatabaseUrl = hasDatabaseConfiguration();
         const email = String(formData.get("email") ?? "");
-        const requestedRedirect = String(formData.get("redirectTo") ?? "/portal/appointments");
+        const requestedRedirect = String(formData.get("redirectTo") ?? "");
 
         await signIn("credentials", {
           email,
