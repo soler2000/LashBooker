@@ -54,6 +54,9 @@ async function main() {
   } else {
     console.info("[startup] Running prisma migrate deploy...");
     await run("npx", ["prisma", "migrate", "deploy"]);
+
+    console.info("[startup] Running prisma seed to ensure default data exists...");
+    await run("npm", ["run", "prisma:seed"]);
   }
 
   console.info("[startup] Starting Next.js server...");
