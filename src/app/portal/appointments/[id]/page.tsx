@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDepositAmount } from "@/lib/payments";
 import { canManageClientBookingStatus, isWithinCutoffWindow } from "@/lib/portal-bookings";
+import { createSignedReadUrlOrNull } from "@/lib/s3-storage";
 import AppointmentActions from "./AppointmentActions";
 
 function formatMoney(cents: number, currency: string) {
@@ -35,6 +36,15 @@ export default async function PortalAppointmentDetailPage({ params }: { params: 
   ]);
 
   if (!booking) notFound();
+
+  const journalEntries = await prisma.journalEntry.findMany({
+    where: { bookingId: booking.id, clientId: session.user.id },
+    include: {
+      images: { orderBy: { createdAt: "asc" } },
+      createdBy: { select: { email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
   const currency = settings?.currency ?? "GBP";
   const priceCents = booking.service.priceCents;
@@ -108,6 +118,28 @@ export default async function PortalAppointmentDetailPage({ params }: { params: 
       </section>
 
       <AppointmentActions bookingId={booking.id} canManage={canManage} />
+
+      <section className="space-y-3 rounded border bg-white p-4">
+        <h2 className="text-lg font-medium">Treatment journal</h2>
+        {journalEntries.length === 0 ? <p className="text-sm text-slate-600">No journal entries have been published for this appointment yet.</p> : null}
+        <ul className="space-y-4">
+          {journalEntries.map((entry) => (
+            <li key={entry.id} className="space-y-2 rounded border p-3">
+              <p className="text-xs text-slate-600">{entry.createdAt.toLocaleString()} · Added by {entry.createdBy.email}</p>
+              <p className="whitespace-pre-wrap text-sm text-slate-800">{entry.notes}</p>
+              <div className="grid gap-2 md:grid-cols-3">
+                {entry.images.map((image) => {
+                  const readUrl = createSignedReadUrlOrNull(image.objectKey);
+                  if (!readUrl) {
+                    return <div key={image.id} className="flex h-36 items-center justify-center rounded bg-slate-100 text-xs text-slate-600">Image unavailable</div>;
+                  }
+                  return <img key={image.id} src={readUrl} alt="Treatment journal" className="h-36 w-full rounded object-cover" />;
+                })}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
     </section>
   );
 }
