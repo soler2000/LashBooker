@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 const ADMIN_PREFIX = "/admin";
 const CHANGE_PASSWORD_PATH = "/admin/change-password";
+const PORTAL_PREFIX = "/portal";
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -20,9 +21,13 @@ export default auth((req) => {
     }
   }
 
+  if (pathname.startsWith(PORTAL_PREFIX)) {
+    if (!role) return NextResponse.redirect(new URL("/login?redirectTo=/portal/appointments", req.url));
+  }
+
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/portal/:path*"],
 };

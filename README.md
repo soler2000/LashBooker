@@ -8,6 +8,7 @@ MVP booking platform for lash studios with deposit-backed appointments.
 - **PR-2**: NextAuth credentials auth, registration API, role middleware, admin shell.
 - **PR-3**: Service management APIs, public services API, availability engine (working-hours/blockout/overlap checks), booking page slot lookup.
 - **PR-4**: Booking creation with Stripe PaymentIntent deposit calculation, Stripe webhook confirmation path, basic confirmation email hook, admin calendar list.
+- **PR-5**: Client portal appointments list, client reschedule/cancel APIs with cutoff rule enforcement, reminder email cron endpoint.
 
 ---
 
