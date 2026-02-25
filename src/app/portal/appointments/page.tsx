@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type BookingItem = {
@@ -40,27 +41,6 @@ export default function PortalAppointmentsPage() {
     loadBookings();
   }, []);
 
-  const cancelBooking = async (bookingId: string) => {
-    const res = await fetch(`/api/portal/bookings/${bookingId}/cancel`, { method: "PUT" });
-    const payload = await res.json();
-    setMessage(res.ok ? "Booking canceled" : payload.error ?? "Cancel failed");
-    if (res.ok) await loadBookings();
-  };
-
-  const rescheduleBooking = async (bookingId: string) => {
-    const startAt = window.prompt("Enter new appointment date/time in ISO format (e.g. 2026-03-12T10:00:00.000Z)");
-    if (!startAt) return;
-
-    const res = await fetch(`/api/portal/bookings/${bookingId}/reschedule`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ startAt }),
-    });
-    const payload = await res.json();
-    setMessage(res.ok ? "Booking rescheduled" : payload.error ?? "Reschedule failed");
-    if (res.ok) await loadBookings();
-  };
-
   return (
     <section className="space-y-6">
       <header>
@@ -79,10 +59,9 @@ export default function PortalAppointmentsPage() {
             <li key={booking.id} className="rounded border p-3">
               <p className="font-medium">{booking.service.name} · {booking.status}</p>
               <p className="text-sm text-slate-600">{new Date(booking.startAt).toLocaleString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
-              <div className="mt-3 flex gap-2">
-                <button type="button" className="rounded border px-3 py-1 text-sm" onClick={() => rescheduleBooking(booking.id)}>Reschedule</button>
-                <button type="button" className="rounded border px-3 py-1 text-sm" onClick={() => cancelBooking(booking.id)}>Cancel</button>
-              </div>
+              <Link href={`/portal/appointments/${booking.id}`} className="mt-3 inline-block rounded border px-3 py-1 text-sm hover:bg-slate-50">
+                View details
+              </Link>
             </li>
           ))}
         </ul>
@@ -96,6 +75,9 @@ export default function PortalAppointmentsPage() {
             <li key={booking.id} className="rounded border p-3">
               <p className="font-medium">{booking.service.name} · {booking.status}</p>
               <p className="text-sm text-slate-600">{new Date(booking.startAt).toLocaleString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
+              <Link href={`/portal/appointments/${booking.id}`} className="mt-3 inline-block rounded border px-3 py-1 text-sm hover:bg-slate-50">
+                View details
+              </Link>
             </li>
           ))}
         </ul>
