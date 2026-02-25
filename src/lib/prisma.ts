@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const DATABASE_URL_ENV_KEYS = [
   "DATABASE_URL",
+  "DATABASE_PUBLIC_URL",
   "DATABASE_PRIVATE_URL",
   "POSTGRES_PRISMA_URL",
   "POSTGRES_URL",
@@ -64,7 +65,7 @@ export function getSchemaSetupHint(error: unknown) {
 export function ensureDatabaseConfigured() {
   if (!hasDatabaseConfiguration()) {
     throw new Error(
-      "Database is not configured. Set DATABASE_URL (or DATABASE_PRIVATE_URL/POSTGRES_URL) before starting the app.",
+      "Database is not configured. Set DATABASE_URL (or DATABASE_PUBLIC_URL / DATABASE_PRIVATE_URL / POSTGRES_URL) before starting the app.",
     );
   }
 }

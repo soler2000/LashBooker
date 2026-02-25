@@ -121,9 +121,17 @@ This project is currently structured for a **Node web service + managed Postgres
 
 ### B. Set production env vars
 
-In Railway service settings, configure:
+In Railway, open your **Web Service** → **Variables** and add references to your Postgres service variables.
 
-- `DATABASE_URL` (Railway Postgres connection URL; keep SSL enabled, typically `?sslmode=require`)
+1. Click **New Variable** and set `DATABASE_URL` to `${{Postgres.DATABASE_URL}}`.
+   - This is the internal Railway network URL and should be used by the running app.
+2. Add `DATABASE_PRIVATE_URL` as `${{Postgres.DATABASE_PRIVATE_URL}}`.
+   - This is useful for scripts/migrations that require a direct DB URL.
+3. Optionally add `DATABASE_PUBLIC_URL` as `${{Postgres.DATABASE_PUBLIC_URL}}` if you need to connect from outside Railway.
+4. Ensure the selected URL includes SSL (`sslmode=require`).
+
+Then configure the rest of the app variables:
+
 - `NEXTAUTH_SECRET` (strong random secret)
 - `NEXTAUTH_URL` (e.g. `https://app.yourdomain.com`)
 - `STRIPE_SECRET_KEY`
@@ -133,6 +141,8 @@ In Railway service settings, configure:
 - `APP_BASE_URL` (same as public URL)
 - Optional S3 vars for future journal image uploads:
   - `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`
+
+If the app still cannot connect, verify the Postgres service is in the same Railway project/environment and that the variable reference points to the correct service name (`Postgres` in the examples above).
 
 ### C. Configure Stripe webhook (production)
 
