@@ -3,6 +3,8 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDepositAmount, stripe } from "@/lib/payments";
+import { ACTIVE_BOOKING_STATUSES, hasBookingWindowConflict } from "@/lib/booking-conflicts";
+import { bookingWindow } from "@/lib/portal-bookings";
 
 const bodySchema = z.object({
   serviceId: z.string().uuid(),
@@ -22,15 +24,26 @@ export async function POST(req: Request) {
 
   const startAt = new Date(parsed.data.startAt);
   const endAt = new Date(startAt.getTime() + service.durationMinutes * 60000);
+  const requestedWindow = bookingWindow({ startAt, endAt }, service.bufferBeforeMinutes, service.bufferAfterMinutes);
 
-  const overlaps = await prisma.booking.findFirst({
-    where: {
-      status: { in: ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED"] },
-      startAt: { lt: endAt },
-      endAt: { gt: startAt },
-    },
+  const maxServiceBuffers = await prisma.service.aggregate({
+    _max: { bufferBeforeMinutes: true, bufferAfterMinutes: true },
   });
-  if (overlaps) return NextResponse.json({ error: "Slot no longer available" }, { status: 409 });
+  const maxBufferBeforeMs = (maxServiceBuffers._max.bufferBeforeMinutes ?? 0) * 60000;
+  const maxBufferAfterMs = (maxServiceBuffers._max.bufferAfterMinutes ?? 0) * 60000;
+
+  const possibleOverlaps = await prisma.booking.findMany({
+    where: {
+      status: { in: ACTIVE_BOOKING_STATUSES },
+      startAt: { lt: new Date(requestedWindow.end.getTime() + maxBufferBeforeMs) },
+      endAt: { gt: new Date(requestedWindow.start.getTime() - maxBufferAfterMs) },
+    },
+    include: { service: { select: { bufferBeforeMinutes: true, bufferAfterMinutes: true } } },
+  });
+
+  if (hasBookingWindowConflict(requestedWindow, possibleOverlaps)) {
+    return NextResponse.json({ error: "Slot no longer available" }, { status: 409 });
+  }
 
   const booking = await prisma.booking.create({
     data: {
