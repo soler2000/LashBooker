@@ -131,8 +131,8 @@ model BusinessSettings {
 }
 
 model WorkingHours {
-  id        String @id @default(uuid())
-  weekday   Int
+  id        String  @id @default(uuid())
+  weekday   Int     @unique
   startTime String
   endTime   String
   isClosed  Boolean @default(false)
