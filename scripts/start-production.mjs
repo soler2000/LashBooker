@@ -22,7 +22,7 @@ function resolveDatabaseUrl() {
 
   const username = encodeURIComponent(PGUSER);
   const password = encodeURIComponent(PGPASSWORD);
-  return `postgresql://${username}:${password}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require`;
+  return `postgresql://${username}:${password}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require&schema=public`;
 }
 
 function run(command, args) {

@@ -44,6 +44,8 @@ MVP booking platform for lash studios with deposit-backed appointments.
    ```
 
 5. **Generate Prisma client + run migrations + seed**
+
+   > If your DB only has `_prisma_migrations`, ensure `DATABASE_URL` points at the expected database and `schema=public`.
    ```bash
    npx prisma generate
    npx prisma migrate dev --name init
@@ -64,7 +66,7 @@ MVP booking platform for lash studios with deposit-backed appointments.
 Copy from `.env.example` and set values:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/lashbooker?sslmode=require"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/lashbooker?schema=public"
 NEXTAUTH_SECRET="replace-with-strong-secret"
 NEXTAUTH_URL="http://localhost:3000"
 STRIPE_SECRET_KEY="sk_test_xxx"
@@ -134,10 +136,10 @@ If you need to define URLs manually, use your Railway hosts like this:
 
 ```bash
 # Internal (for app runtime inside Railway)
-DATABASE_URL="postgresql://<USER>:<PASSWORD>@postgres.railway.internal:5432/<DB_NAME>?sslmode=require"
+DATABASE_URL="postgresql://<USER>:<PASSWORD>@postgres.railway.internal:5432/<DB_NAME>?sslmode=require&schema=public"
 
 # External (for local scripts or external SQL clients)
-DATABASE_PUBLIC_URL="postgresql://<USER>:<PASSWORD>@metro.proxy.rlwy.net:52424/<DB_NAME>?sslmode=require"
+DATABASE_PUBLIC_URL="postgresql://<USER>:<PASSWORD>@metro.proxy.rlwy.net:52424/<DB_NAME>?sslmode=require&schema=public"
 ```
 
 Then configure the rest of the app variables:

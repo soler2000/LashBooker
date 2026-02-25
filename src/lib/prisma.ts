@@ -2,8 +2,8 @@ import { PrismaClient } from "@prisma/client";
 
 const DATABASE_URL_ENV_KEYS = [
   "DATABASE_URL",
-  "DATABASE_PUBLIC_URL",
   "DATABASE_PRIVATE_URL",
+  "DATABASE_PUBLIC_URL",
   "POSTGRES_PRISMA_URL",
   "POSTGRES_URL",
   "POSTGRES_URL_NON_POOLING",
@@ -22,7 +22,7 @@ function resolveDatabaseUrl(): string | undefined {
 
   const username = encodeURIComponent(PGUSER);
   const password = encodeURIComponent(PGPASSWORD);
-  return `postgresql://${username}:${password}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require`;
+  return `postgresql://${username}:${password}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require&schema=public`;
 }
 
 const resolvedDatabaseUrl = resolveDatabaseUrl();
@@ -60,7 +60,7 @@ export function getSchemaSetupHint(error: unknown) {
   const prismaError = error as PrismaLikeError;
   const missingResource = prismaError.meta?.table ? ` (${prismaError.meta.table})` : "";
 
-  return `Database schema is missing${missingResource}. Run \`npx prisma db push\` and \`npm run prisma:seed\`.`;
+  return `Database schema is missing${missingResource}. Run \`npx prisma migrate deploy\` (or \`npx prisma migrate dev --name init\` locally) and \`npm run prisma:seed\`.`;
 }
 
 export function ensureDatabaseConfigured() {
