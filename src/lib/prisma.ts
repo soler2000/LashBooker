@@ -6,6 +6,7 @@ const DATABASE_URL_ENV_KEYS = [
   "DATABASE_PRIVATE_URL",
   "POSTGRES_PRISMA_URL",
   "POSTGRES_URL",
+  "POSTGRES_URL_NON_POOLING",
 ] as const;
 
 function resolveDatabaseUrl(): string | undefined {
@@ -65,7 +66,7 @@ export function getSchemaSetupHint(error: unknown) {
 export function ensureDatabaseConfigured() {
   if (!hasDatabaseConfiguration()) {
     throw new Error(
-      "Database is not configured. Set DATABASE_URL (or DATABASE_PUBLIC_URL / DATABASE_PRIVATE_URL / POSTGRES_URL) before starting the app.",
+      "Database is not configured. Set DATABASE_URL (or DATABASE_PUBLIC_URL / DATABASE_PRIVATE_URL / POSTGRES_URL / POSTGRES_URL_NON_POOLING) before starting the app.",
     );
   }
 }
