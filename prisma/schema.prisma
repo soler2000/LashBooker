@@ -52,6 +52,8 @@ model User {
   updatedAt    DateTime       @updatedAt
   clientProfile ClientProfile?
   bookings     Booking[]
+  clientJournalEntries JournalEntry[] @relation("ClientJournalEntries")
+  authoredJournalEntries JournalEntry[] @relation("AuthoredJournalEntries")
   accounts     Account[]
   sessions     Session[]
 }
@@ -101,6 +103,32 @@ model Booking {
   client           User          @relation(fields: [clientId], references: [id])
   service          Service       @relation(fields: [serviceId], references: [id])
   payments         Payment[]
+  journalEntries   JournalEntry[]
+}
+
+model JournalEntry {
+  id          String         @id @default(uuid())
+  clientId    String
+  bookingId   String
+  createdById String
+  notes       String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  client      User           @relation("ClientJournalEntries", fields: [clientId], references: [id], onDelete: Cascade)
+  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation("AuthoredJournalEntries", fields: [createdById], references: [id], onDelete: Cascade)
+  images      JournalImage[]
+}
+
+model JournalImage {
+  id             String       @id @default(uuid())
+  journalEntryId String
+  objectKey      String       @unique
+  mimeType       String
+  createdAt      DateTime     @default(now())
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+
+  @@index([journalEntryId])
 }
 
 model Payment {
