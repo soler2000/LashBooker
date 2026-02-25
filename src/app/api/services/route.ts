@@ -1,4 +1,4 @@
-import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
+import { getSchemaSetupHint, hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,11 @@ export async function GET() {
         },
         { status: 503 },
       );
+    }
+
+    const schemaHint = getSchemaSetupHint(error);
+    if (schemaHint) {
+      return NextResponse.json({ error: schemaHint }, { status: 503 });
     }
 
     console.error("Failed to fetch services", error);
