@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Service = { id: string; name: string; priceCents: number };
 type Slot = { startAt: string; endAt: string };
@@ -10,6 +11,7 @@ function formatSlot(slot: Slot) {
 }
 
 export default function BookPage() {
+  const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [serviceId, setServiceId] = useState("");
@@ -130,6 +132,8 @@ export default function BookPage() {
                 ? `Booking ${data.bookingId} created. Deposit payment is required before confirmation.`
                 : `Booking ${data.bookingId} confirmed.`
             );
+
+            router.push(`/portal/appointments/${data.bookingId}`);
           }}
         >
           Create booking
