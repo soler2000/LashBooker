@@ -1,6 +1,7 @@
 import { auth, signIn } from "@/lib/auth";
 import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 import { AuthError } from "next-auth";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 type LoginPageProps = {
@@ -73,6 +74,15 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       <input name="email" type="email" placeholder="Email" className="w-full rounded border p-2" required />
       <input name="password" type="password" placeholder="Password" className="w-full rounded border p-2" required />
       <button className="w-full rounded bg-black p-2 text-white" type="submit">Sign in</button>
+      <p className="text-center text-sm text-gray-600">
+        Don&apos;t have an account?{" "}
+        <Link
+          href={`/register${redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ""}`}
+          className="font-medium text-black underline"
+        >
+          Create one
+        </Link>
+      </p>
     </form>
   );
 }
