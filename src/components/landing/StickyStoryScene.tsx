@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef } from "react";
 import { clamp, usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
 
@@ -25,16 +26,27 @@ export default function StickyStoryScene({ eyebrow, title, description, image }:
     <section ref={sectionRef} className="relative h-[180vh] bg-black">
       <div className="sticky top-0 h-screen overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0"
           style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.82)), url('${image}')`,
             transform: `scale(${bgScale})`,
+            transition: prefersReducedMotion ? "none" : "transform 120ms linear",
           }}
+          aria-hidden
+        >
+          <Image src={image} alt="" fill className="object-cover" sizes="100vw" />
+        </div>
+        <div
+          className="absolute inset-0"
+          style={{ backgroundImage: "linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.82))" }}
           aria-hidden
         />
         <div
           className="relative z-10 mx-auto flex h-full w-full max-w-6xl items-center px-6 md:px-12"
-          style={{ opacity: copyOpacity, transform: `translateY(${copyTranslateY}px)` }}
+          style={{
+            opacity: copyOpacity,
+            transform: `translateY(${copyTranslateY}px)`,
+            transition: prefersReducedMotion ? "none" : "transform 120ms linear",
+          }}
         >
           <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.35em] text-white/70">{eyebrow}</p>

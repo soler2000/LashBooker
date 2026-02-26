@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef } from "react";
 import { usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
 import type { SiteImages } from "@/lib/site-images";
@@ -25,14 +26,22 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
   return (
     <section ref={chapterRef} className="relative h-[400vh] bg-black">
       <div className="sticky top-0 h-screen overflow-hidden">
-        <div className="flex h-full" style={{ width: `${panels.length * 100}vw`, transform: `translateX(${xPercent}vw)` }}>
+        <div
+          className="flex h-full"
+          style={{
+            width: `${panels.length * 100}vw`,
+            transform: `translateX(${xPercent}vw)`,
+            transition: prefersReducedMotion ? "none" : "transform 120ms linear",
+          }}
+        >
           {panels.map((panel) => (
             <article key={panel.title} className="relative h-screen w-screen shrink-0">
+              <div className="absolute inset-0" aria-hidden>
+                <Image src={panel.image} alt="" fill className="object-cover" sizes="100vw" />
+              </div>
               <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage: `linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.2)), url('${panel.image}')`,
-                }}
+                className="absolute inset-0"
+                style={{ backgroundImage: "linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.2))" }}
                 aria-hidden
               />
               <div className="relative z-10 flex h-full items-end px-6 pb-14 md:px-12 md:pb-20">
