@@ -33,13 +33,6 @@ const defaultCreateAccountForm: CreateAccountForm = {
   mustChangePassword: true,
 };
 
-type Blockout = {
-  id: string;
-  startAt: string;
-  endAt: string;
-  reason: string;
-};
-
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (Object.keys(defaultSiteImages) as SiteImageKey[]).map((key) => ({
   key,
   label: siteImageUsage[key].label,
@@ -53,16 +46,6 @@ const idealImageDimensions: Record<SiteImageKey, string> = {
   booking: "1800 × 1200 px",
   policies: "1800 × 1200 px",
 };
-
-function toLocalDatetimeInput(value: string) {
-  const date = new Date(value);
-  const tzOffset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
-}
-
-function toIsoFromLocalInput(value: string) {
-  return new Date(value).toISOString();
-}
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -78,9 +61,6 @@ export default function AdminSettingsPage() {
   const [savedMessage, setSavedMessage] = useState("");
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
-  const [blockouts, setBlockouts] = useState<Blockout[]>([]);
-  const [blockoutStatus, setBlockoutStatus] = useState("");
-  const [newBlockout, setNewBlockout] = useState({ startAt: "", endAt: "", reason: "" });
   const [depositRequired, setDepositRequired] = useState(true);
   const [depositStatus, setDepositStatus] = useState("");
   const [createAccountForm, setCreateAccountForm] = useState<CreateAccountForm>(defaultCreateAccountForm);
@@ -102,16 +82,6 @@ export default function AdminSettingsPage() {
       setImages(defaultSiteImages);
     }
   }, []);
-
-  const loadBlockouts = async () => {
-    const response = await fetch("/api/admin/blockouts", { cache: "no-store" });
-    if (!response.ok) {
-      setBlockoutStatus("Could not load blockouts.");
-      return;
-    }
-    const rows = (await response.json()) as Blockout[];
-    setBlockouts(rows);
-  };
 
   const loadDepositSettings = async () => {
     const response = await fetch("/api/admin/settings", { cache: "no-store" });
@@ -137,7 +107,6 @@ export default function AdminSettingsPage() {
   };
 
   useEffect(() => {
-    loadBlockouts();
     loadDepositSettings();
     loadAccounts();
   }, []);
@@ -162,47 +131,6 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const createBlockout = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setBlockoutStatus("");
-    const response = await fetch("/api/admin/blockouts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...newBlockout,
-        startAt: toIsoFromLocalInput(newBlockout.startAt),
-        endAt: toIsoFromLocalInput(newBlockout.endAt),
-      }),
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setBlockoutStatus(data.error ?? "Could not create blockout.");
-      return;
-    }
-
-    setNewBlockout({ startAt: "", endAt: "", reason: "" });
-    setBlockoutStatus("Blockout saved.");
-    await loadBlockouts();
-  };
-
-  const updateBlockout = async (row: Blockout, patch: Partial<Blockout>) => {
-    setBlockoutStatus("");
-    const response = await fetch(`/api/admin/blockouts/${row.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...row, ...patch }),
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setBlockoutStatus(data.error ?? "Could not update blockout.");
-      return;
-    }
-
-    await loadBlockouts();
-  };
-
   const saveDepositSettings = async () => {
     setDepositStatus("");
     const response = await fetch("/api/admin/settings", {
@@ -218,17 +146,6 @@ export default function AdminSettingsPage() {
     }
 
     setDepositStatus(depositRequired ? "Deposits are required for new bookings." : "Deposits are disabled. Bookings confirm immediately.");
-  };
-
-  const deleteBlockout = async (id: string) => {
-    setBlockoutStatus("");
-    const response = await fetch(`/api/admin/blockouts/${id}`, { method: "DELETE" });
-    if (!response.ok) {
-      setBlockoutStatus("Could not delete blockout.");
-      return;
-    }
-    setBlockoutStatus("Deleted.");
-    await loadBlockouts();
   };
 
   const createAccount = async (event: FormEvent<HTMLFormElement>) => {
@@ -302,7 +219,7 @@ export default function AdminSettingsPage() {
     <section className="max-w-4xl space-y-10 text-slate-100">
       <div>
         <h1 className="text-2xl font-semibold text-white">Owner settings</h1>
-        <p className="mt-2 text-sm text-slate-300">Upload homepage background images, manage deposit requirements, and maintain calendar blockouts.</p>
+        <p className="mt-2 text-sm text-slate-300">Upload homepage background images, manage deposit requirements, and maintain admin access.</p>
       </div>
 
       <form className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4" onSubmit={save}>
@@ -462,64 +379,6 @@ export default function AdminSettingsPage() {
           </div>
         </div>
         {accountsStatus ? <p className="text-sm text-slate-200">{accountsStatus}</p> : null}
-      </section>
-
-
-      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
-        <h2 className="text-lg font-semibold">Blockouts</h2>
-        <form onSubmit={createBlockout} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-4">
-          <input
-            type="datetime-local"
-            required
-            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
-            value={newBlockout.startAt}
-            onChange={(event) => setNewBlockout((current) => ({ ...current, startAt: event.target.value }))}
-          />
-          <input
-            type="datetime-local"
-            required
-            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
-            value={newBlockout.endAt}
-            onChange={(event) => setNewBlockout((current) => ({ ...current, endAt: event.target.value }))}
-          />
-          <input
-            type="text"
-            required
-            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
-            placeholder="Reason"
-            value={newBlockout.reason}
-            onChange={(event) => setNewBlockout((current) => ({ ...current, reason: event.target.value }))}
-          />
-          <button type="submit" className="rounded bg-white px-3 py-2 text-sm font-medium text-black hover:bg-slate-200">Add blockout</button>
-        </form>
-
-        <ul className="space-y-2">
-          {blockouts.map((row) => (
-            <li key={row.id} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-5 md:items-center">
-              <input
-                type="datetime-local"
-                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
-                value={toLocalDatetimeInput(row.startAt)}
-                onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, startAt: toIsoFromLocalInput(event.target.value) } : item)))}
-              />
-              <input
-                type="datetime-local"
-                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
-                value={toLocalDatetimeInput(row.endAt)}
-                onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, endAt: toIsoFromLocalInput(event.target.value) } : item)))}
-              />
-              <input
-                type="text"
-                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
-                value={row.reason}
-                onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, reason: event.target.value } : item)))}
-              />
-              <button type="button" className="rounded bg-white px-3 py-2 text-sm text-black hover:bg-slate-200" onClick={() => updateBlockout(row, {})}>Save</button>
-              <button type="button" className="rounded border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-100 hover:bg-slate-900" onClick={() => deleteBlockout(row.id)}>Delete</button>
-            </li>
-          ))}
-        </ul>
-        {blockoutStatus ? <p className="text-sm text-slate-200">{blockoutStatus}</p> : null}
       </section>
     </section>
   );
