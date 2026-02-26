@@ -1,11 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, type ReactNode, type RefObject } from "react";
 
 type SceneProps = {
   children: ReactNode;
   image?: string;
   overlay?: string;
+  imagePriority?: boolean;
+  imageSizes?: string;
   sectionClassName?: string;
   contentClassName?: string;
 };
@@ -74,19 +77,20 @@ export default function Scene({
   children,
   image,
   overlay = "linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,.82))",
+  imagePriority = false,
+  imageSizes = "100vw",
   sectionClassName = "relative h-screen w-full overflow-hidden",
   contentClassName = "relative z-10",
 }: SceneProps) {
   return (
     <section className={sectionClassName}>
       {image ? (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `${overlay}, url('${image}')`,
-          }}
-          aria-hidden
-        />
+        <>
+          <div className="absolute inset-0" aria-hidden>
+            <Image src={image} alt="" fill className="object-cover" sizes={imageSizes} priority={imagePriority} />
+          </div>
+          <div className="absolute inset-0" style={{ backgroundImage: overlay }} aria-hidden />
+        </>
       ) : null}
       <div className={contentClassName}>{children}</div>
     </section>

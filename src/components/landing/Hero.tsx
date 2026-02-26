@@ -12,6 +12,8 @@ export default function Hero({ image }: HeroProps) {
     <Scene
       image={image}
       overlay="linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.8))"
+      imagePriority
+      imageSizes="100vw"
       sectionClassName="relative h-screen w-full overflow-hidden"
       contentClassName="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-between px-6 pb-14 pt-8 md:px-12 md:pb-20"
     >
