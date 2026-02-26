@@ -25,7 +25,7 @@ async function main() {
     where: { id: "default" },
     create: {
       id: "default",
-      businessName: "LashBooker Studio",
+      businessName: "Lashed and Lifted",
       timezone: "Europe/London",
       currency: "gbp",
       depositDefaultType: DepositType.PERCENT,

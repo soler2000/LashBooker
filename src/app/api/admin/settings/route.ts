@@ -21,7 +21,7 @@ async function ensureSettings() {
   return prisma.businessSettings.create({
     data: {
       id: "default",
-      businessName: "LashBooker",
+      businessName: "Lashed and Lifted",
       timezone: "Europe/London",
       currency: "gbp",
       depositDefaultType: "PERCENT",
