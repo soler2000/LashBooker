@@ -294,49 +294,49 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <section className="max-w-4xl space-y-10">
+    <section className="max-w-4xl space-y-10 text-slate-100">
       <div>
-        <h1 className="text-2xl font-semibold">Owner settings</h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Upload homepage background images, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
+        <h1 className="text-2xl font-semibold text-white">Owner settings</h1>
+        <p className="mt-2 text-sm text-slate-300">Upload homepage background images, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
       </div>
 
-      <form className="space-y-4" onSubmit={save}>
+      <form className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4" onSubmit={save}>
         <h2 className="text-lg font-semibold">Homepage images</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">Ideal dimensions: hero 2000 × 1200 px, all other backgrounds 1800 × 1200 px.</p>
+        <p className="text-sm text-slate-300">Ideal dimensions: hero 2000 × 1200 px, all other backgrounds 1800 × 1200 px.</p>
         {imageFields.map((field) => (
-          <label key={field.key} className="block space-y-2 rounded border border-slate-200 p-3 dark:border-slate-700">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{field.label}</span>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Ideal size: {idealImageDimensions[field.key]}</p>
-            <div className="h-28 overflow-hidden rounded border bg-slate-100">
+          <label key={field.key} className="block space-y-2 rounded border border-slate-800 bg-slate-950 p-3">
+            <span className="text-sm font-medium text-slate-100">{field.label}</span>
+            <p className="text-xs text-slate-300">Ideal size: {idealImageDimensions[field.key]}</p>
+            <div className="h-28 overflow-hidden rounded border border-slate-700 bg-slate-900">
               <Image src={images[field.key]} alt={`${field.label} preview`} width={720} height={180} className="h-full w-full object-cover" />
             </div>
             <div className="flex items-center gap-3">
               <input
                 type="file"
                 accept="image/*"
-                className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 file:mr-3 file:rounded file:border-0 file:bg-black file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800 dark:border-slate-600 dark:bg-black dark:text-slate-100 dark:file:bg-slate-100 dark:file:text-black"
+                className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
                 onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
               />
-              <div className="h-10 w-16 shrink-0 overflow-hidden rounded border border-slate-300 bg-slate-100 dark:border-slate-600">
+              <div className="h-10 w-16 shrink-0 overflow-hidden rounded border border-slate-700 bg-slate-900">
                 <Image src={images[field.key]} alt={`${field.label} small preview`} width={96} height={60} className="h-full w-full object-cover" />
               </div>
             </div>
           </label>
         ))}
 
-        <button type="submit" className="rounded bg-black px-4 py-2 text-sm font-medium text-white">
+        <button type="submit" className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200">
           Save image settings
         </button>
-        {imageUploadStatus ? <p className="text-sm text-slate-700 dark:text-slate-200">{imageUploadStatus}</p> : null}
-        {savedMessage ? <p className="text-sm text-green-700">{savedMessage}</p> : null}
+        {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
+        {savedMessage ? <p className="text-sm text-green-300">{savedMessage}</p> : null}
       </form>
 
 
 
-      <section className="space-y-4">
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <h2 className="text-lg font-semibold">Booking deposits</h2>
-        <p className="text-sm text-slate-600">Choose whether clients must pay a Stripe deposit before a booking is confirmed.</p>
-        <label className="flex items-center gap-2 text-sm">
+        <p className="text-sm text-slate-300">Choose whether clients must pay a Stripe deposit before a booking is confirmed.</p>
+        <label className="flex items-center gap-2 text-sm text-slate-100">
           <input
             type="checkbox"
             checked={depositRequired}
@@ -344,19 +344,19 @@ export default function AdminSettingsPage() {
           />
           Require deposit payment for new bookings
         </label>
-        <button type="button" className="rounded bg-black px-4 py-2 text-sm font-medium text-white" onClick={saveDepositSettings}>
+        <button type="button" className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200" onClick={saveDepositSettings}>
           Save deposit settings
         </button>
-        {depositStatus ? <p className="text-sm text-slate-700">{depositStatus}</p> : null}
+        {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <h2 className="text-lg font-semibold">Working hours</h2>
-        <p className="text-sm text-slate-600">One record per weekday is allowed.</p>
+        <p className="text-sm text-slate-300">One record per weekday is allowed.</p>
 
-        <form onSubmit={createWorkingHour} className="grid gap-2 rounded border p-4 md:grid-cols-5">
+        <form onSubmit={createWorkingHour} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-5">
           <select
-            className="rounded border p-2 text-sm"
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
             value={newWorkingHour.weekday}
             onChange={(event) => setNewWorkingHour((current) => ({ ...current, weekday: Number(event.target.value) }))}
           >
@@ -366,19 +366,19 @@ export default function AdminSettingsPage() {
           </select>
           <input
             type="time"
-            className="rounded border p-2 text-sm"
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
             value={newWorkingHour.startTime}
             onChange={(event) => setNewWorkingHour((current) => ({ ...current, startTime: event.target.value }))}
             disabled={newWorkingHour.isClosed}
           />
           <input
             type="time"
-            className="rounded border p-2 text-sm"
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
             value={newWorkingHour.endTime}
             onChange={(event) => setNewWorkingHour((current) => ({ ...current, endTime: event.target.value }))}
             disabled={newWorkingHour.isClosed}
           />
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm text-slate-100">
             <input
               type="checkbox"
               checked={newWorkingHour.isClosed}
@@ -388,33 +388,33 @@ export default function AdminSettingsPage() {
           </label>
           <button
             type="submit"
-            className="rounded bg-black px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded bg-white px-3 py-2 text-sm font-medium text-black disabled:cursor-not-allowed disabled:bg-slate-500 disabled:text-slate-200"
             disabled={!hasAvailableWeekday}
           >
             Add day
           </button>
         </form>
-        {!hasAvailableWeekday ? <p className="text-sm text-slate-600">All weekdays already have working-hours entries.</p> : null}
+        {!hasAvailableWeekday ? <p className="text-sm text-slate-300">All weekdays already have working-hours entries.</p> : null}
 
         <ul className="space-y-2">
           {workingHours.map((row) => (
-            <li key={row.id} className="grid gap-2 rounded border bg-white p-4 md:grid-cols-6 md:items-center">
+            <li key={row.id} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-6 md:items-center">
               <p className="text-sm font-medium">{weekdays[row.weekday]}</p>
               <input
                 type="time"
                 value={row.startTime}
                 disabled={row.isClosed}
-                className="rounded border p-2 text-sm"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
                 onChange={(event) => setWorkingHours((current) => current.map((item) => (item.id === row.id ? { ...item, startTime: event.target.value } : item)))}
               />
               <input
                 type="time"
                 value={row.endTime}
                 disabled={row.isClosed}
-                className="rounded border p-2 text-sm"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
                 onChange={(event) => setWorkingHours((current) => current.map((item) => (item.id === row.id ? { ...item, endTime: event.target.value } : item)))}
               />
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm text-slate-100">
                 <input
                   type="checkbox"
                   checked={row.isClosed}
@@ -422,69 +422,69 @@ export default function AdminSettingsPage() {
                 />
                 Closed
               </label>
-              <button type="button" className="rounded bg-slate-900 px-3 py-2 text-sm text-white" onClick={() => updateWorkingHour(row, {})}>Save</button>
-              <button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => deleteWorkingHour(row.id)}>Delete</button>
+              <button type="button" className="rounded bg-white px-3 py-2 text-sm text-black hover:bg-slate-200" onClick={() => updateWorkingHour(row, {})}>Save</button>
+              <button type="button" className="rounded border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-100 hover:bg-slate-900" onClick={() => deleteWorkingHour(row.id)}>Delete</button>
             </li>
           ))}
         </ul>
-        {workingHoursStatus ? <p className="text-sm text-slate-700">{workingHoursStatus}</p> : null}
+        {workingHoursStatus ? <p className="text-sm text-slate-200">{workingHoursStatus}</p> : null}
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <h2 className="text-lg font-semibold">Blockouts</h2>
-        <form onSubmit={createBlockout} className="grid gap-2 rounded border p-4 md:grid-cols-4">
+        <form onSubmit={createBlockout} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-4">
           <input
             type="datetime-local"
             required
-            className="rounded border p-2 text-sm"
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
             value={newBlockout.startAt}
             onChange={(event) => setNewBlockout((current) => ({ ...current, startAt: event.target.value }))}
           />
           <input
             type="datetime-local"
             required
-            className="rounded border p-2 text-sm"
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
             value={newBlockout.endAt}
             onChange={(event) => setNewBlockout((current) => ({ ...current, endAt: event.target.value }))}
           />
           <input
             type="text"
             required
-            className="rounded border p-2 text-sm"
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
             placeholder="Reason"
             value={newBlockout.reason}
             onChange={(event) => setNewBlockout((current) => ({ ...current, reason: event.target.value }))}
           />
-          <button type="submit" className="rounded bg-black px-3 py-2 text-sm font-medium text-white">Add blockout</button>
+          <button type="submit" className="rounded bg-white px-3 py-2 text-sm font-medium text-black hover:bg-slate-200">Add blockout</button>
         </form>
 
         <ul className="space-y-2">
           {blockouts.map((row) => (
-            <li key={row.id} className="grid gap-2 rounded border bg-white p-4 md:grid-cols-5 md:items-center">
+            <li key={row.id} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-5 md:items-center">
               <input
                 type="datetime-local"
-                className="rounded border p-2 text-sm"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
                 value={toLocalDatetimeInput(row.startAt)}
                 onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, startAt: toIsoFromLocalInput(event.target.value) } : item)))}
               />
               <input
                 type="datetime-local"
-                className="rounded border p-2 text-sm"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
                 value={toLocalDatetimeInput(row.endAt)}
                 onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, endAt: toIsoFromLocalInput(event.target.value) } : item)))}
               />
               <input
                 type="text"
-                className="rounded border p-2 text-sm"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
                 value={row.reason}
                 onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, reason: event.target.value } : item)))}
               />
-              <button type="button" className="rounded bg-slate-900 px-3 py-2 text-sm text-white" onClick={() => updateBlockout(row, {})}>Save</button>
-              <button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => deleteBlockout(row.id)}>Delete</button>
+              <button type="button" className="rounded bg-white px-3 py-2 text-sm text-black hover:bg-slate-200" onClick={() => updateBlockout(row, {})}>Save</button>
+              <button type="button" className="rounded border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-100 hover:bg-slate-900" onClick={() => deleteBlockout(row.id)}>Delete</button>
             </li>
           ))}
         </ul>
-        {blockoutStatus ? <p className="text-sm text-slate-700">{blockoutStatus}</p> : null}
+        {blockoutStatus ? <p className="text-sm text-slate-200">{blockoutStatus}</p> : null}
       </section>
     </section>
   );
