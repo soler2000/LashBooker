@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-type Service = { id: string; name: string; priceCents: number };
+type Service = { id: string; name: string; description: string; priceCents: number };
 type Slot = { startAt: string; endAt: string };
 
 function formatSlot(slot: Slot) {
@@ -21,6 +21,8 @@ export default function BookPage() {
   const [message, setMessage] = useState("");
   const [authRequired, setAuthRequired] = useState(false);
   const [acceptPolicies, setAcceptPolicies] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
+  const selectedService = services.find((service) => service.id === serviceId);
   const selectedSlotDetails = slots.find((slot) => slot.startAt === selectedSlot);
   const canCreateBooking = Boolean(serviceId && date && selectedSlot && acceptPolicies);
 
@@ -84,9 +86,20 @@ export default function BookPage() {
           <option value="">Select service</option>
           {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-          <input type="date" className="rounded border border-white/40 bg-white/90 p-2 text-gray-900" value={date} onChange={(e) => setDate(e.target.value)} />
+          <input
+            type="date"
+            className="rounded border border-white/40 bg-white/90 p-2 text-gray-900"
+            value={date}
+            min={today}
+            placeholder="Pick a date"
+            aria-label="Pick a date"
+            onChange={(e) => setDate(e.target.value)}
+          />
           <button className="rounded bg-white p-2 font-medium text-gray-900 hover:bg-gray-200" onClick={checkAvailability}>Check slots</button>
         </div>
+        <p className="mt-2 text-sm text-white/90">
+          {selectedService ? selectedService.description : "Pick a service to view its description."}
+        </p>
 
         <ul className="mt-6 space-y-2">
           {slots.map((slot) => (
