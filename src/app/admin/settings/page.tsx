@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImageKey, type SiteImages } from "@/lib/site-images";
 
 type WorkingHour = {
@@ -27,6 +28,15 @@ const imageFields: Array<{ key: SiteImageKey; label: string }> = [
   { key: "policies", label: "Policies panel image" },
 ];
 
+const idealImageDimensions: Record<SiteImageKey, string> = {
+  hero: "2000 × 1200 px",
+  precision: "1800 × 1200 px",
+  closeup: "1800 × 1200 px",
+  luxury: "1800 × 1200 px",
+  booking: "1800 × 1200 px",
+  policies: "1800 × 1200 px",
+};
+
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function getFirstAvailableWeekday(workingHoursByDay: Map<number, WorkingHour>) {
@@ -44,9 +54,19 @@ function toIsoFromLocalInput(value: string) {
   return new Date(value).toISOString();
 }
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AdminSettingsPage() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [savedMessage, setSavedMessage] = useState("");
+  const [imageUploadStatus, setImageUploadStatus] = useState("");
 
   const [workingHours, setWorkingHours] = useState<WorkingHour[]>([]);
   const [workingHoursStatus, setWorkingHoursStatus] = useState("");
@@ -134,6 +154,20 @@ export default function AdminSettingsPage() {
     event.preventDefault();
     window.localStorage.setItem(SITE_IMAGES_STORAGE_KEY, JSON.stringify(images));
     setSavedMessage("Saved. Refresh the front page to see updates.");
+  };
+
+  const uploadImage = async (key: SiteImageKey, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setImages((current) => ({ ...current, [key]: dataUrl }));
+      setImageUploadStatus(`${imageFields.find((field) => field.key === key)?.label ?? "Image"} uploaded. Click save to apply.`);
+    } catch {
+      setImageUploadStatus("Could not upload image. Please try a different file.");
+    }
   };
 
   const createWorkingHour = async (event: FormEvent<HTMLFormElement>) => {
@@ -263,19 +297,24 @@ export default function AdminSettingsPage() {
     <section className="max-w-4xl space-y-10">
       <div>
         <h1 className="text-2xl font-semibold">Owner settings</h1>
-        <p className="mt-2 text-sm text-slate-600">Update homepage image URLs, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
+        <p className="mt-2 text-sm text-slate-600">Upload homepage background images, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
       </div>
 
       <form className="space-y-4" onSubmit={save}>
         <h2 className="text-lg font-semibold">Homepage images</h2>
+        <p className="text-sm text-slate-600">Ideal dimensions: hero 2000 × 1200 px, all other backgrounds 1800 × 1200 px.</p>
         {imageFields.map((field) => (
           <label key={field.key} className="block space-y-2">
             <span className="text-sm font-medium text-slate-700">{field.label}</span>
+            <p className="text-xs text-slate-500">Ideal size: {idealImageDimensions[field.key]}</p>
+            <div className="h-28 overflow-hidden rounded border bg-slate-100">
+              <Image src={images[field.key]} alt={`${field.label} preview`} width={720} height={180} className="h-full w-full object-cover" />
+            </div>
             <input
-              type="url"
+              type="file"
+              accept="image/*"
               className="w-full rounded border p-2 text-sm"
-              value={images[field.key]}
-              onChange={(event) => setImages((current) => ({ ...current, [field.key]: event.target.value }))}
+              onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
             />
           </label>
         ))}
@@ -283,6 +322,7 @@ export default function AdminSettingsPage() {
         <button type="submit" className="rounded bg-black px-4 py-2 text-sm font-medium text-white">
           Save image settings
         </button>
+        {imageUploadStatus ? <p className="text-sm text-slate-700">{imageUploadStatus}</p> : null}
         {savedMessage ? <p className="text-sm text-green-700">{savedMessage}</p> : null}
       </form>
 
