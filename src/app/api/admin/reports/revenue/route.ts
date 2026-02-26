@@ -11,8 +11,8 @@ export async function GET() {
 
   const now = new Date();
   const ranges = getPeriodRanges(now);
-  const from = ranges.month.start;
-  const to = ranges.month.end;
+  const from = new Date(Math.min(ranges.today.start.getTime(), ranges.week.start.getTime(), ranges.month.start.getTime()));
+  const to = new Date(Math.max(ranges.today.end.getTime(), ranges.week.end.getTime(), ranges.month.end.getTime()));
 
   const [bookings, blockouts, workingHours] = await Promise.all([
     prisma.booking.findMany({
