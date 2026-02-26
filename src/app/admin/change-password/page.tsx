@@ -7,6 +7,11 @@ export default function ChangePasswordPage() {
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
 
+  async function logoutAndRefresh() {
+    await signOut({ redirect: false });
+    window.location.assign("/login");
+  }
+
   return (
     <form
       className="mx-auto mt-20 max-w-md space-y-4 rounded bg-white p-6 shadow"
@@ -36,7 +41,7 @@ export default function ChangePasswordPage() {
 
         setIsError(false);
         setMessage("Password updated. Please sign in again.");
-        await signOut({ callbackUrl: "/login" });
+        await logoutAndRefresh();
       }}
     >
       <h1 className="text-2xl font-semibold">Change your password</h1>
