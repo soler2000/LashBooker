@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 type Service = { id: string; name: string; description: string; priceCents: number };
 type Slot = { startAt: string; endAt: string };
@@ -22,6 +23,7 @@ export default function BookPage() {
   const [isCheckingSlots, setIsCheckingSlots] = useState(false);
   const [authRequired, setAuthRequired] = useState(false);
   const [acceptPolicies, setAcceptPolicies] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const today = new Date().toISOString().split("T")[0];
   const selectedService = services.find((service) => service.id === serviceId);
   const selectedSlotDetails = slots.find((slot) => slot.startAt === selectedSlot);
@@ -43,6 +45,22 @@ export default function BookPage() {
       .catch(() => {
         setMessage("Unable to load services right now.");
         setServices([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then(async (res) => {
+        if (!res.ok) {
+          setIsLoggedIn(false);
+          return;
+        }
+
+        const data = await res.json();
+        setIsLoggedIn(Boolean(data?.user));
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
       });
   }, []);
 
@@ -90,12 +108,24 @@ export default function BookPage() {
             <Link href="/" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
               Main menu
             </Link>
-            <Link href="/login?redirectTo=%2Fbook" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
-              Sign in
-            </Link>
-            <Link href="/register?redirectTo=%2Fbook" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
-              Create account
-            </Link>
+            {isLoggedIn ? (
+              <button
+                className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20"
+                onClick={() => signOut({ callbackUrl: "/book" })}
+                type="button"
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link href="/login?redirectTo=%2Fbook" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
+                  Sign in
+                </Link>
+                <Link href="/register?redirectTo=%2Fbook" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
+                  Create account
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
