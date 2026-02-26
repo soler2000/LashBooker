@@ -42,6 +42,27 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
+enum CampaignSegmentType {
+  LAPSED
+  VIP
+  INFILL_DUE
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+}
+
+enum CampaignRecipientStatus {
+  QUEUED
+  SENT
+  FAILED
+  OPENED
+  CLICKED
+  UNSUBSCRIBED
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -56,6 +77,7 @@ model User {
   authoredJournalEntries JournalEntry[] @relation("AuthoredJournalEntries")
   accounts     Account[]
   sessions     Session[]
+  campaignRecipients CampaignRecipient[]
 }
 
 model ClientProfile {
@@ -174,6 +196,44 @@ model Blockout {
   endAt     DateTime
   reason    String
   createdAt DateTime @default(now())
+}
+
+model Campaign {
+  id            String              @id @default(uuid())
+  name          String
+  subject       String
+  bodyHtml      String
+  bodyText      String?
+  segmentType   CampaignSegmentType
+  status        CampaignStatus      @default(DRAFT)
+  sentAt        DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  recipients    CampaignRecipient[]
+
+  @@index([createdAt])
+}
+
+model CampaignRecipient {
+  id                String                  @id @default(uuid())
+  campaignId        String
+  clientId          String
+  email             String
+  status            CampaignRecipientStatus @default(QUEUED)
+  providerMessageId String?
+  failureReason     String?
+  queuedAt          DateTime                @default(now())
+  sentAt            DateTime?
+  openedAt          DateTime?
+  clickedAt         DateTime?
+  unsubscribedAt    DateTime?
+  updatedAt         DateTime                @updatedAt
+  campaign          Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  client            User                    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, clientId])
+  @@index([campaignId, status])
+  @@index([providerMessageId])
 }
 
 
