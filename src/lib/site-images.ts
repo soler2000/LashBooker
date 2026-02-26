@@ -11,3 +11,12 @@ export const defaultSiteImages = {
 
 export type SiteImageKey = keyof typeof defaultSiteImages;
 export type SiteImages = Record<SiteImageKey, string>;
+
+export const siteImageUsage: Record<SiteImageKey, { label: string; usedOn: string[] }> = {
+  hero: { label: "Hero image", usedOn: ["/"] },
+  precision: { label: "Precision story image", usedOn: ["/"] },
+  closeup: { label: "Close-up story image", usedOn: ["/"] },
+  luxury: { label: "Luxury story image", usedOn: ["/"] },
+  booking: { label: "Booking panel image", usedOn: ["/", "/book"] },
+  policies: { label: "Policies panel image", usedOn: ["/policies"] },
+};

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImageKey, type SiteImages } from "@/lib/site-images";
+import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, siteImageUsage, type SiteImageKey, type SiteImages } from "@/lib/site-images";
 
 type WorkingHour = {
   id: string;
@@ -88,14 +88,10 @@ type Blockout = {
   reason: string;
 };
 
-const imageFields: Array<{ key: SiteImageKey; label: string }> = [
-  { key: "hero", label: "Hero image" },
-  { key: "precision", label: "Precision story image" },
-  { key: "closeup", label: "Close-up story image" },
-  { key: "luxury", label: "Luxury story image" },
-  { key: "booking", label: "Booking panel image" },
-  { key: "policies", label: "Policies panel image" },
-];
+const imageFields: Array<{ key: SiteImageKey; label: string }> = (Object.keys(defaultSiteImages) as SiteImageKey[]).map((key) => ({
+  key,
+  label: siteImageUsage[key].label,
+}));
 
 const idealImageDimensions: Record<SiteImageKey, string> = {
   hero: "2000 × 1200 px",
@@ -483,10 +479,12 @@ export default function AdminSettingsPage() {
       <form className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4" onSubmit={save}>
         <h2 className="text-lg font-semibold">Homepage images</h2>
         <p className="text-sm text-slate-300">Ideal dimensions: hero 2000 × 1200 px, all other backgrounds 1800 × 1200 px.</p>
+        <p className="text-xs text-slate-400">Each image is shared by route so the homepage and related pages stay in sync.</p>
         {imageFields.map((field) => (
           <label key={field.key} className="block space-y-2 rounded border border-slate-800 bg-slate-950 p-3">
             <span className="text-sm font-medium text-slate-100">{field.label}</span>
             <p className="text-xs text-slate-300">Ideal size: {idealImageDimensions[field.key]}</p>
+            <p className="text-xs text-slate-400">Used on: {siteImageUsage[field.key].usedOn.join(", ")}</p>
             <div className="flex h-24 w-36 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
               <Image src={images[field.key]} alt={`${field.label} preview`} width={240} height={160} className="h-full w-full object-contain" />
             </div>
