@@ -19,6 +19,7 @@ export default function BookPage() {
   const [date, setDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [message, setMessage] = useState("");
+  const [isCheckingSlots, setIsCheckingSlots] = useState(false);
   const [authRequired, setAuthRequired] = useState(false);
   const [acceptPolicies, setAcceptPolicies] = useState(false);
   const today = new Date().toISOString().split("T")[0];
@@ -46,18 +47,35 @@ export default function BookPage() {
   }, []);
 
   async function checkAvailability() {
-    const res = await fetch(`/api/availability?serviceId=${serviceId}&date=${date}`);
-    const data = await res.json();
-
-    if (!res.ok || !Array.isArray(data)) {
+    if (!serviceId || !date) {
       setSlots([]);
-      setMessage(typeof data?.error === "string" ? data.error : "Unable to check availability right now.");
+      setSelectedSlot("");
+      setMessage("Please select a service and date before checking availability.");
       return;
     }
 
-    setSlots(data);
-    setSelectedSlot((current) => (data.some((slot) => slot.startAt === current) ? current : ""));
-    setMessage("");
+    setIsCheckingSlots(true);
+
+    try {
+      const res = await fetch(`/api/availability?serviceId=${serviceId}&date=${date}`);
+      const data = await res.json();
+
+      if (!res.ok || !Array.isArray(data)) {
+        setSlots([]);
+        setMessage(typeof data?.error === "string" ? data.error : "Unable to check availability right now.");
+        return;
+      }
+
+      setSlots(data);
+      setSelectedSlot((current) => (data.some((slot) => slot.startAt === current) ? current : ""));
+      setMessage(data.length ? "" : "No slots available for that date. Try another date.");
+    } catch {
+      setSlots([]);
+      setSelectedSlot("");
+      setMessage("Unable to check availability right now.");
+    } finally {
+      setIsCheckingSlots(false);
+    }
   }
 
   return (
@@ -95,7 +113,13 @@ export default function BookPage() {
             aria-label="Pick a date"
             onChange={(e) => setDate(e.target.value)}
           />
-          <button className="rounded bg-white p-2 font-medium text-gray-900 hover:bg-gray-200" onClick={checkAvailability}>Check slots</button>
+          <button
+            className="rounded bg-white p-2 font-medium text-gray-900 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isCheckingSlots}
+            onClick={checkAvailability}
+          >
+            {isCheckingSlots ? "Checking..." : "Check slots"}
+          </button>
         </div>
         <p className="mt-2 text-sm text-white/90">
           {selectedService ? selectedService.description : "Pick a service to view its description."}
@@ -122,6 +146,7 @@ export default function BookPage() {
             </li>
           ))}
         </ul>
+        {!slots.length && !isCheckingSlots ? <p className="mt-4 text-sm text-white/90">No time slots to display yet.</p> : null}
 
         <div className="mt-4 rounded bg-white/90 p-4 text-gray-900 shadow">
           <label className="flex items-start gap-2 text-sm">
