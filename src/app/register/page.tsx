@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [message, setMessage] = useState("");
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
@@ -39,5 +39,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </form>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto mt-20 max-w-md rounded bg-white p-6 shadow">Loading registration form...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }
