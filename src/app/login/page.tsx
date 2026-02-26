@@ -23,11 +23,15 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
         const email = String(formData.get("email") ?? "").trim().toLowerCase();
         const requestedRedirect = String(formData.get("redirectTo") ?? "");
 
-        await signIn("credentials", {
+        const signInResult = await signIn("credentials", {
           email,
           password: String(formData.get("password")),
           redirect: false,
         });
+
+        if (signInResult?.error) {
+          redirect(`/login?error=invalid_credentials&redirectTo=${encodeURIComponent(requestedRedirect || "/portal/appointments")}`);
+        }
 
         let isAdmin = false;
         let mustChangePassword = false;
