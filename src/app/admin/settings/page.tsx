@@ -275,6 +275,29 @@ export default function AdminSettingsPage() {
     await loadAccounts();
   };
 
+  const resetAccountPassword = async (account: AdminAccount) => {
+    const password = window.prompt(`Set a new temporary password for ${account.email}.`);
+    if (!password) {
+      return;
+    }
+
+    setAccountsStatus("");
+    const response = await fetch(`/api/admin/accounts/${account.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setAccountsStatus(data.error ?? "Could not reset password.");
+      return;
+    }
+
+    setAccountsStatus(`Password reset for ${account.email}. They will be prompted to change it on next login.`);
+    await loadAccounts();
+  };
+
   return (
     <section className="max-w-4xl space-y-10 text-slate-100">
       <div>
@@ -410,13 +433,22 @@ export default function AdminSettingsPage() {
                     <td className="px-3 py-2">{account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : "Never"}</td>
                     <td className="px-3 py-2">{new Date(account.createdAt).toLocaleString()}</td>
                     <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        className="rounded border border-red-500 px-2 py-1 text-xs font-medium text-red-200 hover:bg-red-500/10"
-                        onClick={() => removeAccount(account)}
-                      >
-                        Remove
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="rounded border border-slate-600 px-2 py-1 text-xs font-medium text-slate-100 hover:bg-slate-900"
+                          onClick={() => resetAccountPassword(account)}
+                        >
+                          Reset password
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded border border-red-500 px-2 py-1 text-xs font-medium text-red-200 hover:bg-red-500/10"
+                          onClick={() => removeAccount(account)}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
