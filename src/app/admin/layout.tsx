@@ -6,6 +6,7 @@ const links = [
   ["Calendar", "/admin/calendar"],
   ["Services", "/admin/services"],
   ["Clients", "/admin/clients"],
+  ["Marketing", "/admin/marketing"],
   ["Owner Settings", "/admin/settings"],
 ];
 
