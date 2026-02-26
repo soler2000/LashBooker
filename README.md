@@ -207,3 +207,13 @@ npm run lint
 # Prisma studio
 npx prisma studio
 ```
+
+
+## 6) UX follow-up tasks
+
+- [ ] **Homepage transition hardening (main → booking/policies/other nav)**
+  - Verify slide panel transition remains seamless across desktop/mobile and touch swipe interactions.
+  - Add Playwright coverage for `Book now`/`View policies` transitions and assert no duplicate stacked panel appears during motion.
+  - Add reduced-motion fallback (`prefers-reduced-motion`) to disable animated transforms for accessibility while keeping deterministic panel state.
+  - Audit image aspect ratio/loading behavior to prevent layout jumps during transitions.
+
