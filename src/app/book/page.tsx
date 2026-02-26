@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 type Service = { id: string; name: string; priceCents: number };
 type Slot = { startAt: string; endAt: string };
 
+function formatSlot(slot: Slot) {
+  return `${new Date(slot.startAt).toLocaleString()} - ${new Date(slot.endAt).toLocaleTimeString()}`;
+}
+
 export default function BookPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -13,6 +17,7 @@ export default function BookPage() {
   const [selectedSlot, setSelectedSlot] = useState("");
   const [message, setMessage] = useState("");
   const [acceptPolicies, setAcceptPolicies] = useState(false);
+  const selectedSlotDetails = slots.find((slot) => slot.startAt === selectedSlot);
 
   useEffect(() => {
     fetch("/api/services")
@@ -44,6 +49,7 @@ export default function BookPage() {
     }
 
     setSlots(data);
+    setSelectedSlot((current) => (data.some((slot) => slot.startAt === current) ? current : ""));
     setMessage("");
   }
 
@@ -60,9 +66,22 @@ export default function BookPage() {
       </div>
       <ul className="mt-6 space-y-2">
         {slots.map((slot) => (
-          <li key={slot.startAt} className="flex items-center justify-between rounded border bg-white p-3 text-sm">
-            <span>{new Date(slot.startAt).toLocaleString()} - {new Date(slot.endAt).toLocaleTimeString()}</span>
-            <button className="rounded border px-2 py-1" onClick={() => setSelectedSlot(slot.startAt)}>Select</button>
+          <li
+            key={slot.startAt}
+            className={`flex items-center justify-between rounded border p-3 text-sm text-gray-900 ${
+              selectedSlot === slot.startAt ? "border-black bg-gray-100" : "border-gray-300 bg-white"
+            }`}
+          >
+            <span>{formatSlot(slot)}</span>
+            <button
+              className={`rounded px-2 py-1 ${
+                selectedSlot === slot.startAt ? "bg-black text-white" : "border border-gray-400 bg-white text-gray-900"
+              }`}
+              aria-pressed={selectedSlot === slot.startAt}
+              onClick={() => setSelectedSlot(slot.startAt)}
+            >
+              {selectedSlot === slot.startAt ? "Selected" : "Select"}
+            </button>
           </li>
         ))}
       </ul>
@@ -79,7 +98,7 @@ export default function BookPage() {
           </span>
         </label>
         <p className="mt-2 text-xs text-gray-600">You must accept policies before submitting your booking.</p>
-        <p className="mt-2 text-sm">Selected slot: {selectedSlot || "None"}</p>
+        <p className="mt-2 text-sm text-gray-900">Selected slot: {selectedSlotDetails ? formatSlot(selectedSlotDetails) : "None"}</p>
         <button
           className="mt-2 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
           disabled={!serviceId || !selectedSlot || !acceptPolicies}
