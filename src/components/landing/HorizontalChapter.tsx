@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
-import type { SiteImages } from "@/lib/site-images";
+import { defaultSiteImages, type SiteImages } from "@/lib/site-images";
 
 type HorizontalChapterProps = {
   images: SiteImages;
@@ -13,12 +13,13 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
   const chapterRef = useRef<HTMLElement | null>(null);
   const progress = useSectionProgress(chapterRef);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const [imageLoadFailed, setImageLoadFailed] = useState<Record<string, boolean>>({});
 
   const panels = [
-    { title: "Classic sets", copy: "Soft definition for an elegant everyday finish.", image: images.precision },
-    { title: "Hybrid blends", copy: "The balance between texture and featherlight volume.", image: images.closeup },
-    { title: "Volume artistry", copy: "Full-bodied drama designed to still feel weightless.", image: images.luxury },
-    { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.booking },
+    { title: "Classic sets", copy: "Soft definition for an elegant everyday finish.", image: images.precision, fallback: defaultSiteImages.precision },
+    { title: "Hybrid blends", copy: "The balance between texture and featherlight volume.", image: images.closeup, fallback: defaultSiteImages.closeup },
+    { title: "Volume artistry", copy: "Full-bodied drama designed to still feel weightless.", image: images.luxury, fallback: defaultSiteImages.luxury },
+    { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.booking, fallback: defaultSiteImages.booking },
   ];
 
   const panelCount = panels.length;
@@ -42,7 +43,15 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
           {panels.map((panel, index) => (
             <article key={panel.title} className="relative h-screen w-screen shrink-0">
               <div className="absolute inset-0" aria-hidden>
-                <Image src={panel.image} alt="" fill className="object-cover" sizes="100vw" priority={index < 2} />
+                <Image
+                  src={imageLoadFailed[panel.title] ? panel.fallback : panel.image}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority={index < 2}
+                  onError={() => setImageLoadFailed((current) => ({ ...current, [panel.title]: true }))}
+                />
               </div>
               <div
                 className="absolute inset-0"
