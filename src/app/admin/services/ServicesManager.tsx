@@ -17,18 +17,62 @@ type Service = {
   isActive: boolean;
 };
 
-type ServiceForm = Omit<Service, "id" | "isActive">;
+type ServiceForm = {
+  name: string;
+  description: string;
+  durationMinutes: number;
+  price: number;
+  depositType: DepositType;
+  depositValue: number;
+  bufferBeforeMinutes: number;
+  bufferAfterMinutes: number;
+};
 
 const emptyForm: ServiceForm = {
   name: "",
   description: "",
   durationMinutes: 60,
-  priceCents: 0,
+  price: 0,
   depositType: "NONE",
   depositValue: 0,
   bufferBeforeMinutes: 0,
   bufferAfterMinutes: 0,
 };
+
+function toMoneyNumber(value: number) {
+  return Number((value / 100).toFixed(2));
+}
+
+function toPayload(form: ServiceForm) {
+  const priceCents = Math.max(0, Math.round(form.price * 100));
+  const depositValue = form.depositType === "FIXED"
+    ? Math.max(0, Math.round(form.depositValue * 100))
+    : Math.max(0, Math.round(form.depositValue));
+
+  return {
+    name: form.name,
+    description: form.description,
+    durationMinutes: Math.round(form.durationMinutes),
+    priceCents,
+    depositType: form.depositType,
+    depositValue,
+    bufferBeforeMinutes: Math.max(0, Math.round(form.bufferBeforeMinutes)),
+    bufferAfterMinutes: Math.max(0, Math.round(form.bufferAfterMinutes)),
+  };
+}
+
+function fromService(service: Service): ServiceForm {
+  return {
+    name: service.name,
+    description: service.description,
+    durationMinutes: service.durationMinutes,
+    price: toMoneyNumber(service.priceCents),
+    depositType: service.depositType,
+    depositValue: service.depositType === "FIXED" ? toMoneyNumber(service.depositValue) : service.depositValue,
+    bufferBeforeMinutes: service.bufferBeforeMinutes,
+    bufferAfterMinutes: service.bufferAfterMinutes,
+  };
+}
 
 export default function ServicesManager() {
   const [services, setServices] = useState<Service[]>([]);
@@ -55,7 +99,7 @@ export default function ServicesManager() {
     const res = await fetch("/api/admin/services", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(createForm),
+      body: JSON.stringify(toPayload(createForm)),
     });
 
     const data = await res.json();
@@ -76,7 +120,7 @@ export default function ServicesManager() {
     const res = await fetch(`/api/admin/services/${id}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(toPayload(payload)),
     });
 
     const data = await res.json();
@@ -107,7 +151,7 @@ export default function ServicesManager() {
   }
 
   function updateForm<T extends ServiceForm>(form: T, key: keyof ServiceForm, value: string) {
-    if (["durationMinutes", "priceCents", "depositValue", "bufferBeforeMinutes", "bufferAfterMinutes"].includes(key)) {
+    if (["durationMinutes", "price", "depositValue", "bufferBeforeMinutes", "bufferAfterMinutes"].includes(key)) {
       return { ...form, [key]: Number(value) };
     }
     return { ...form, [key]: value };
@@ -137,8 +181,8 @@ export default function ServicesManager() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          <span>Price in (£)</span>
-          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.priceCents} onChange={(e) => onChange("priceCents", e.target.value)} />
+          <span>Price (£)</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" min="0" step="0.01" value={form.price} onChange={(e) => onChange("price", e.target.value)} />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
@@ -151,8 +195,8 @@ export default function ServicesManager() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          <span>Deposit value</span>
-          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.depositValue} onChange={(e) => onChange("depositValue", e.target.value)} />
+          <span>Deposit value{form.depositType === "FIXED" ? " (£)" : form.depositType === "PERCENT" ? " (%)" : ""}</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" min="0" step={form.depositType === "FIXED" ? "0.01" : "1"} value={form.depositValue} onChange={(e) => onChange("depositValue", e.target.value)} />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
@@ -180,7 +224,7 @@ export default function ServicesManager() {
 
       <ul className="space-y-2">
         {services.map((service) => {
-          const editForm = editing[service.id] ?? service;
+          const editForm = editing[service.id] ?? fromService(service);
 
           return (
             <li key={service.id} className="space-y-3 rounded border bg-white p-4">
