@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
+import { trimPasswordEdges } from "@/lib/password";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -57,7 +58,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user?.passwordHash) return null;
 
         const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
-        if (!ok) return null;
+        const trimmedPassword = trimPasswordEdges(parsed.data.password);
+        const okWithTrimmedPassword =
+          trimmedPassword !== parsed.data.password
+            ? await bcrypt.compare(trimmedPassword, user.passwordHash)
+            : false;
+
+        if (!ok && !okWithTrimmedPassword) return null;
 
         await prisma.user.update({
           where: { id: user.id },

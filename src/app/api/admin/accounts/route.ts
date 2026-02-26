@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { trimPasswordEdges } from "@/lib/password";
 
 const createAccountSchema = z
   .object({
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email already used" }, { status: 409 });
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(trimPasswordEdges(parsed.data.password), 10);
 
   const account = await prisma.user.create({
     data: {
