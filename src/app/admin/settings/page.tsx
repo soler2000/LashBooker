@@ -8,6 +8,17 @@ type AdminSettingsResponse = {
   depositRequired: boolean;
 };
 
+type TransactionalEmailTemplate = {
+  id: string;
+  key: string;
+  name: string;
+  subject: string;
+  htmlBody: string;
+  textBody: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (Object.keys(defaultSiteImages) as SiteImageKey[]).map((key) => ({
   key,
@@ -22,6 +33,8 @@ const idealImageDimensions: Record<SiteImageKey, string> = {
   booking: "1800 × 1200 px",
   policies: "1800 × 1200 px",
 };
+
+const placeholderExamples = ["{{firstName}}", "{{bookingId}}", "{{startAt}}", "{{serviceName}}", "{{email}}", "{{resetUrl}}", "{{expiresAt}}"];
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -39,6 +52,10 @@ export default function AdminSettingsPage() {
 
   const [depositRequired, setDepositRequired] = useState(true);
   const [depositStatus, setDepositStatus] = useState("");
+
+  const [templates, setTemplates] = useState<TransactionalEmailTemplate[]>([]);
+  const [templatesStatus, setTemplatesStatus] = useState("");
+  const [savingTemplateId, setSavingTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -66,9 +83,22 @@ export default function AdminSettingsPage() {
     setDepositRequired(data.depositRequired);
   };
 
+  const loadTemplates = async () => {
+    setTemplatesStatus("");
+    const response = await fetch("/api/admin/email-templates", { cache: "no-store" });
+
+    if (!response.ok) {
+      setTemplatesStatus("Could not load transactional email templates.");
+      return;
+    }
+
+    const data = (await response.json()) as TransactionalEmailTemplate[];
+    setTemplates(data);
+  };
 
   useEffect(() => {
     loadDepositSettings();
+    loadTemplates();
   }, []);
 
   const save = (event: FormEvent<HTMLFormElement>) => {
@@ -106,6 +136,52 @@ export default function AdminSettingsPage() {
     }
 
     setDepositStatus(depositRequired ? "Deposits are required for new bookings." : "Deposits are disabled. Bookings confirm immediately.");
+  };
+
+  const updateTemplateValue = (id: string, field: "subject" | "htmlBody" | "textBody" | "isActive", value: string | boolean) => {
+    setTemplates((current) =>
+      current.map((template) =>
+        template.id === id
+          ? {
+              ...template,
+              [field]: value,
+            }
+          : template,
+      ),
+    );
+  };
+
+  const saveTemplate = async (id: string) => {
+    const template = templates.find((item) => item.id === id);
+    if (!template) {
+      return;
+    }
+
+    setSavingTemplateId(id);
+    setTemplatesStatus("");
+
+    const response = await fetch(`/api/admin/email-templates/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject: template.subject,
+        htmlBody: template.htmlBody,
+        textBody: template.textBody,
+        isActive: template.isActive,
+      }),
+    });
+
+    setSavingTemplateId(null);
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setTemplatesStatus(data.error ?? `Could not save ${template.name}.`);
+      return;
+    }
+
+    const updated = (await response.json()) as TransactionalEmailTemplate;
+    setTemplates((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    setTemplatesStatus(`Saved “${updated.name}”.`);
   };
 
   return (
@@ -148,17 +224,11 @@ export default function AdminSettingsPage() {
         {savedMessage ? <p className="text-sm text-green-300">{savedMessage}</p> : null}
       </form>
 
-
-
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <h2 className="text-lg font-semibold">Booking deposits</h2>
         <p className="text-sm text-slate-300">Choose whether clients must pay a Stripe deposit before a booking is confirmed.</p>
         <label className="flex items-center gap-2 text-sm text-slate-100">
-          <input
-            type="checkbox"
-            checked={depositRequired}
-            onChange={(event) => setDepositRequired(event.target.checked)}
-          />
+          <input type="checkbox" checked={depositRequired} onChange={(event) => setDepositRequired(event.target.checked)} />
           Require deposit payment for new bookings
         </label>
         <button type="button" className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200" onClick={saveDepositSettings}>
@@ -167,6 +237,72 @@ export default function AdminSettingsPage() {
         {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
       </section>
 
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">Transactional email templates</h2>
+          <p className="text-sm text-slate-300">Edit subject and body content for customer notifications. Placeholders are rendered when each email is sent.</p>
+          <p className="text-xs text-slate-400">Common placeholders: {placeholderExamples.join(", ")}</p>
+        </div>
+
+        <div className="space-y-4">
+          {templates.map((template) => (
+            <article key={template.id} className="space-y-3 rounded border border-slate-800 bg-slate-900/30 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">{template.name}</h3>
+                  <p className="text-xs text-slate-400">Key: {template.key}</p>
+                </div>
+                <label className="flex items-center gap-2 text-xs text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={template.isActive}
+                    onChange={(event) => updateTemplateValue(template.id, "isActive", event.target.checked)}
+                  />
+                  Active
+                </label>
+              </div>
+
+              <label className="block space-y-1">
+                <span className="text-xs text-slate-300">Subject</span>
+                <input
+                  className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  value={template.subject}
+                  onChange={(event) => updateTemplateValue(template.id, "subject", event.target.value)}
+                />
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-xs text-slate-300">HTML body</span>
+                <textarea
+                  className="h-32 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  value={template.htmlBody}
+                  onChange={(event) => updateTemplateValue(template.id, "htmlBody", event.target.value)}
+                />
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-xs text-slate-300">Plain text body</span>
+                <textarea
+                  className="h-28 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  value={template.textBody}
+                  onChange={(event) => updateTemplateValue(template.id, "textBody", event.target.value)}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={savingTemplateId === template.id}
+                onClick={() => saveTemplate(template.id)}
+              >
+                {savingTemplateId === template.id ? "Saving..." : "Save template"}
+              </button>
+            </article>
+          ))}
+        </div>
+
+        {templatesStatus ? <p className="text-sm text-slate-200">{templatesStatus}</p> : null}
+      </section>
     </section>
   );
 }
