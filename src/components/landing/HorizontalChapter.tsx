@@ -30,14 +30,14 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
           className="flex h-full"
           style={{
             width: `${panels.length * 100}vw`,
-            transform: `translateX(${xPercent}vw)`,
-            transition: prefersReducedMotion ? "none" : "transform 120ms linear",
+            transform: `translate3d(${xPercent}vw, 0, 0)`,
+            willChange: prefersReducedMotion ? "auto" : "transform",
           }}
         >
-          {panels.map((panel) => (
+          {panels.map((panel, index) => (
             <article key={panel.title} className="relative h-screen w-screen shrink-0">
               <div className="absolute inset-0" aria-hidden>
-                <Image src={panel.image} alt="" fill className="object-cover" sizes="100vw" />
+                <Image src={panel.image} alt="" fill className="object-cover" sizes="100vw" priority={index > 1} />
               </div>
               <div
                 className="absolute inset-0"
