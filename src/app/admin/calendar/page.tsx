@@ -103,8 +103,8 @@ export default function AdminCalendarPage() {
           });
 
           return (
-            <section key={dayKey} className="rounded border bg-white p-3">
-              <h2 className="mb-2 font-semibold">{day.toUTCString().slice(0, 16)}</h2>
+            <section key={dayKey} className="rounded border bg-white p-3 text-slate-900">
+              <h2 className="mb-2 font-semibold text-slate-900">{day.toUTCString().slice(0, 16)}</h2>
 
               <div className="space-y-2">
                 {dayBlockouts.map((blockout) => (
@@ -115,12 +115,12 @@ export default function AdminCalendarPage() {
                 ))}
 
                 {dayBookings.map((booking) => (
-                  <article key={booking.id} className="rounded border p-2 text-sm">
-                    <p className="font-medium">{booking.serviceName}</p>
-                    <p>{new Date(booking.startAt).toLocaleTimeString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
+                  <article key={booking.id} className="rounded border border-slate-200 bg-slate-50 p-2 text-sm text-slate-900">
+                    <p className="font-medium text-slate-900">{booking.serviceName}</p>
+                    <p className="text-slate-800">{new Date(booking.startAt).toLocaleTimeString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
                     <p className="text-slate-600">{booking.client.email}</p>
                     <select
-                      className="mt-2 w-full rounded border px-2 py-1"
+                      className="mt-2 w-full rounded border border-slate-300 bg-white px-2 py-1 text-slate-900"
                       value={booking.status}
                       onChange={(event) => updateStatus(booking.id, event.target.value as Booking["status"])}
                     >
