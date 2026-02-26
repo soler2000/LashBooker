@@ -29,6 +29,11 @@ const imageFields: Array<{ key: SiteImageKey; label: string }> = [
 
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+function getFirstAvailableWeekday(workingHoursByDay: Map<number, WorkingHour>) {
+  const available = weekdays.findIndex((_, idx) => !workingHoursByDay.has(idx));
+  return available === -1 ? 1 : available;
+}
+
 function toLocalDatetimeInput(value: string) {
   const date = new Date(value);
   const tzOffset = date.getTimezoneOffset() * 60_000;
@@ -96,6 +101,20 @@ export default function AdminSettingsPage() {
     for (const row of workingHours) grouped.set(row.weekday, row);
     return grouped;
   }, [workingHours]);
+  const hasAvailableWeekday = workingHoursByDay.size < weekdays.length;
+
+  useEffect(() => {
+    setNewWorkingHour((current) => {
+      if (!workingHoursByDay.has(current.weekday)) {
+        return current;
+      }
+
+      return {
+        ...current,
+        weekday: getFirstAvailableWeekday(workingHoursByDay),
+      };
+    });
+  }, [workingHoursByDay]);
 
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -118,7 +137,13 @@ export default function AdminSettingsPage() {
       return;
     }
 
-    setNewWorkingHour({ weekday: 1, startTime: "09:00", endTime: "17:00", isClosed: false });
+    setNewWorkingHour((current) => ({
+      ...current,
+      weekday: getFirstAvailableWeekday(workingHoursByDay),
+      startTime: "09:00",
+      endTime: "17:00",
+      isClosed: false,
+    }));
     setWorkingHoursStatus("Working hours saved.");
     await loadWorkingHours();
   };
@@ -266,8 +291,15 @@ export default function AdminSettingsPage() {
             />
             Closed
           </label>
-          <button type="submit" className="rounded bg-black px-3 py-2 text-sm font-medium text-white">Add day</button>
+          <button
+            type="submit"
+            className="rounded bg-black px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            disabled={!hasAvailableWeekday}
+          >
+            Add day
+          </button>
         </form>
+        {!hasAvailableWeekday ? <p className="text-sm text-slate-600">All weekdays already have working-hours entries.</p> : null}
 
         <ul className="space-y-2">
           {workingHours.map((row) => (
