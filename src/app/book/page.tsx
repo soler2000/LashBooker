@@ -18,6 +18,7 @@ export default function BookPage() {
   const [message, setMessage] = useState("");
   const [acceptPolicies, setAcceptPolicies] = useState(false);
   const selectedSlotDetails = slots.find((slot) => slot.startAt === selectedSlot);
+  const canCreateBooking = Boolean(serviceId && date && selectedSlot && acceptPolicies);
 
   useEffect(() => {
     fetch("/api/services")
@@ -98,11 +99,21 @@ export default function BookPage() {
           </span>
         </label>
         <p className="mt-2 text-xs text-gray-600">You must accept policies before submitting your booking.</p>
+        <p className="mt-1 text-xs text-gray-600">
+          {canCreateBooking
+            ? "You're ready to submit your booking."
+            : "To submit, select a service, choose a date, pick a slot, and accept policies."}
+        </p>
         <p className="mt-2 text-sm text-gray-900">Selected slot: {selectedSlotDetails ? formatSlot(selectedSlotDetails) : "None"}</p>
         <button
           className="mt-2 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-          disabled={!serviceId || !selectedSlot || !acceptPolicies}
+          disabled={!canCreateBooking}
           onClick={async () => {
+            if (!canCreateBooking) {
+              setMessage("Please select a service, date, and slot, then accept policies before submitting.");
+              return;
+            }
+
             const res = await fetch("/api/bookings", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
