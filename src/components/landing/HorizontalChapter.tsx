@@ -21,7 +21,12 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
     { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.booking },
   ];
 
-  const xPercent = prefersReducedMotion ? 0 : progress * (panels.length - 1) * -100;
+  const panelCount = panels.length;
+  const stickyStart = 1 / (panelCount + 1);
+  const stickyEnd = panelCount / (panelCount + 1);
+  const chapterProgress = (progress - stickyStart) / (stickyEnd - stickyStart);
+  const normalizedProgress = Math.min(1, Math.max(0, chapterProgress));
+  const xPercent = prefersReducedMotion ? 0 : normalizedProgress * (panelCount - 1) * -100;
 
   return (
     <section ref={chapterRef} className="relative h-[400vh] bg-black">
@@ -37,7 +42,7 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
           {panels.map((panel, index) => (
             <article key={panel.title} className="relative h-screen w-screen shrink-0">
               <div className="absolute inset-0" aria-hidden>
-                <Image src={panel.image} alt="" fill className="object-cover" sizes="100vw" priority={index > 1} />
+                <Image src={panel.image} alt="" fill className="object-cover" sizes="100vw" priority={index < 2} />
               </div>
               <div
                 className="absolute inset-0"
