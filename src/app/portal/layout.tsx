@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 const links = [
+  ["Back to Main Page", "/"],
   ["Appointments", "/portal/appointments"],
   ["Book New", "/book"],
   ["Policies", "/policies"],
