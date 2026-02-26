@@ -67,7 +67,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       <h1 className="text-2xl font-semibold">Sign in</h1>
       {showInvalidCredentialsError ? (
         <p className="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
-          Invalid email or password. If this is a new environment, run the seed process to create the default owner account.
+          Invalid email or password.
         </p>
       ) : null}
       <input name="redirectTo" type="hidden" value={redirectTo} />
