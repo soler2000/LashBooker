@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { trimPasswordEdges } from "@/lib/password";
 
 const changePasswordSchema = z.object({
   password: z.string().min(8),
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(trimPasswordEdges(parsed.data.password), 10);
 
   await prisma.user.update({
     where: { id: session.user.id },

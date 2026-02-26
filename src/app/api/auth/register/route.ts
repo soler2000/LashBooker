@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { trimPasswordEdges } from "@/lib/password";
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
   if (existing) return NextResponse.json({ error: "Email already used" }, { status: 409 });
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(trimPasswordEdges(parsed.data.password), 10);
   const user = await prisma.user.create({
     data: {
       email: parsed.data.email,
