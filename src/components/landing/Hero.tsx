@@ -18,7 +18,7 @@ export default function Hero({ image }: HeroProps) {
       contentClassName="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-between px-6 pb-14 pt-8 md:px-12 md:pb-20"
     >
       <header className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/75">LashBooker Studio</p>
+        <p className="text-xs uppercase tracking-[0.35em] text-white/75">Lashed and Lifted</p>
         <Link href="/login" className="text-sm font-medium text-white/85 transition hover:text-white">
           Login
         </Link>

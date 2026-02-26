@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "LashBooker",
+  title: "Lashed and Lifted",
   description: "Eyelash booking with deposit protection",
 };
 
