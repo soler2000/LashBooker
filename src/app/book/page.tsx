@@ -96,6 +96,11 @@ export default function BookPage() {
     }
   }
 
+  async function handleLogout() {
+    await signOut({ redirect: false });
+    window.location.reload();
+  }
+
   return (
     <main
       className="min-h-screen bg-cover bg-center bg-no-repeat px-4 py-10"
@@ -111,7 +116,7 @@ export default function BookPage() {
             {isLoggedIn ? (
               <button
                 className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20"
-                onClick={() => signOut({ callbackUrl: "/book" })}
+                onClick={handleLogout}
                 type="button"
               >
                 Logout
