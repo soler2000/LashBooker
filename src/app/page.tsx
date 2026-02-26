@@ -1,15 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Hero from "@/components/landing/Hero";
 import HorizontalChapter from "@/components/landing/HorizontalChapter";
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
 
+type OpeningHour = {
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  isClosed: boolean;
+};
+
+const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function formatHour(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  return `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
 export default function Home() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
+  const [openingHours, setOpeningHours] = useState<OpeningHour[]>([]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -25,6 +42,26 @@ export default function Home() {
       setImages(defaultSiteImages);
     }
   }, []);
+
+  useEffect(() => {
+    const loadOpeningHours = async () => {
+      const response = await fetch("/api/working-hours", { cache: "no-store" });
+      if (!response.ok) return;
+      const rows = (await response.json()) as OpeningHour[];
+      setOpeningHours(rows);
+    };
+
+    loadOpeningHours();
+  }, []);
+
+  const openingHoursLines = useMemo(() => {
+    if (openingHours.length === 0) return [];
+
+    return openingHours
+      .slice()
+      .sort((a, b) => a.weekday - b.weekday)
+      .map((row) => `${weekdays[row.weekday]}: ${row.isClosed ? "Closed" : `${formatHour(row.startTime)} – ${formatHour(row.endTime)}`}`);
+  }, [openingHours]);
 
   return (
     <main className="bg-black text-white">
@@ -42,7 +79,18 @@ export default function Home() {
         title="Studio calm, editorial results."
         description="From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail."
         image={images.luxury}
-      />
+      >
+        {openingHoursLines.length > 0 ? (
+          <div className="mt-6 rounded-xl border border-white/20 bg-black/35 p-4 backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-[0.28em] text-white/70">Opening times</p>
+            <ul className="mt-3 space-y-1 text-sm text-white/90 md:text-base">
+              {openingHoursLines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </StickyStoryScene>
 
       <HorizontalChapter images={images} />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { ReactNode, useRef } from "react";
 import { clamp, usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
 
 type StickyStorySceneProps = {
@@ -9,9 +9,10 @@ type StickyStorySceneProps = {
   title: string;
   description: string;
   image: string;
+  children?: ReactNode;
 };
 
-export default function StickyStoryScene({ eyebrow, title, description, image }: StickyStorySceneProps) {
+export default function StickyStoryScene({ eyebrow, title, description, image, children }: StickyStorySceneProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const progress = useSectionProgress(sectionRef);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -52,6 +53,7 @@ export default function StickyStoryScene({ eyebrow, title, description, image }:
             <p className="text-xs uppercase tracking-[0.35em] text-white/70">{eyebrow}</p>
             <h2 className="mt-5 text-4xl font-semibold leading-tight md:text-7xl">{title}</h2>
             <p className="mt-6 text-base text-white/80 md:text-xl">{description}</p>
+            {children}
           </div>
         </div>
       </div>

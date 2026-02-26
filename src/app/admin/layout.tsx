@@ -8,6 +8,7 @@ const links = [
   ["Services", "/admin/services"],
   ["Clients", "/admin/clients"],
   ["Marketing", "/admin/marketing"],
+  ["Opening Times", "/admin/opening-times"],
   ["Owner Settings", "/admin/settings"],
 ];
 
