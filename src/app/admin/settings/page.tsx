@@ -297,32 +297,37 @@ export default function AdminSettingsPage() {
     <section className="max-w-4xl space-y-10">
       <div>
         <h1 className="text-2xl font-semibold">Owner settings</h1>
-        <p className="mt-2 text-sm text-slate-600">Upload homepage background images, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Upload homepage background images, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
       </div>
 
       <form className="space-y-4" onSubmit={save}>
         <h2 className="text-lg font-semibold">Homepage images</h2>
-        <p className="text-sm text-slate-600">Ideal dimensions: hero 2000 × 1200 px, all other backgrounds 1800 × 1200 px.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Ideal dimensions: hero 2000 × 1200 px, all other backgrounds 1800 × 1200 px.</p>
         {imageFields.map((field) => (
-          <label key={field.key} className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">{field.label}</span>
-            <p className="text-xs text-slate-500">Ideal size: {idealImageDimensions[field.key]}</p>
+          <label key={field.key} className="block space-y-2 rounded border border-slate-200 p-3 dark:border-slate-700">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{field.label}</span>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Ideal size: {idealImageDimensions[field.key]}</p>
             <div className="h-28 overflow-hidden rounded border bg-slate-100">
               <Image src={images[field.key]} alt={`${field.label} preview`} width={720} height={180} className="h-full w-full object-cover" />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="w-full rounded border p-2 text-sm"
-              onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept="image/*"
+                className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 file:mr-3 file:rounded file:border-0 file:bg-black file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800 dark:border-slate-600 dark:bg-black dark:text-slate-100 dark:file:bg-slate-100 dark:file:text-black"
+                onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
+              />
+              <div className="h-10 w-16 shrink-0 overflow-hidden rounded border border-slate-300 bg-slate-100 dark:border-slate-600">
+                <Image src={images[field.key]} alt={`${field.label} small preview`} width={96} height={60} className="h-full w-full object-cover" />
+              </div>
+            </div>
           </label>
         ))}
 
         <button type="submit" className="rounded bg-black px-4 py-2 text-sm font-medium text-white">
           Save image settings
         </button>
-        {imageUploadStatus ? <p className="text-sm text-slate-700">{imageUploadStatus}</p> : null}
+        {imageUploadStatus ? <p className="text-sm text-slate-700 dark:text-slate-200">{imageUploadStatus}</p> : null}
         {savedMessage ? <p className="text-sm text-green-700">{savedMessage}</p> : null}
       </form>
 
