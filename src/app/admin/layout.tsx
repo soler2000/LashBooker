@@ -14,6 +14,7 @@ const links = [
 
 const systemSettingsLinks = [
   ["Owner Settings", "/admin/settings"],
+  ["Admin Accounts", "/admin/accounts"],
   ["Email Settings", "/admin/email-settings"],
 ];
 
