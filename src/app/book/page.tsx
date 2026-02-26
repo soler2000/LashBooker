@@ -12,6 +12,7 @@ export default function BookPage() {
   const [date, setDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [message, setMessage] = useState("");
+  const [acceptPolicies, setAcceptPolicies] = useState(false);
 
   useEffect(() => {
     fetch("/api/services")
@@ -66,15 +67,27 @@ export default function BookPage() {
         ))}
       </ul>
       <div className="mt-4 rounded bg-white p-4 shadow">
-        <p className="text-sm">Selected slot: {selectedSlot || "None"}</p>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={acceptPolicies}
+            onChange={(e) => setAcceptPolicies(e.target.checked)}
+          />
+          <span>
+            I have read and agree to the studio policies.
+          </span>
+        </label>
+        <p className="mt-2 text-xs text-gray-600">You must accept policies before submitting your booking.</p>
+        <p className="mt-2 text-sm">Selected slot: {selectedSlot || "None"}</p>
         <button
           className="mt-2 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-          disabled={!serviceId || !selectedSlot}
+          disabled={!serviceId || !selectedSlot || !acceptPolicies}
           onClick={async () => {
             const res = await fetch("/api/bookings", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ serviceId, startAt: selectedSlot, policyAccepted: true }),
+              body: JSON.stringify({ serviceId, startAt: selectedSlot, policyAccepted: acceptPolicies }),
             });
             const data = await res.json();
             setMessage(res.ok ? `Booking ${data.bookingId} created. Complete payment using returned client secret.` : data.error || "Failed");
