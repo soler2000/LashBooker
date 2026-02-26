@@ -6,22 +6,20 @@ const prisma = new PrismaClient();
 async function main() {
   const defaultOwnerEmail = process.env.DEFAULT_OWNER_EMAIL ?? "owner@lashbooker.local";
   const defaultOwnerPassword = process.env.DEFAULT_OWNER_PASSWORD ?? "ChangeMe123!";
-  const defaultOwnerPasswordHash = await bcrypt.hash(defaultOwnerPassword, 10);
+  const existingOwner = await prisma.user.findUnique({ where: { email: defaultOwnerEmail } });
 
-  await prisma.user.upsert({
-    where: { email: defaultOwnerEmail },
-    create: {
-      email: defaultOwnerEmail,
-      passwordHash: defaultOwnerPasswordHash,
-      role: "OWNER",
-      mustChangePassword: true,
-    },
-    update: {
-      role: "OWNER",
-      passwordHash: defaultOwnerPasswordHash,
-      mustChangePassword: true,
-    },
-  });
+  if (!existingOwner) {
+    const defaultOwnerPasswordHash = await bcrypt.hash(defaultOwnerPassword, 10);
+
+    await prisma.user.create({
+      data: {
+        email: defaultOwnerEmail,
+        passwordHash: defaultOwnerPasswordHash,
+        role: "OWNER",
+        mustChangePassword: true,
+      },
+    });
+  }
 
   await prisma.businessSettings.upsert({
     where: { id: "default" },

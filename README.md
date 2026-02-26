@@ -85,7 +85,9 @@ DEFAULT_OWNER_PASSWORD="ChangeMe123!"
 
 ---
 
-After running `npm run prisma:seed`, you can sign in with the default owner account from `DEFAULT_OWNER_EMAIL` / `DEFAULT_OWNER_PASSWORD`. On first login, the app forces a password change before allowing access to other admin pages.
+After running `npm run prisma:seed`, you can sign in with the default owner account from `DEFAULT_OWNER_EMAIL` / `DEFAULT_OWNER_PASSWORD`.
+The seed only creates this owner account when it does not already exist, so later deploys/builds will not overwrite existing user credentials.
+On first login, the app forces a password change before allowing access to other admin pages.
 
 ---
 
@@ -216,4 +218,3 @@ npx prisma studio
   - Add Playwright coverage for `Book now`/`View policies` transitions and assert no duplicate stacked panel appears during motion.
   - Add reduced-motion fallback (`prefers-reduced-motion`) to disable animated transforms for accessibility while keeping deterministic panel state.
   - Audit image aspect ratio/loading behavior to prevent layout jumps during transitions.
-
