@@ -19,6 +19,7 @@ export default function BookPage() {
   const [date, setDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [message, setMessage] = useState("");
+  const [authRequired, setAuthRequired] = useState(false);
   const [acceptPolicies, setAcceptPolicies] = useState(false);
   const selectedSlotDetails = slots.find((slot) => slot.startAt === selectedSlot);
   const canCreateBooking = Boolean(serviceId && date && selectedSlot && acceptPolicies);
@@ -65,9 +66,17 @@ export default function BookPage() {
       <div className="mx-auto max-w-3xl rounded-xl bg-black/65 p-8 text-white shadow-2xl backdrop-blur-[2px]">
         <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold">Book an appointment</h1>
-          <Link href="/" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
-            Main menu
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
+              Main menu
+            </Link>
+            <Link href="/login?redirectTo=%2Fbook" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
+              Sign in
+            </Link>
+            <Link href="/register?redirectTo=%2Fbook" className="rounded border border-white/60 px-3 py-2 text-sm font-medium hover:bg-white/20">
+              Create account
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
@@ -136,9 +145,14 @@ export default function BookPage() {
             });
             const data = await res.json();
             if (!res.ok) {
+              if (res.status === 401) {
+                setAuthRequired(true);
+              }
               setMessage(data.error || "Failed");
               return;
             }
+
+            setAuthRequired(false);
 
             setMessage(
               data.requiresPayment
@@ -152,6 +166,12 @@ export default function BookPage() {
             Create booking
           </button>
           {message ? <p className="mt-2 text-sm">{message}</p> : null}
+          {authRequired ? (
+            <p className="mt-2 text-sm text-gray-800">
+              You need an account to book. <Link href="/register?redirectTo=%2Fbook" className="underline">Create account</Link> or{" "}
+              <Link href="/login?redirectTo=%2Fbook" className="underline">sign in</Link> to continue.
+            </p>
+          ) : null}
         </div>
       </div>
     </main>
