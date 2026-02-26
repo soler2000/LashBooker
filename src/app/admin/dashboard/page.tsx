@@ -14,14 +14,16 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage() {
   const now = new Date();
   const ranges = getPeriodRanges(now);
+  const dataWindowStart = new Date(Math.min(ranges.today.start.getTime(), ranges.week.start.getTime(), ranges.month.start.getTime()));
+  const dataWindowEnd = new Date(Math.max(ranges.today.end.getTime(), ranges.week.end.getTime(), ranges.month.end.getTime()));
 
   const [bookings, blockouts, workingHours] = await Promise.all([
     prisma.booking.findMany({
-      where: { startAt: { gte: ranges.month.start, lt: ranges.month.end } },
+      where: { startAt: { gte: dataWindowStart, lt: dataWindowEnd } },
       select: { id: true, startAt: true, endAt: true, status: true, clientId: true, payments: true },
     }),
     prisma.blockout.findMany({
-      where: { endAt: { gt: ranges.month.start }, startAt: { lt: ranges.month.end } },
+      where: { endAt: { gt: dataWindowStart }, startAt: { lt: dataWindowEnd } },
       select: { startAt: true, endAt: true },
     }),
     prisma.workingHours.findMany({
