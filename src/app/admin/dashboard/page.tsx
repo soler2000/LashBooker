@@ -43,13 +43,13 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold">Dashboard</h1>
-      <p className="mb-6 text-sm text-slate-500">As of {now.toLocaleString()}</p>
+      <h1 className="mb-4 text-2xl font-semibold text-white">Dashboard</h1>
+      <p className="mb-6 text-sm text-slate-300">As of {now.toLocaleString()}</p>
       <div className="grid gap-4 md:grid-cols-3">
         {cards.map(([label, data]) => (
-          <section key={label} className="rounded border bg-white p-4 shadow-sm">
-            <h2 className="mb-2 text-lg font-semibold">{label}</h2>
-            <dl className="space-y-1 text-sm">
+          <section key={label} className="rounded border border-slate-800 bg-slate-950 p-4 shadow-sm">
+            <h2 className="mb-2 text-lg font-semibold text-white">{label}</h2>
+            <dl className="space-y-1 text-sm text-slate-200">
               <div className="flex justify-between"><dt>Bookings</dt><dd>{data.bookingCount}</dd></div>
               <div className="flex justify-between"><dt>Total revenue</dt><dd>{money(data.revenueCents)}</dd></div>
               <div className="flex justify-between"><dt>Deposits</dt><dd>{money(data.depositRevenueCents)}</dd></div>
