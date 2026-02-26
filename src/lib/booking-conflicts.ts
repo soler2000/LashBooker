@@ -6,10 +6,8 @@ export const ACTIVE_BOOKING_STATUSES: BookingStatus[] = ["PENDING_PAYMENT", "CON
 export type BookingWithServiceBuffers = {
   startAt: Date;
   endAt: Date;
-  service: {
-    bufferBeforeMinutes: number;
-    bufferAfterMinutes: number;
-  };
+  serviceBufferBeforeMinutes: number;
+  serviceBufferAfterMinutes: number;
 };
 
 export function hasBookingWindowConflict(
@@ -19,8 +17,8 @@ export function hasBookingWindowConflict(
   return existingBookings.some((booking) => {
     const existingWindow = bookingWindow(
       booking,
-      booking.service.bufferBeforeMinutes,
-      booking.service.bufferAfterMinutes,
+      booking.serviceBufferBeforeMinutes,
+      booking.serviceBufferAfterMinutes,
     );
 
     return requestedWindow.start < existingWindow.end && requestedWindow.end > existingWindow.start;

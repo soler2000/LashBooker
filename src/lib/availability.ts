@@ -114,7 +114,7 @@ export async function getAvailableSlots(serviceId: string, date: string, increme
 
   const bookings = await prisma.booking.findMany({
     where: { startAt: { gte: dayStart, lt: dayEnd }, status: { in: ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED"] } },
-    include: { service: true },
+    select: { startAt: true, endAt: true, serviceBufferBeforeMinutes: true, serviceBufferAfterMinutes: true },
   });
 
   const blockouts = await prisma.blockout.findMany({
@@ -129,8 +129,8 @@ export async function getAvailableSlots(serviceId: string, date: string, increme
     const end = new Date(t + totalDuration * 60000);
 
     const clashesBooking = bookings.some((b) => {
-      const bs = new Date(b.startAt).getTime() - b.service.bufferBeforeMinutes * 60000;
-      const be = new Date(b.endAt).getTime() + b.service.bufferAfterMinutes * 60000;
+      const bs = new Date(b.startAt).getTime() - b.serviceBufferBeforeMinutes * 60000;
+      const be = new Date(b.endAt).getTime() + b.serviceBufferAfterMinutes * 60000;
       return start.getTime() < be && end.getTime() > bs;
     });
 

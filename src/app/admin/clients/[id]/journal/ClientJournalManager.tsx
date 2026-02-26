@@ -6,7 +6,7 @@ type BookingSummary = {
   id: string;
   startAt: string;
   status: string;
-  service: { name: string };
+  serviceName: string;
 };
 
 type ClientPayload = {
@@ -26,7 +26,7 @@ type JournalEntry = {
   id: string;
   notes: string;
   createdAt: string;
-  booking: { id: string; startAt: string; service: { name: string } };
+  booking: { id: string; startAt: string; serviceName: string };
   createdBy: { email: string };
   images: Array<{ id: string; mimeType: string; createdAt: string; readUrl: string | null }>;
 };
@@ -186,7 +186,7 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
         <select value={selectedBookingId} onChange={(e) => setSelectedBookingId(e.target.value)} className="w-full rounded border px-3 py-2">
           <option value="">Select appointment</option>
           {client.bookings.map((booking) => (
-            <option key={booking.id} value={booking.id}>{new Date(booking.startAt).toLocaleString()} · {booking.service.name} · {booking.status}</option>
+            <option key={booking.id} value={booking.id}>{new Date(booking.startAt).toLocaleString()} · {booking.serviceName} · {booking.status}</option>
           ))}
         </select>
         <textarea className="min-h-24 w-full rounded border px-3 py-2" value={entryNotes} onChange={(e) => setEntryNotes(e.target.value)} placeholder="Procedure notes" />
@@ -202,7 +202,7 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
           {entries.map((entry) => (
             <li key={entry.id} className="space-y-3 rounded border bg-white p-4">
               <div className="text-sm text-slate-600">
-                <p>{new Date(entry.createdAt).toLocaleString()} · {entry.booking.service.name}</p>
+                <p>{new Date(entry.createdAt).toLocaleString()} · {entry.booking.serviceName}</p>
                 <p>Added by {entry.createdBy.email}</p>
               </div>
               <p className="whitespace-pre-wrap">{entry.notes}</p>

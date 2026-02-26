@@ -38,7 +38,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   const entries = await prisma.journalEntry.findMany({
     where: { clientId: params.id },
     include: {
-      booking: { select: { id: true, startAt: true, service: { select: { name: true } } } },
+      booking: { select: { id: true, startAt: true, serviceName: true } },
       createdBy: { select: { id: true, email: true } },
       images: { select: { id: true, objectKey: true, mimeType: true, createdAt: true }, orderBy: { createdAt: "asc" } },
     },
@@ -74,7 +74,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       },
     },
     include: {
-      booking: { select: { id: true, startAt: true, service: { select: { name: true } } } },
+      booking: { select: { id: true, startAt: true, serviceName: true } },
       createdBy: { select: { id: true, email: true } },
       images: { select: { id: true, objectKey: true, mimeType: true, createdAt: true }, orderBy: { createdAt: "asc" } },
     },

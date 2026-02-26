@@ -10,12 +10,10 @@ export async function GET() {
   const [upcoming, past] = await Promise.all([
     prisma.booking.findMany({
       where: { clientId: session.user.id, startAt: { gte: now } },
-      include: { service: true },
       orderBy: { startAt: "asc" },
     }),
     prisma.booking.findMany({
       where: { clientId: session.user.id, startAt: { lt: now } },
-      include: { service: true },
       orderBy: { startAt: "desc" },
       take: 50,
     }),

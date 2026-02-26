@@ -8,7 +8,7 @@ type Booking = {
   endAt: string;
   status: "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED_BY_CLIENT" | "CANCELLED_BY_ADMIN" | "NO_SHOW";
   notes: string | null;
-  service: { name: string };
+  serviceName: string;
   client: { email: string };
 };
 
@@ -116,7 +116,7 @@ export default function AdminCalendarPage() {
 
                 {dayBookings.map((booking) => (
                   <article key={booking.id} className="rounded border p-2 text-sm">
-                    <p className="font-medium">{booking.service.name}</p>
+                    <p className="font-medium">{booking.serviceName}</p>
                     <p>{new Date(booking.startAt).toLocaleTimeString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
                     <p className="text-slate-600">{booking.client.email}</p>
                     <select

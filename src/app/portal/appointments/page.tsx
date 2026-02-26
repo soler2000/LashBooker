@@ -8,9 +8,7 @@ type BookingItem = {
   startAt: string;
   endAt: string;
   status: string;
-  service: {
-    name: string;
-  };
+  serviceName: string;
 };
 
 type BookingResponse = {
@@ -57,7 +55,7 @@ export default function PortalAppointmentsPage() {
         <ul className="space-y-3">
           {data.upcoming.map((booking) => (
             <li key={booking.id} className="rounded border p-3">
-              <p className="font-medium">{booking.service.name} · {booking.status}</p>
+              <p className="font-medium">{booking.serviceName} · {booking.status}</p>
               <p className="text-sm text-slate-600">{new Date(booking.startAt).toLocaleString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
               <Link href={`/portal/appointments/${booking.id}`} className="mt-3 inline-block rounded border px-3 py-1 text-sm hover:bg-slate-50">
                 View details
@@ -73,7 +71,7 @@ export default function PortalAppointmentsPage() {
         <ul className="space-y-3">
           {data.past.map((booking) => (
             <li key={booking.id} className="rounded border p-3">
-              <p className="font-medium">{booking.service.name} · {booking.status}</p>
+              <p className="font-medium">{booking.serviceName} · {booking.status}</p>
               <p className="text-sm text-slate-600">{new Date(booking.startAt).toLocaleString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
               <Link href={`/portal/appointments/${booking.id}`} className="mt-3 inline-block rounded border px-3 py-1 text-sm hover:bg-slate-50">
                 View details

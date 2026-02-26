@@ -27,7 +27,6 @@ export async function PUT(_req: Request, { params }: { params: { id: string } })
   const updated = await prisma.booking.update({
     where: { id: booking.id },
     data: { status: "CANCELLED_BY_CLIENT" },
-    include: { service: true },
   });
 
   return NextResponse.json({ booking: updated });
