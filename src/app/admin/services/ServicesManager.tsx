@@ -137,7 +137,7 @@ export default function ServicesManager() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          <span>Price (cents)</span>
+          <span>Price in (£)</span>
           <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.priceCents} onChange={(e) => onChange("priceCents", e.target.value)} />
         </label>
 
