@@ -42,6 +42,15 @@ type MailSettingsForm = {
   smtpUseStarttls: boolean;
 };
 
+type AccountRole = "STAFF" | "ADMIN" | "OWNER";
+
+type CreateAccountForm = {
+  email: string;
+  password: string;
+  role: AccountRole;
+  mustChangePassword: boolean;
+};
+
 const defaultMailSettings: MailSettingsForm = {
   mailProviderType: "",
   smtpHost: "",
@@ -55,6 +64,14 @@ const defaultMailSettings: MailSettingsForm = {
   smtpUseTls: false,
   smtpUseStarttls: false,
 };
+
+const defaultCreateAccountForm: CreateAccountForm = {
+  email: "",
+  password: "",
+  role: "STAFF",
+  mustChangePassword: true,
+};
+
 type Blockout = {
   id: string;
   startAt: string;
@@ -123,6 +140,8 @@ export default function AdminSettingsPage() {
   const [mailSettings, setMailSettings] = useState<MailSettingsForm>(defaultMailSettings);
   const [mailStatus, setMailStatus] = useState("");
   const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
+  const [createAccountForm, setCreateAccountForm] = useState<CreateAccountForm>(defaultCreateAccountForm);
+  const [createAccountStatus, setCreateAccountStatus] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -386,6 +405,30 @@ export default function AdminSettingsPage() {
     await loadBlockouts();
   };
 
+  const createAccount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCreateAccountStatus("");
+
+    const response = await fetch("/api/admin/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(createAccountForm),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setCreateAccountStatus(data.error ?? "Could not create account.");
+      return;
+    }
+
+    setCreateAccountForm((current) => ({
+      ...defaultCreateAccountForm,
+      role: current.role,
+      mustChangePassword: current.mustChangePassword,
+    }));
+    setCreateAccountStatus("Account created.");
+  };
+
   return (
     <section className="max-w-4xl space-y-10 text-slate-100">
       <div>
@@ -561,6 +604,62 @@ export default function AdminSettingsPage() {
           Save email settings
         </button>
         {mailStatus ? <p className="text-sm text-slate-200">{mailStatus}</p> : null}
+      </section>
+
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
+        <h2 className="text-lg font-semibold">Admin accounts</h2>
+        <p className="text-sm text-slate-300">Create staff, admin, or owner accounts with a temporary password from owner settings.</p>
+
+        <form className="grid gap-3 md:grid-cols-2" onSubmit={createAccount}>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Email</span>
+            <input
+              type="email"
+              className="w-full rounded border border-slate-700 bg-slate-900 p-2"
+              value={createAccountForm.email}
+              onChange={(event) => setCreateAccountForm((current) => ({ ...current, email: event.target.value }))}
+              required
+            />
+          </label>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Temporary password</span>
+            <input
+              type="password"
+              minLength={8}
+              className="w-full rounded border border-slate-700 bg-slate-900 p-2"
+              value={createAccountForm.password}
+              onChange={(event) => setCreateAccountForm((current) => ({ ...current, password: event.target.value }))}
+              required
+            />
+          </label>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Role</span>
+            <select
+              className="w-full rounded border border-slate-700 bg-slate-900 p-2"
+              value={createAccountForm.role}
+              onChange={(event) => setCreateAccountForm((current) => ({ ...current, role: event.target.value as AccountRole }))}
+            >
+              <option value="STAFF">Staff</option>
+              <option value="ADMIN">Admin</option>
+              <option value="OWNER">Owner</option>
+            </select>
+          </label>
+
+          <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-100">
+            <input
+              type="checkbox"
+              checked={createAccountForm.mustChangePassword}
+              onChange={(event) => setCreateAccountForm((current) => ({ ...current, mustChangePassword: event.target.checked }))}
+            />
+            Require password change on first login
+          </label>
+
+          <button type="submit" className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200 md:col-span-2 md:w-fit">
+            Create account
+          </button>
+        </form>
+
+        {createAccountStatus ? <p className="text-sm text-slate-200">{createAccountStatus}</p> : null}
       </section>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
