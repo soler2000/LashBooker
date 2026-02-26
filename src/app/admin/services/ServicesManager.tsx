@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type DepositType = "NONE" | "FIXED" | "PERCENT";
 
@@ -75,6 +76,7 @@ function fromService(service: Service): ServiceForm {
 }
 
 export default function ServicesManager() {
+  const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
   const [createForm, setCreateForm] = useState<ServiceForm>(emptyForm);
   const [editing, setEditing] = useState<Record<string, ServiceForm>>({});
@@ -111,6 +113,7 @@ export default function ServicesManager() {
     setCreateForm(emptyForm);
     setMessage("Service added.");
     await loadServices();
+    router.refresh();
   }
 
   async function saveService(id: string) {
