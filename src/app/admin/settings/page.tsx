@@ -307,8 +307,8 @@ export default function AdminSettingsPage() {
           <label key={field.key} className="block space-y-2 rounded border border-slate-800 bg-slate-950 p-3">
             <span className="text-sm font-medium text-slate-100">{field.label}</span>
             <p className="text-xs text-slate-300">Ideal size: {idealImageDimensions[field.key]}</p>
-            <div className="h-28 overflow-hidden rounded border border-slate-700 bg-slate-900">
-              <Image src={images[field.key]} alt={`${field.label} preview`} width={720} height={180} className="h-full w-full object-cover" />
+            <div className="flex h-24 w-36 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
+              <Image src={images[field.key]} alt={`${field.label} preview`} width={240} height={160} className="h-full w-full object-contain" />
             </div>
             <div className="flex items-center gap-3">
               <input
@@ -317,8 +317,8 @@ export default function AdminSettingsPage() {
                 className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
                 onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
               />
-              <div className="h-10 w-16 shrink-0 overflow-hidden rounded border border-slate-700 bg-slate-900">
-                <Image src={images[field.key]} alt={`${field.label} small preview`} width={96} height={60} className="h-full w-full object-cover" />
+              <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
+                <Image src={images[field.key]} alt={`${field.label} small preview`} width={120} height={84} className="h-full w-full object-contain" />
               </div>
             </div>
           </label>
