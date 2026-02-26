@@ -181,6 +181,17 @@ model BusinessSettings {
   currency              String
   depositDefaultType    DepositType
   depositDefaultValue   Int
+  mailProviderType      String?
+  smtpHost              String?
+  smtpPort              Int?
+  smtpUsername          String?
+  smtpPasswordEncrypted String?
+  smtpSecretRef         String?
+  mailFromName          String?
+  mailFromEmail         String?
+  mailReplyTo           String?
+  smtpUseTls            Boolean?
+  smtpUseStarttls       Boolean?
   rescheduleCutoffHours Int      @default(24)
   cancelCutoffHours     Int      @default(24)
   pendingPaymentExpiryMinutes Int @default(30)
