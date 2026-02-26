@@ -28,7 +28,6 @@ export default async function PortalAppointmentDetailPage({ params }: { params: 
     prisma.booking.findFirst({
       where: { id: params.id, clientId: session.user.id },
       include: {
-        service: true,
         payments: { orderBy: { createdAt: "desc" } },
       },
     }),
@@ -47,8 +46,8 @@ export default async function PortalAppointmentDetailPage({ params }: { params: 
   });
 
   const currency = settings?.currency ?? "GBP";
-  const priceCents = booking.service.priceCents;
-  const depositDueCents = calculateDepositAmount(priceCents, booking.service.depositType, booking.service.depositValue);
+  const priceCents = booking.servicePriceCents;
+  const depositDueCents = calculateDepositAmount(priceCents, booking.serviceDepositType, booking.serviceDepositValue);
   const remainingCents = Math.max(priceCents - depositDueCents, 0);
   const totalPaidCents = booking.payments
     .filter((payment) => payment.status === "SUCCEEDED")
@@ -71,7 +70,7 @@ export default async function PortalAppointmentDetailPage({ params }: { params: 
       <div className="grid gap-4 md:grid-cols-2">
         <section className="space-y-3 rounded border bg-white p-4">
           <h2 className="text-lg font-medium">Service & timing</h2>
-          <p><span className="font-medium">Service:</span> {booking.service.name}</p>
+          <p><span className="font-medium">Service:</span> {booking.serviceName}</p>
           <p><span className="font-medium">Status:</span> <span className="capitalize">{formatStatus(booking.status)}</span></p>
           <p><span className="font-medium">Starts:</span> {booking.startAt.toLocaleString()}</p>
           <p><span className="font-medium">Ends:</span> {booking.endAt.toLocaleString()}</p>

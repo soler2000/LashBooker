@@ -17,7 +17,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   const booking = await prisma.booking.findUnique({
     where: { id: params.id },
-    include: { service: true },
   });
 
   if (!booking || booking.clientId !== session.user.id) {
@@ -37,11 +36,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 
   const nextStartAt = new Date(parsed.data.startAt);
-  const nextEndAt = new Date(nextStartAt.getTime() + booking.service.durationMinutes * 60_000);
+  const nextEndAt = new Date(nextStartAt.getTime() + booking.serviceDurationMinutes * 60_000);
   const nextWindow = bookingWindow(
     { startAt: nextStartAt, endAt: nextEndAt },
-    booking.service.bufferBeforeMinutes,
-    booking.service.bufferAfterMinutes,
+    booking.serviceBufferBeforeMinutes,
+    booking.serviceBufferAfterMinutes,
   );
 
   const overlaps = await prisma.booking.findFirst({
@@ -61,7 +60,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       startAt: nextStartAt,
       endAt: nextEndAt,
     },
-    include: { service: true },
   });
 
   return NextResponse.json({ booking: updated });

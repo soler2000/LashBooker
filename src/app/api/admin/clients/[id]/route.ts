@@ -46,7 +46,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
           startAt: true,
           endAt: true,
           status: true,
-          service: { select: { name: true } },
+          serviceName: true,
         },
         orderBy: { startAt: "desc" },
         take: 30,

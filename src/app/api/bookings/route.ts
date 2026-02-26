@@ -39,7 +39,12 @@ export async function POST(req: Request) {
       startAt: { lt: new Date(requestedWindow.end.getTime() + maxBufferBeforeMs) },
       endAt: { gt: new Date(requestedWindow.start.getTime() - maxBufferAfterMs) },
     },
-    include: { service: { select: { bufferBeforeMinutes: true, bufferAfterMinutes: true } } },
+    select: {
+      startAt: true,
+      endAt: true,
+      serviceBufferBeforeMinutes: true,
+      serviceBufferAfterMinutes: true,
+    },
   });
 
   if (hasBookingWindowConflict(requestedWindow, possibleOverlaps)) {
@@ -50,6 +55,13 @@ export async function POST(req: Request) {
     data: {
       clientId: session.user.id,
       serviceId: service.id,
+      serviceName: service.name,
+      serviceDurationMinutes: service.durationMinutes,
+      servicePriceCents: service.priceCents,
+      serviceDepositType: service.depositType,
+      serviceDepositValue: service.depositValue,
+      serviceBufferBeforeMinutes: service.bufferBeforeMinutes,
+      serviceBufferAfterMinutes: service.bufferAfterMinutes,
       startAt,
       endAt,
       policyAcceptedAt: new Date(),

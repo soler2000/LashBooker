@@ -115,6 +115,13 @@ model Booking {
   id               String        @id @default(uuid())
   clientId         String
   serviceId        String
+  serviceName      String
+  serviceDurationMinutes Int
+  servicePriceCents Int
+  serviceDepositType DepositType
+  serviceDepositValue Int
+  serviceBufferBeforeMinutes Int
+  serviceBufferAfterMinutes Int
   startAt          DateTime
   endAt            DateTime
   status           BookingStatus @default(PENDING_PAYMENT)

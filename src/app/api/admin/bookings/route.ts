@@ -59,7 +59,6 @@ export async function GET(request: Request) {
     prisma.booking.findMany({
       where,
       include: {
-        service: { select: { name: true, durationMinutes: true } },
         client: { select: { email: true } },
         payments: { select: { amountCents: true, status: true, capturedAt: true } },
       },
@@ -99,7 +98,6 @@ export async function PUT(request: Request) {
       ...(parsed.data.endAt ? { endAt: nextEndAt } : {}),
     },
     include: {
-      service: { select: { name: true, durationMinutes: true } },
       client: { select: { email: true } },
       payments: { select: { amountCents: true, status: true, capturedAt: true } },
     },
