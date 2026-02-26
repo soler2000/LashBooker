@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const roleAllowlist = ["ADMIN", "OWNER", "STAFF"];
+const CALENDAR_BLOCKING_STATUSES = ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED", "NO_SHOW"] as const;
 
 const querySchema = z.object({
   startAt: z.string().datetime().optional(),
@@ -39,9 +40,9 @@ export async function GET(request: Request) {
   const parsed = querySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
-  const statuses = parsed.data.status?.split(",").filter(Boolean) as Array<
+  const statuses = (parsed.data.status?.split(",").filter(Boolean) as Array<
     "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED_BY_CLIENT" | "CANCELLED_BY_ADMIN" | "NO_SHOW"
-  > | undefined;
+  > | undefined) ?? [...CALENDAR_BLOCKING_STATUSES];
 
   const where = {
     ...(parsed.data.startAt || parsed.data.endAt
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
           },
         }
       : {}),
-    ...(statuses?.length ? { status: { in: statuses } } : {}),
+    ...(statuses.length ? { status: { in: statuses } } : {}),
   };
 
   const [bookings, blockouts] = await Promise.all([
