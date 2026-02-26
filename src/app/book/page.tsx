@@ -109,10 +109,19 @@ export default function BookPage() {
               body: JSON.stringify({ serviceId, startAt: selectedSlot, policyAccepted: acceptPolicies }),
             });
             const data = await res.json();
-            setMessage(res.ok ? `Booking ${data.bookingId} created. Complete payment using returned client secret.` : data.error || "Failed");
+            if (!res.ok) {
+              setMessage(data.error || "Failed");
+              return;
+            }
+
+            setMessage(
+              data.requiresPayment
+                ? `Booking ${data.bookingId} created. Deposit payment is required before confirmation.`
+                : `Booking ${data.bookingId} confirmed.`
+            );
           }}
         >
-          Create booking + payment intent
+          Create booking
         </button>
         {message ? <p className="mt-2 text-sm">{message}</p> : null}
       </div>
