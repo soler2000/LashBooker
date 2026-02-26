@@ -9,6 +9,18 @@ function parseDateParts(date: string) {
   return { year, month, day };
 }
 
+export function resolveTimeZone(timeZone: string | null | undefined) {
+  const candidate = (timeZone || "").trim();
+  if (!candidate) return "UTC";
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: candidate });
+    return candidate;
+  } catch {
+    return "UTC";
+  }
+}
+
 function getTimeZoneOffsetMs(date: Date, timeZone: string) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone,
@@ -92,7 +104,7 @@ export async function getAvailableSlots(serviceId: string, date: string, increme
   if (!service || !service.isActive) return [];
 
   const settings = await prisma.businessSettings.findUnique({ where: { id: "default" } });
-  const timeZone = settings?.timezone || "UTC";
+  const timeZone = resolveTimeZone(settings?.timezone);
 
   const weekday = getWeekdayFromDateString(date);
   const wh = await prisma.workingHours.findFirst({ where: { weekday } });

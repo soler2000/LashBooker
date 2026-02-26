@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getDayBoundsInTimezone, getWorkingWindowInTimezone } from "@/lib/availability";
+import { getDayBoundsInTimezone, getWorkingWindowInTimezone, resolveTimeZone } from "@/lib/availability";
+
+test("falls back to UTC when timezone is invalid", () => {
+  assert.equal(resolveTimeZone("America/New_York"), "America/New_York");
+  assert.equal(resolveTimeZone("Invalid/Zone"), "UTC");
+  assert.equal(resolveTimeZone(""), "UTC");
+});
 
 test("computes normal-date working window in business timezone and returns UTC ISO values", () => {
   const { dayStart, dayEnd } = getWorkingWindowInTimezone("2026-02-10", "09:00", "17:00", "America/New_York");
