@@ -60,20 +60,6 @@ export default function Home() {
           Start booking
         </Link>
       </Scene>
-
-      <Scene
-        sectionClassName="flex h-screen w-full items-center justify-center bg-zinc-950 px-6 md:px-12"
-        contentClassName="max-w-3xl text-center"
-      >
-        <p className="text-xs uppercase tracking-[0.35em] text-white/65">Before you visit</p>
-        <h2 className="mt-4 text-4xl font-semibold md:text-6xl">Studio policies</h2>
-        <p className="mt-5 text-white/80 md:text-lg">
-          Deposits, cancellation windows, and preparation guidance are all in one place.
-        </p>
-        <Link href="/policies" className="mt-8 inline-flex rounded-full border border-white/60 px-8 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10">
-          Read policies
-        </Link>
-      </Scene>
     </main>
   );
 }

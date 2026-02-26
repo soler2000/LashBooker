@@ -32,10 +32,16 @@ export default function Hero({ image }: HeroProps) {
           <Link href="/book" className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-white/85">
             Book now
           </Link>
-          <Link href="/policies" className="rounded-full border border-white/60 px-7 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10">
-            View policies
-          </Link>
         </div>
+        <p className="mt-5 flex flex-wrap items-center gap-2 text-sm text-white/75">
+          <span>Deposits secure your slot • 24h changes</span>
+          <Link
+            href="/policies"
+            className="inline-flex rounded-full border border-white/35 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-white/85 transition hover:border-white/70 hover:bg-white/10"
+          >
+            /policies
+          </Link>
+        </p>
       </div>
     </Scene>
   );
