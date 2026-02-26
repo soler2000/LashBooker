@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import Hero from "@/components/landing/Hero";
+import Header from "@/components/landing/Header";
 import HorizontalChapter from "@/components/landing/HorizontalChapter";
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
@@ -28,6 +28,12 @@ export default function Home() {
 
   return (
     <main className="bg-black text-white">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
+        <div className="pointer-events-auto border-b border-white/10 bg-black/35 backdrop-blur-sm">
+          <Header />
+        </div>
+      </div>
+
       <Hero image={images.hero} />
 
       <StickyStoryScene
@@ -56,9 +62,6 @@ export default function Home() {
         <p className="mx-auto mt-5 max-w-2xl text-white/80 md:text-lg">
           Reserve your appointment in minutes and we&apos;ll guide you to the perfect service choice.
         </p>
-        <Link href="/book" className="mt-8 inline-flex rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition hover:bg-white/85">
-          Start booking
-        </Link>
       </Scene>
 
       <Scene
@@ -70,9 +73,6 @@ export default function Home() {
         <p className="mt-5 text-white/80 md:text-lg">
           Deposits, cancellation windows, and preparation guidance are all in one place.
         </p>
-        <Link href="/policies" className="mt-8 inline-flex rounded-full border border-white/60 px-8 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10">
-          Read policies
-        </Link>
       </Scene>
     </main>
   );

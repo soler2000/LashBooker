@@ -15,14 +15,8 @@ export default function Hero({ image }: HeroProps) {
       imagePriority
       imageSizes="100vw"
       sectionClassName="relative h-screen w-full overflow-hidden"
-      contentClassName="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-between px-6 pb-14 pt-8 md:px-12 md:pb-20"
+      contentClassName="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-end px-6 pb-14 pt-24 md:px-12 md:pb-20 md:pt-28"
     >
-      <header className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/75">LashBooker Studio</p>
-        <Link href="/login" className="text-sm font-medium text-white/85 transition hover:text-white">
-          Login
-        </Link>
-      </header>
       <div className="max-w-3xl">
         <h1 className="text-5xl font-semibold leading-tight md:text-8xl">Lash design in motion.</h1>
         <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">
@@ -33,7 +27,7 @@ export default function Hero({ image }: HeroProps) {
             Book now
           </Link>
           <Link href="/policies" className="rounded-full border border-white/60 px-7 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10">
-            View policies
+            Policies
           </Link>
         </div>
       </div>
