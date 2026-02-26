@@ -20,7 +20,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       "use server";
       try {
         const hasDatabaseUrl = hasDatabaseConfiguration();
-        const email = String(formData.get("email") ?? "");
+        const email = String(formData.get("email") ?? "").trim().toLowerCase();
         const requestedRedirect = String(formData.get("redirectTo") ?? "");
 
         await signIn("credentials", {

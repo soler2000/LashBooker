@@ -7,7 +7,7 @@ import { z } from "zod";
 import { hasDatabaseConfiguration, prisma } from "@/lib/prisma";
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8),
 });
 
