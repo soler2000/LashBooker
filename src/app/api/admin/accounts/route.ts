@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 
 const createAccountSchema = z
   .object({
-    email: z.string().trim().email().max(320),
+    email: z.string().trim().toLowerCase().email().max(320),
     password: z.string().min(8).max(128),
     role: z.enum(["STAFF", "ADMIN", "OWNER"]),
     mustChangePassword: z.boolean().optional(),
