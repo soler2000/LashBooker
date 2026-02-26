@@ -51,6 +51,15 @@ type CreateAccountForm = {
   mustChangePassword: boolean;
 };
 
+type AdminAccount = {
+  id: string;
+  email: string;
+  role: AccountRole;
+  mustChangePassword: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+};
+
 const defaultMailSettings: MailSettingsForm = {
   mailProviderType: "",
   smtpHost: "",
@@ -142,6 +151,8 @@ export default function AdminSettingsPage() {
   const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
   const [createAccountForm, setCreateAccountForm] = useState<CreateAccountForm>(defaultCreateAccountForm);
   const [createAccountStatus, setCreateAccountStatus] = useState("");
+  const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [accountsStatus, setAccountsStatus] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -204,10 +215,23 @@ export default function AdminSettingsPage() {
     setSmtpPasswordConfigured(data.smtpPasswordConfigured);
   };
 
+  const loadAccounts = async () => {
+    const response = await fetch("/api/admin/accounts", { cache: "no-store" });
+    if (!response.ok) {
+      setAccountsStatus("Could not load admin accounts.");
+      return;
+    }
+
+    const rows = (await response.json()) as AdminAccount[];
+    setAccounts(rows);
+    setAccountsStatus("");
+  };
+
   useEffect(() => {
     loadWorkingHours();
     loadBlockouts();
     loadDepositSettings();
+    loadAccounts();
   }, []);
 
   const workingHoursByDay = useMemo(() => {
@@ -427,6 +451,26 @@ export default function AdminSettingsPage() {
       mustChangePassword: current.mustChangePassword,
     }));
     setCreateAccountStatus("Account created.");
+    await loadAccounts();
+  };
+
+  const removeAccount = async (account: AdminAccount) => {
+    const confirmed = window.confirm(`Remove ${account.email}? This action cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    setAccountsStatus("");
+    const response = await fetch(`/api/admin/accounts/${account.id}`, { method: "DELETE" });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setAccountsStatus(data.error ?? "Could not remove account.");
+      return;
+    }
+
+    setAccountsStatus(`Removed ${account.email}.`);
+    await loadAccounts();
   };
 
   return (
@@ -660,6 +704,48 @@ export default function AdminSettingsPage() {
         </form>
 
         {createAccountStatus ? <p className="text-sm text-slate-200">{createAccountStatus}</p> : null}
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Existing admin users</h3>
+          <div className="overflow-x-auto rounded border border-slate-800">
+            <table className="min-w-full text-left text-sm text-slate-200">
+              <thead className="bg-slate-900 text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-3 py-2">Email</th>
+                  <th className="px-3 py-2">Role</th>
+                  <th className="px-3 py-2">Last login</th>
+                  <th className="px-3 py-2">Created</th>
+                  <th className="px-3 py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map((account) => (
+                  <tr key={account.id} className="border-t border-slate-800">
+                    <td className="px-3 py-2">{account.email}</td>
+                    <td className="px-3 py-2">{account.role}</td>
+                    <td className="px-3 py-2">{account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : "Never"}</td>
+                    <td className="px-3 py-2">{new Date(account.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        className="rounded border border-red-500 px-2 py-1 text-xs font-medium text-red-200 hover:bg-red-500/10"
+                        onClick={() => removeAccount(account)}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {accounts.length === 0 ? (
+                  <tr>
+                    <td className="px-3 py-3 text-slate-400" colSpan={5}>No admin accounts found.</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {accountsStatus ? <p className="text-sm text-slate-200">{accountsStatus}</p> : null}
       </section>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">

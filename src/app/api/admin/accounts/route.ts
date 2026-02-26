@@ -15,11 +15,40 @@ const createAccountSchema = z
 
 async function guard() {
   const session = await auth();
-  return !!session?.user && session.user.role === "OWNER";
+  if (!session?.user || session.user.role !== "OWNER") {
+    return null;
+  }
+
+  return session.user;
+}
+
+export async function GET() {
+  const user = await guard();
+  if (!user) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const accounts = await prisma.user.findMany({
+    where: {
+      role: { in: ["STAFF", "ADMIN", "OWNER"] },
+    },
+    orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      mustChangePassword: true,
+      lastLoginAt: true,
+      createdAt: true,
+    },
+  });
+
+  return NextResponse.json(accounts);
 }
 
 export async function POST(request: Request) {
-  if (!(await guard())) {
+  const user = await guard();
+  if (!user) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
