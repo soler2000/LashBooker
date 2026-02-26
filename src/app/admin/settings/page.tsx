@@ -55,6 +55,8 @@ export default function AdminSettingsPage() {
   const [blockouts, setBlockouts] = useState<Blockout[]>([]);
   const [blockoutStatus, setBlockoutStatus] = useState("");
   const [newBlockout, setNewBlockout] = useState({ startAt: "", endAt: "", reason: "" });
+  const [depositRequired, setDepositRequired] = useState(true);
+  const [depositStatus, setDepositStatus] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -91,9 +93,21 @@ export default function AdminSettingsPage() {
     setBlockouts(rows);
   };
 
+  const loadDepositSettings = async () => {
+    const response = await fetch("/api/admin/settings", { cache: "no-store" });
+    if (!response.ok) {
+      setDepositStatus("Could not load deposit settings.");
+      return;
+    }
+
+    const data = (await response.json()) as { depositRequired: boolean };
+    setDepositRequired(data.depositRequired);
+  };
+
   useEffect(() => {
     loadWorkingHours();
     loadBlockouts();
+    loadDepositSettings();
   }, []);
 
   const workingHoursByDay = useMemo(() => {
@@ -217,6 +231,23 @@ export default function AdminSettingsPage() {
     await loadBlockouts();
   };
 
+  const saveDepositSettings = async () => {
+    setDepositStatus("");
+    const response = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ depositRequired }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setDepositStatus(data.error ?? "Could not save deposit settings.");
+      return;
+    }
+
+    setDepositStatus(depositRequired ? "Deposits are required for new bookings." : "Deposits are disabled. Bookings confirm immediately.");
+  };
+
   const deleteBlockout = async (id: string) => {
     setBlockoutStatus("");
     const response = await fetch(`/api/admin/blockouts/${id}`, { method: "DELETE" });
@@ -232,7 +263,7 @@ export default function AdminSettingsPage() {
     <section className="max-w-4xl space-y-10">
       <div>
         <h1 className="text-2xl font-semibold">Owner settings</h1>
-        <p className="mt-2 text-sm text-slate-600">Update homepage image URLs, weekly working-hours windows, and calendar blockouts.</p>
+        <p className="mt-2 text-sm text-slate-600">Update homepage image URLs, deposit requirements, weekly working-hours windows, and calendar blockouts.</p>
       </div>
 
       <form className="space-y-4" onSubmit={save}>
@@ -254,6 +285,25 @@ export default function AdminSettingsPage() {
         </button>
         {savedMessage ? <p className="text-sm text-green-700">{savedMessage}</p> : null}
       </form>
+
+
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Booking deposits</h2>
+        <p className="text-sm text-slate-600">Choose whether clients must pay a Stripe deposit before a booking is confirmed.</p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={depositRequired}
+            onChange={(event) => setDepositRequired(event.target.checked)}
+          />
+          Require deposit payment for new bookings
+        </label>
+        <button type="button" className="rounded bg-black px-4 py-2 text-sm font-medium text-white" onClick={saveDepositSettings}>
+          Save deposit settings
+        </button>
+        {depositStatus ? <p className="text-sm text-slate-700">{depositStatus}</p> : null}
+      </section>
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Working hours</h2>

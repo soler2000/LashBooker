@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateDepositAmount, stripe } from "@/lib/payments";
 import { ACTIVE_BOOKING_STATUSES, hasBookingWindowConflict } from "@/lib/booking-conflicts";
 import { bookingWindow } from "@/lib/portal-bookings";
+import { sendBookingConfirmationEmail } from "@/lib/email";
 
 const bodySchema = z.object({
   serviceId: z.string().uuid(),
@@ -56,7 +57,23 @@ export async function POST(req: Request) {
     },
   });
 
+  const businessSettings = await prisma.businessSettings.findUnique({ where: { id: "default" } });
+  const depositRequired = (businessSettings?.depositDefaultType ?? "NONE") !== "NONE";
+
+  if (!depositRequired) {
+    await prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });
+    if (session.user.email) await sendBookingConfirmationEmail(session.user.email, booking.id);
+    return NextResponse.json({ bookingId: booking.id, status: "CONFIRMED", requiresPayment: false });
+  }
+
   const amount = calculateDepositAmount(service.priceCents, service.depositType, service.depositValue);
+
+  if (amount <= 0) {
+    await prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });
+    if (session.user.email) await sendBookingConfirmationEmail(session.user.email, booking.id);
+    return NextResponse.json({ bookingId: booking.id, status: "CONFIRMED", requiresPayment: false });
+  }
+
   const intent = await stripe.paymentIntents.create({
     amount,
     currency: "gbp",
@@ -75,5 +92,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ bookingId: booking.id, clientSecret: intent.client_secret });
+  return NextResponse.json({ bookingId: booking.id, clientSecret: intent.client_secret, requiresPayment: true });
 }
