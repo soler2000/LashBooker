@@ -57,7 +57,12 @@ export default function BookPage() {
         }
 
         const data = await res.json();
-        setIsLoggedIn(Boolean(data?.user));
+        const authenticated = Boolean(data?.user);
+        setIsLoggedIn(authenticated);
+
+        if (authenticated) {
+          setAuthRequired(false);
+        }
       })
       .catch(() => {
         setIsLoggedIn(false);
@@ -211,6 +216,12 @@ export default function BookPage() {
               return;
             }
 
+            if (!isLoggedIn) {
+              setAuthRequired(true);
+              setMessage("Please sign in to create a booking.");
+              return;
+            }
+
             const res = await fetch("/api/bookings", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -239,7 +250,7 @@ export default function BookPage() {
             Create booking
           </button>
           {message ? <p className="mt-2 text-sm">{message}</p> : null}
-          {authRequired ? (
+          {authRequired && !isLoggedIn ? (
             <p className="mt-2 text-sm text-gray-800">
               You need an account to book. <Link href="/register?redirectTo=%2Fbook" className="underline">Create account</Link> or{" "}
               <Link href="/login?redirectTo=%2Fbook" className="underline">sign in</Link> to continue.
