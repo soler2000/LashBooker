@@ -10,6 +10,13 @@ type WorkingHour = {
   isClosed: boolean;
 };
 
+type Blockout = {
+  id: string;
+  startAt: string;
+  endAt: string;
+  reason: string;
+};
+
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function getFirstAvailableWeekday(workingHoursByDay: Map<number, WorkingHour>) {
@@ -17,10 +24,23 @@ function getFirstAvailableWeekday(workingHoursByDay: Map<number, WorkingHour>) {
   return available === -1 ? 1 : available;
 }
 
+function toLocalDatetimeInput(value: string) {
+  const date = new Date(value);
+  const tzOffset = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+}
+
+function toIsoFromLocalInput(value: string) {
+  return new Date(value).toISOString();
+}
+
 export default function WorkingTimesPage() {
   const [workingHours, setWorkingHours] = useState<WorkingHour[]>([]);
   const [workingHoursStatus, setWorkingHoursStatus] = useState("");
   const [newWorkingHour, setNewWorkingHour] = useState({ weekday: 1, startTime: "09:00", endTime: "17:00", isClosed: false });
+  const [blockouts, setBlockouts] = useState<Blockout[]>([]);
+  const [blockoutStatus, setBlockoutStatus] = useState("");
+  const [newBlockout, setNewBlockout] = useState({ startAt: "", endAt: "", reason: "" });
 
   const loadWorkingHours = async () => {
     const response = await fetch("/api/admin/working-hours", { cache: "no-store" });
@@ -34,7 +54,18 @@ export default function WorkingTimesPage() {
 
   useEffect(() => {
     loadWorkingHours();
+    loadBlockouts();
   }, []);
+
+  const loadBlockouts = async () => {
+    const response = await fetch("/api/admin/blockouts", { cache: "no-store" });
+    if (!response.ok) {
+      setBlockoutStatus("Could not load blockouts.");
+      return;
+    }
+    const rows = (await response.json()) as Blockout[];
+    setBlockouts(rows);
+  };
 
   const workingHoursByDay = useMemo(() => {
     const grouped = new Map<number, WorkingHour>();
@@ -108,6 +139,58 @@ export default function WorkingTimesPage() {
     }
     setWorkingHoursStatus("Deleted.");
     await loadWorkingHours();
+  };
+
+  const createBlockout = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBlockoutStatus("");
+    const response = await fetch("/api/admin/blockouts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...newBlockout,
+        startAt: toIsoFromLocalInput(newBlockout.startAt),
+        endAt: toIsoFromLocalInput(newBlockout.endAt),
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setBlockoutStatus(data.error ?? "Could not create blockout.");
+      return;
+    }
+
+    setNewBlockout({ startAt: "", endAt: "", reason: "" });
+    setBlockoutStatus("Blockout saved.");
+    await loadBlockouts();
+  };
+
+  const updateBlockout = async (row: Blockout, patch: Partial<Blockout>) => {
+    setBlockoutStatus("");
+    const response = await fetch(`/api/admin/blockouts/${row.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...row, ...patch }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setBlockoutStatus(data.error ?? "Could not update blockout.");
+      return;
+    }
+
+    await loadBlockouts();
+  };
+
+  const deleteBlockout = async (id: string) => {
+    setBlockoutStatus("");
+    const response = await fetch(`/api/admin/blockouts/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      setBlockoutStatus("Could not delete blockout.");
+      return;
+    }
+    setBlockoutStatus("Deleted.");
+    await loadBlockouts();
   };
 
   return (
@@ -195,6 +278,63 @@ export default function WorkingTimesPage() {
           ))}
         </ul>
         {workingHoursStatus ? <p className="text-sm text-slate-200">{workingHoursStatus}</p> : null}
+      </section>
+
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
+        <h2 className="text-lg font-semibold">Blockouts</h2>
+        <form onSubmit={createBlockout} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-4">
+          <input
+            type="datetime-local"
+            required
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
+            value={newBlockout.startAt}
+            onChange={(event) => setNewBlockout((current) => ({ ...current, startAt: event.target.value }))}
+          />
+          <input
+            type="datetime-local"
+            required
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
+            value={newBlockout.endAt}
+            onChange={(event) => setNewBlockout((current) => ({ ...current, endAt: event.target.value }))}
+          />
+          <input
+            type="text"
+            required
+            className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
+            placeholder="Reason"
+            value={newBlockout.reason}
+            onChange={(event) => setNewBlockout((current) => ({ ...current, reason: event.target.value }))}
+          />
+          <button type="submit" className="rounded bg-white px-3 py-2 text-sm font-medium text-black hover:bg-slate-200">Add blockout</button>
+        </form>
+
+        <ul className="space-y-2">
+          {blockouts.map((row) => (
+            <li key={row.id} className="grid gap-2 rounded border border-slate-800 bg-slate-950 p-4 md:grid-cols-5 md:items-center">
+              <input
+                type="datetime-local"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
+                value={toLocalDatetimeInput(row.startAt)}
+                onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, startAt: toIsoFromLocalInput(event.target.value) } : item)))}
+              />
+              <input
+                type="datetime-local"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
+                value={toLocalDatetimeInput(row.endAt)}
+                onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, endAt: toIsoFromLocalInput(event.target.value) } : item)))}
+              />
+              <input
+                type="text"
+                className="rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
+                value={row.reason}
+                onChange={(event) => setBlockouts((current) => current.map((item) => (item.id === row.id ? { ...item, reason: event.target.value } : item)))}
+              />
+              <button type="button" className="rounded bg-white px-3 py-2 text-sm text-black hover:bg-slate-200" onClick={() => updateBlockout(row, {})}>Save</button>
+              <button type="button" className="rounded border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-100 hover:bg-slate-900" onClick={() => deleteBlockout(row.id)}>Delete</button>
+            </li>
+          ))}
+        </ul>
+        {blockoutStatus ? <p className="text-sm text-slate-200">{blockoutStatus}</p> : null}
       </section>
     </section>
   );
