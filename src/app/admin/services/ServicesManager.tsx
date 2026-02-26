@@ -115,19 +115,55 @@ export default function ServicesManager() {
 
   function renderEditor(form: ServiceForm, onChange: (key: keyof ServiceForm, value: string) => void) {
     return (
-      <div className="grid gap-2 md:grid-cols-2">
-        <input className="rounded border px-3 py-2" value={form.name} onChange={(e) => onChange("name", e.target.value)} placeholder="Name" />
-        <input className="rounded border px-3 py-2" value={form.description} onChange={(e) => onChange("description", e.target.value)} placeholder="Description" />
-        <input className="rounded border px-3 py-2" type="number" value={form.durationMinutes} onChange={(e) => onChange("durationMinutes", e.target.value)} placeholder="Duration (minutes)" />
-        <input className="rounded border px-3 py-2" type="number" value={form.priceCents} onChange={(e) => onChange("priceCents", e.target.value)} placeholder="Price (cents)" />
-        <select className="rounded border px-3 py-2" value={form.depositType} onChange={(e) => onChange("depositType", e.target.value)}>
-          <option value="NONE">No deposit</option>
-          <option value="FIXED">Fixed amount</option>
-          <option value="PERCENT">Percent</option>
-        </select>
-        <input className="rounded border px-3 py-2" type="number" value={form.depositValue} onChange={(e) => onChange("depositValue", e.target.value)} placeholder="Deposit value" />
-        <input className="rounded border px-3 py-2" type="number" value={form.bufferBeforeMinutes} onChange={(e) => onChange("bufferBeforeMinutes", e.target.value)} placeholder="Buffer before (minutes)" />
-        <input className="rounded border px-3 py-2" type="number" value={form.bufferAfterMinutes} onChange={(e) => onChange("bufferAfterMinutes", e.target.value)} placeholder="Buffer after (minutes)" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Name</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" value={form.name} onChange={(e) => onChange("name", e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 md:col-span-2">
+          <span>Description</span>
+          <textarea
+            className="rounded border px-3 py-2 font-normal text-slate-900"
+            value={form.description}
+            onChange={(e) => onChange("description", e.target.value)}
+            rows={3}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Duration (minutes)</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.durationMinutes} onChange={(e) => onChange("durationMinutes", e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Price (cents)</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.priceCents} onChange={(e) => onChange("priceCents", e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Deposit type</span>
+          <select className="rounded border px-3 py-2 font-normal text-slate-900" value={form.depositType} onChange={(e) => onChange("depositType", e.target.value)}>
+            <option value="NONE">No deposit</option>
+            <option value="FIXED">Fixed amount</option>
+            <option value="PERCENT">Percent</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Deposit value</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.depositValue} onChange={(e) => onChange("depositValue", e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Buffer before (minutes)</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.bufferBeforeMinutes} onChange={(e) => onChange("bufferBeforeMinutes", e.target.value)} />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <span>Buffer after (minutes)</span>
+          <input className="rounded border px-3 py-2 font-normal text-slate-900" type="number" value={form.bufferAfterMinutes} onChange={(e) => onChange("bufferAfterMinutes", e.target.value)} />
+        </label>
       </div>
     );
   }
