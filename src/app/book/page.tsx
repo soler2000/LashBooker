@@ -185,13 +185,6 @@ export default function BookPage() {
           <button
             className="rounded bg-white p-2 font-medium text-gray-900 hover:bg-gray-200"
             type="button"
-            onClick={() => setWeekStart((current) => addDays(current, -7))}
-          >
-            Prev week
-          </button>
-          <button
-            className="rounded bg-white p-2 font-medium text-gray-900 hover:bg-gray-200"
-            type="button"
             onClick={() => setWeekStart(getWeekStart(formatDate(new Date())))}
           >
             This week
