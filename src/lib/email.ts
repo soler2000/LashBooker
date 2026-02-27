@@ -358,6 +358,58 @@ export async function sendTemplatedEmail(input: {
   });
 }
 
+
+export async function hasSuccessfulTransactionalEmailLog(dedupeKey: string): Promise<boolean> {
+  const existing = await prisma.transactionalEmailLog.findFirst({
+    where: { dedupeKey, status: "SENT" },
+    select: { id: true },
+  });
+
+  return !!existing;
+}
+
+export async function sendLoggedTransactionalEmail(input: {
+  to: string;
+  templateKey: TransactionalTemplateKey;
+  variables: TemplateVariables;
+  metadata?: Record<string, string>;
+  recipientUserId?: string;
+  bookingId?: string;
+  dedupeKey?: string;
+}): Promise<DeliveryResult & { skipped?: boolean }> {
+  if (input.dedupeKey) {
+    const alreadySent = await hasSuccessfulTransactionalEmailLog(input.dedupeKey);
+    if (alreadySent) {
+      return { ok: true, skipped: true };
+    }
+  }
+
+  const log = await prisma.transactionalEmailLog.create({
+    data: {
+      templateKey: input.templateKey,
+      recipientEmail: input.to,
+      recipientUserId: input.recipientUserId,
+      bookingId: input.bookingId,
+      dedupeKey: input.dedupeKey,
+      status: "QUEUED",
+    },
+    select: { id: true },
+  });
+
+  const result = await sendTemplatedEmail(input);
+
+  await prisma.transactionalEmailLog.update({
+    where: { id: log.id },
+    data: {
+      status: result.ok ? "SENT" : "FAILED",
+      providerMessageId: result.providerMessageId,
+      error: result.error,
+    },
+  });
+
+  return result;
+}
+
 export function parseProviderWebhook(payload: unknown): ProviderWebhookEvent | null {
   if (!payload || typeof payload !== "object") return null;
   const body = payload as Record<string, unknown>;
@@ -390,13 +442,14 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
     metadata: { bookingId: data.bookingId, type: "booking_confirmation" },
   });
 
+
   if (!result.ok) {
     console.warn(JSON.stringify({ event: "booking_confirmation_email_failed", bookingId: data.bookingId, to: data.to, ...result }));
   }
 }
 
-export async function sendBookingReminderEmail(data: BookingEmailData & { scheduledHours: number }) {
-  const result = await sendTemplatedEmail({
+export async function sendBookingReminderEmail(data: BookingEmailData & { scheduledHours: number; recipientUserId?: string }) {
+  const result = await sendLoggedTransactionalEmail({
     to: data.to,
     templateKey: "booking_reminder",
     variables: {
@@ -410,6 +463,9 @@ export async function sendBookingReminderEmail(data: BookingEmailData & { schedu
       scheduledHours: String(data.scheduledHours),
       type: "booking_reminder",
     },
+    recipientUserId: data.recipientUserId,
+    bookingId: data.bookingId,
+    dedupeKey: `reminder:${data.bookingId}:${data.scheduledHours}`,
   });
 
   if (!result.ok) {
@@ -423,4 +479,6 @@ export async function sendBookingReminderEmail(data: BookingEmailData & { schedu
       }),
     );
   }
+
+  return result;
 }
