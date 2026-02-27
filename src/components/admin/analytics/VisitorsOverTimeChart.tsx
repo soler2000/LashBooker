@@ -1,6 +1,5 @@
 "use client";
 
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { VisitorsSeriesPoint } from "./types";
 
 function formatPeriod(value: string) {
@@ -12,22 +11,24 @@ export function VisitorsOverTimeChart({ data }: { data: VisitorsSeriesPoint[] })
     return <p className="text-sm text-slate-400">No visitor time-series data available for this date range.</p>;
   }
 
+  const maxValue = Math.max(...data.map((point) => Math.max(point.visitors, point.pageViews)), 1);
+
   return (
-    <div className="h-72 w-full">
-      <ResponsiveContainer>
-        <LineChart data={data}>
-          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
-          <XAxis dataKey="periodStart" tickFormatter={formatPeriod} stroke="#94a3b8" />
-          <YAxis stroke="#94a3b8" allowDecimals={false} />
-          <Tooltip
-            contentStyle={{ backgroundColor: "#020617", border: "1px solid #334155", borderRadius: "8px" }}
-            labelFormatter={(label: string | number) => formatPeriod(String(label))}
-          />
-          <Legend />
-          <Line type="monotone" dataKey="visitors" stroke="#38bdf8" strokeWidth={2} dot={false} name="Visitors" />
-          <Line type="monotone" dataKey="pageViews" stroke="#a78bfa" strokeWidth={2} dot={false} name="Page Views" />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="space-y-3">
+      {data.map((point) => (
+        <div key={point.periodStart} className="space-y-1">
+          <div className="flex items-center justify-between text-xs text-slate-300">
+            <span>{formatPeriod(point.periodStart)}</span>
+            <span>{point.visitors} visitors · {point.pageViews} views</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded bg-slate-800">
+            <div className="h-full bg-sky-400" style={{ width: `${(point.visitors / maxValue) * 100}%` }} />
+          </div>
+          <div className="h-2 overflow-hidden rounded bg-slate-800">
+            <div className="h-full bg-violet-400" style={{ width: `${(point.pageViews / maxValue) * 100}%` }} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

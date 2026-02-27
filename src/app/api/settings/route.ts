@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 function toPublicSettings(instagramUrl: string | null | undefined) {
   if (!instagramUrl) {
     return { instagramUrl: null };

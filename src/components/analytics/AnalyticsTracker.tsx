@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 
 const VISITOR_KEY_STORAGE = "lb_visitor_key";
 const SESSION_KEY_STORAGE = "lb_session_id";
@@ -50,7 +50,7 @@ function sendVisit(payload: {
   });
 }
 
-export function AnalyticsTracker() {
+function AnalyticsTrackerInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPathRef = useRef<string>("");
@@ -137,4 +137,12 @@ export function AnalyticsTracker() {
   }, []);
 
   return null;
+}
+
+export function AnalyticsTracker() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsTrackerInner />
+    </Suspense>
+  );
 }
