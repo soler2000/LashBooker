@@ -248,6 +248,7 @@ model BusinessSettings {
   addressCity                 String?
   addressPostcode             String?
   addressCountry              String?
+  qualificationCertificatesJson String?
   reminderScheduleJson        String
   createdAt                   DateTime    @default(now())
   updatedAt                   DateTime    @updatedAt

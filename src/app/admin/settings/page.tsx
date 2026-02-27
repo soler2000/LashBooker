@@ -9,10 +9,15 @@ import {
   type SiteImageKey,
   type SiteImages,
 } from "@/lib/site-images";
+import {
+  defaultQualificationCertificates,
+  type QualificationCertificateContent,
+} from "@/lib/qualification-certificates";
 
 type AdminSettingsResponse = {
   depositRequired: boolean;
   instagramUrl: string | null;
+  qualificationCertificates: QualificationCertificateContent[];
 };
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
@@ -48,6 +53,9 @@ export default function AdminSettingsPage() {
   const [depositRequired, setDepositRequired] = useState(true);
   const [instagramUrl, setInstagramUrl] = useState("");
   const [depositStatus, setDepositStatus] = useState("");
+  const [qualificationCertificates, setQualificationCertificates] = useState<QualificationCertificateContent[]>(
+    defaultQualificationCertificates,
+  );
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -81,6 +89,7 @@ export default function AdminSettingsPage() {
     const data = (await response.json()) as AdminSettingsResponse;
     setDepositRequired(data.depositRequired);
     setInstagramUrl(data.instagramUrl ?? "");
+    setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
   };
 
   useEffect(() => {
@@ -109,6 +118,14 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const updateCertificateField = (index: number, field: keyof QualificationCertificateContent, value: string) => {
+    setQualificationCertificates((current) =>
+      current.map((certificate, certificateIndex) =>
+        certificateIndex === index ? { ...certificate, [field]: value } : certificate,
+      ),
+    );
+  };
+
   const saveDepositSettings = async () => {
     setDepositStatus("");
     const response = await fetch("/api/admin/settings", {
@@ -117,6 +134,10 @@ export default function AdminSettingsPage() {
       body: JSON.stringify({
         depositRequired,
         instagramUrl: normalizeInstagramInput(instagramUrl) || null,
+        qualificationCertificates: qualificationCertificates.map((certificate) => ({
+          title: certificate.title.trim(),
+          description: certificate.description.trim(),
+        })),
       }),
     });
 
@@ -128,6 +149,7 @@ export default function AdminSettingsPage() {
 
     const data = (await response.json()) as AdminSettingsResponse;
     setInstagramUrl(data.instagramUrl ?? "");
+    setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setDepositStatus(
       depositRequired
         ? "Settings saved. Deposits are required for new bookings."
@@ -215,6 +237,32 @@ export default function AdminSettingsPage() {
             onChange={(event) => setInstagramUrl(event.target.value)}
           />
           <p className="text-xs text-slate-400">Used on the public homepage header. Leave blank to hide the link.</p>
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-slate-100">Homepage qualification certificates</p>
+          <p className="text-xs text-slate-400">Edit the titles and descriptions shown in the qualifications section.</p>
+
+          {qualificationCertificates.map((certificate, index) => (
+            <div key={index} className="space-y-2 rounded border border-slate-800 bg-slate-900/30 p-3">
+              <p className="text-xs uppercase tracking-wide text-slate-300">Certificate {index + 1}</p>
+              <input
+                type="text"
+                maxLength={120}
+                className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                value={certificate.title}
+                onChange={(event) => updateCertificateField(index, "title", event.target.value)}
+                placeholder="Certificate title"
+              />
+              <textarea
+                maxLength={320}
+                className="min-h-24 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                value={certificate.description}
+                onChange={(event) => updateCertificateField(index, "description", event.target.value)}
+                placeholder="Certificate description"
+              />
+            </div>
+          ))}
         </div>
 
         <button
