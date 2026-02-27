@@ -41,11 +41,18 @@ export async function POST(req: Request) {
         status: "CONFIRMED",
         startAt: { gte: windowStart, lt: windowEnd },
       },
-      include: { client: true },
+      include: { client: { include: { clientProfile: true } } },
     });
 
     for (const booking of bookings) {
-      await sendBookingReminderEmail(booking.client.email, booking.id, hours);
+      await sendBookingReminderEmail({
+        to: booking.client.email,
+        bookingId: booking.id,
+        firstName: booking.client.clientProfile?.firstName || "there",
+        serviceName: booking.serviceName,
+        startAt: booking.startAt,
+        scheduledHours: hours,
+      });
       sent.push({ bookingId: booking.id, hours });
     }
   }

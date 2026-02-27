@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { sendTemplatedEmail } from "@/lib/email";
 
 const roleAllowlist = ["ADMIN", "OWNER", "STAFF"];
 const CALENDAR_BLOCKING_STATUSES = ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED", "NO_SHOW"] as const;
@@ -83,7 +84,12 @@ export async function PUT(request: Request) {
   const parsed = updateSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
-  const existing = await prisma.booking.findUnique({ where: { id: parsed.data.bookingId } });
+  const existing = await prisma.booking.findUnique({
+    where: { id: parsed.data.bookingId },
+    include: {
+      client: { include: { clientProfile: true } },
+    },
+  });
   if (!existing) return NextResponse.json({ error: "Booking missing" }, { status: 404 });
 
   const nextStartAt = parsed.data.startAt ? new Date(parsed.data.startAt) : existing.startAt;
@@ -99,10 +105,83 @@ export async function PUT(request: Request) {
       ...(parsed.data.endAt ? { endAt: nextEndAt } : {}),
     },
     include: {
-      client: { select: { email: true } },
+      client: { include: { clientProfile: true } },
       payments: { select: { amountCents: true, status: true, capturedAt: true } },
     },
   });
+
+  const firstName = updated.client.clientProfile?.firstName || "there";
+  const timeChanged = parsed.data.startAt !== undefined || parsed.data.endAt !== undefined;
+  const statusChanged = parsed.data.status !== undefined && parsed.data.status !== existing.status;
+
+  if (statusChanged && (parsed.data.status === "CANCELLED_BY_ADMIN" || parsed.data.status === "CANCELLED_BY_CLIENT")) {
+    const cancellationEmail = await sendTemplatedEmail({
+      to: updated.client.email,
+      templateKey: "booking_cancellation_confirmed",
+      variables: {
+        bookingId: updated.id,
+        firstName,
+        serviceName: updated.serviceName,
+        startAt: updated.startAt,
+      },
+      metadata: { bookingId: updated.id, type: "booking_cancellation_confirmed" },
+    });
+
+    if (!cancellationEmail.ok) {
+      console.warn(JSON.stringify({
+        event: "admin_booking_cancellation_email_failed",
+        bookingId: updated.id,
+        email: updated.client.email,
+        ...cancellationEmail,
+      }));
+    }
+  }
+
+  if (timeChanged) {
+    const changeEmail = await sendTemplatedEmail({
+      to: updated.client.email,
+      templateKey: "booking_change_confirmed",
+      variables: {
+        bookingId: updated.id,
+        firstName,
+        serviceName: updated.serviceName,
+        startAt: updated.startAt,
+      },
+      metadata: { bookingId: updated.id, type: "booking_change_confirmed" },
+    });
+
+    if (!changeEmail.ok) {
+      console.warn(JSON.stringify({
+        event: "admin_booking_change_email_failed",
+        bookingId: updated.id,
+        email: updated.client.email,
+        ...changeEmail,
+      }));
+    }
+  }
+
+  if (statusChanged && parsed.data.status === "NO_SHOW") {
+    const noShowEmail = await sendTemplatedEmail({
+      to: updated.client.email,
+      templateKey: "missed_booking_notification",
+      variables: {
+        bookingId: updated.id,
+        firstName,
+        serviceName: updated.serviceName,
+        startAt: updated.startAt,
+      },
+      metadata: { bookingId: updated.id, type: "missed_booking_notification" },
+    });
+
+    if (!noShowEmail.ok) {
+      console.warn(JSON.stringify({
+        event: "admin_booking_no_show_email_failed",
+        bookingId: updated.id,
+        email: updated.client.email,
+        ...noShowEmail,
+      }));
+    }
+  }
 
   return NextResponse.json(updated);
 }

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { trimPasswordEdges } from "@/lib/password";
+import { sendTemplatedEmail } from "@/lib/email";
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -33,6 +34,25 @@ export async function POST(req: Request) {
       },
     },
   });
+
+  const accountCreatedEmail = await sendTemplatedEmail({
+    to: parsed.data.email,
+    templateKey: "account_created",
+    variables: {
+      firstName: parsed.data.firstName,
+      email: parsed.data.email,
+    },
+    metadata: { userId: user.id, type: "account_created" },
+  });
+
+  if (!accountCreatedEmail.ok) {
+    console.warn(JSON.stringify({
+      event: "account_created_email_failed",
+      userId: user.id,
+      email: parsed.data.email,
+      ...accountCreatedEmail,
+    }));
+  }
 
   return NextResponse.json({ id: user.id }, { status: 201 });
 }

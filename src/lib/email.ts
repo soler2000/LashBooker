@@ -25,6 +25,18 @@ export type ProviderWebhookEvent = {
   event: "OPENED" | "CLICKED";
 };
 
+type TemplateVariables = Record<string, string | number | boolean | null | undefined | Date>;
+
+type TransactionalTemplateKey =
+  | "account_created"
+  | "password_changed"
+  | "password_recovery"
+  | "booking_confirmed"
+  | "booking_cancellation_confirmed"
+  | "booking_change_confirmed"
+  | "booking_reminder"
+  | "missed_booking_notification";
+
 type ResolvedTransport =
   | {
       provider: "SMTP";
@@ -45,6 +57,18 @@ type SmtpResponse = { code: number; lines: string[] };
 function readBooleanEnv(value: string | undefined): boolean | undefined {
   if (typeof value === "undefined") return undefined;
   return value.trim().toLowerCase() === "true";
+}
+
+function normalizeTemplateValue(value: TemplateVariables[string]): string {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value.toISOString();
+  return String(value);
+}
+
+function renderTemplateString(template: string, variables: TemplateVariables): string {
+  return template.replace(/{{\s*([\w.-]+)\s*}}/g, (_match, key: string) => {
+    return normalizeTemplateValue(variables[key]);
+  });
 }
 
 async function resolveTransport(): Promise<ResolvedTransport> {
@@ -303,6 +327,37 @@ export async function sendEmail(input: SendEmailInput): Promise<DeliveryResult> 
   }
 }
 
+export async function sendTemplatedEmail(input: {
+  to: string;
+  templateKey: TransactionalTemplateKey;
+  variables: TemplateVariables;
+  metadata?: Record<string, string>;
+}): Promise<DeliveryResult> {
+  const template = await prisma.transactionalEmailTemplate.findUnique({
+    where: { key: input.templateKey },
+  });
+
+  if (!template || !template.isActive) {
+    return {
+      ok: false,
+      error: `Transactional template '${input.templateKey}' is missing or inactive`,
+      errorCode: "CONFIGURATION",
+      retryable: false,
+    };
+  }
+
+  return sendEmail({
+    to: input.to,
+    subject: renderTemplateString(template.subject, input.variables),
+    html: renderTemplateString(template.htmlBody, input.variables),
+    text: renderTemplateString(template.textBody, input.variables),
+    metadata: {
+      ...input.metadata,
+      templateKey: input.templateKey,
+    },
+  });
+}
+
 export function parseProviderWebhook(payload: unknown): ProviderWebhookEvent | null {
   if (!payload || typeof payload !== "object") return null;
   const body = payload as Record<string, unknown>;
@@ -314,40 +369,56 @@ export function parseProviderWebhook(payload: unknown): ProviderWebhookEvent | n
   return null;
 }
 
-export async function sendBookingConfirmationEmail(to: string, bookingId: string) {
-  const result = await sendEmail({
-    to,
-    subject: "Your booking is confirmed",
-    html: `<p>Your booking <strong>${bookingId}</strong> is confirmed.</p>`,
-    text: `Your booking ${bookingId} is confirmed.`,
-    metadata: { bookingId, type: "booking_confirmation" },
+type BookingEmailData = {
+  to: string;
+  bookingId: string;
+  firstName: string;
+  serviceName: string;
+  startAt: Date;
+};
+
+export async function sendBookingConfirmationEmail(data: BookingEmailData) {
+  const result = await sendTemplatedEmail({
+    to: data.to,
+    templateKey: "booking_confirmed",
+    variables: {
+      bookingId: data.bookingId,
+      firstName: data.firstName,
+      serviceName: data.serviceName,
+      startAt: data.startAt,
+    },
+    metadata: { bookingId: data.bookingId, type: "booking_confirmation" },
   });
 
   if (!result.ok) {
-    console.warn(JSON.stringify({ event: "booking_confirmation_email_failed", bookingId, to, ...result }));
+    console.warn(JSON.stringify({ event: "booking_confirmation_email_failed", bookingId: data.bookingId, to: data.to, ...result }));
   }
 }
 
-export async function sendBookingReminderEmail(
-  to: string,
-  bookingId: string,
-  scheduledHours: number,
-) {
-  const result = await sendEmail({
-    to,
-    subject: "Booking reminder",
-    html: `<p>Reminder: your booking <strong>${bookingId}</strong> is in ${scheduledHours} hours.</p>`,
-    text: `Reminder: your booking ${bookingId} is in ${scheduledHours} hours.`,
-    metadata: { bookingId, scheduledHours: String(scheduledHours), type: "booking_reminder" },
+export async function sendBookingReminderEmail(data: BookingEmailData & { scheduledHours: number }) {
+  const result = await sendTemplatedEmail({
+    to: data.to,
+    templateKey: "booking_reminder",
+    variables: {
+      bookingId: data.bookingId,
+      firstName: data.firstName,
+      serviceName: data.serviceName,
+      startAt: data.startAt,
+    },
+    metadata: {
+      bookingId: data.bookingId,
+      scheduledHours: String(data.scheduledHours),
+      type: "booking_reminder",
+    },
   });
 
   if (!result.ok) {
     console.warn(
       JSON.stringify({
         event: "booking_reminder_email_failed",
-        bookingId,
-        to,
-        scheduledHours,
+        bookingId: data.bookingId,
+        to: data.to,
+        scheduledHours: data.scheduledHours,
         ...result,
       }),
     );

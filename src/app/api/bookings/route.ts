@@ -73,16 +73,32 @@ export async function POST(req: Request) {
   const depositRequired = (businessSettings?.depositDefaultType ?? "NONE") !== "NONE";
 
   if (!depositRequired) {
-    await prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });
-    if (session.user.email) await sendBookingConfirmationEmail(session.user.email, booking.id);
+    const confirmed = await prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });
+    if (session.user.email) {
+      await sendBookingConfirmationEmail({
+        to: session.user.email,
+        bookingId: booking.id,
+        firstName: session.user.name?.split(" ")[0] || "there",
+        serviceName: confirmed.serviceName,
+        startAt: confirmed.startAt,
+      });
+    }
     return NextResponse.json({ bookingId: booking.id, status: "CONFIRMED", requiresPayment: false });
   }
 
   const amount = calculateDepositAmount(service.priceCents, service.depositType, service.depositValue);
 
   if (amount <= 0) {
-    await prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });
-    if (session.user.email) await sendBookingConfirmationEmail(session.user.email, booking.id);
+    const confirmed = await prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });
+    if (session.user.email) {
+      await sendBookingConfirmationEmail({
+        to: session.user.email,
+        bookingId: booking.id,
+        firstName: session.user.name?.split(" ")[0] || "there",
+        serviceName: confirmed.serviceName,
+        startAt: confirmed.startAt,
+      });
+    }
     return NextResponse.json({ bookingId: booking.id, status: "CONFIRMED", requiresPayment: false });
   }
 
