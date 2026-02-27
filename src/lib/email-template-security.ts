@@ -78,8 +78,26 @@ export const SAMPLE_TEMPLATE_VARIABLES: Record<TransactionalTemplateKey, Templat
 
 function normalizeTemplateValue(value: TemplateVariables[string]): string {
   if (value === null || value === undefined) return "";
-  if (value instanceof Date) return value.toISOString();
+  if (value instanceof Date) return formatEmailDateTime(value);
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return formatEmailDateTime(parsed);
+    }
+  }
   return String(value);
+}
+
+function formatEmailDateTime(value: Date): string {
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(value.getUTCDate()).padStart(2, "0");
+  const hours24 = value.getUTCHours();
+  const minutes = String(value.getUTCMinutes()).padStart(2, "0");
+  const meridiem = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 || 12;
+
+  return `${year}-${month}-${day} at ${hours12}:${minutes}${meridiem}`;
 }
 
 export function escapeHtml(value: string): string {
