@@ -241,6 +241,13 @@ model BusinessSettings {
   cancelCutoffHours           Int         @default(24)
   pendingPaymentExpiryMinutes Int         @default(30)
   instagramUrl                String?
+  contactPhone                String?
+  contactEmail                String?
+  addressLine1                String?
+  addressLine2                String?
+  addressCity                 String?
+  addressPostcode             String?
+  addressCountry              String?
   reminderScheduleJson        String
   createdAt                   DateTime    @default(now())
   updatedAt                   DateTime    @updatedAt
