@@ -41,6 +41,12 @@ export default function Hero({ image }: HeroProps) {
           >
             /policies
           </Link>
+          <Link
+            href="/cookie-policy"
+            className="inline-flex rounded-full border border-white/35 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-white/85 transition hover:border-white/70 hover:bg-white/10"
+          >
+            /cookie-policy
+          </Link>
         </p>
       </div>
     </Scene>
