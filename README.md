@@ -74,6 +74,16 @@ STRIPE_SECRET_KEY="sk_test_xxx"
 STRIPE_WEBHOOK_SECRET="whsec_xxx"
 STRIPE_PUBLISHABLE_KEY="pk_test_xxx"
 EMAIL_PROVIDER_API_KEY=""
+EMAIL_PROVIDER="LOG"
+SMTP_HOST=""
+SMTP_PORT="587"
+SMTP_USERNAME=""
+SMTP_PASSWORD=""
+SMTP_FROM_NAME=""
+SMTP_FROM_EMAIL=""
+SMTP_REPLY_TO=""
+SMTP_USE_TLS="false"
+SMTP_USE_STARTTLS="true"
 S3_ENDPOINT=""
 S3_ACCESS_KEY=""
 S3_SECRET_KEY=""
@@ -84,6 +94,8 @@ DEFAULT_OWNER_PASSWORD="ChangeMe123!"
 ```
 
 ---
+
+Email delivery resolves transport from persisted admin settings (`/admin/email-settings`) first, then falls back to environment variables. If SMTP is incomplete or disabled, the app safely falls back to LOG transport for local/dev usage.
 
 After running `npm run prisma:seed`, you can sign in with the default owner account from `DEFAULT_OWNER_EMAIL` / `DEFAULT_OWNER_PASSWORD`.
 The seed only creates this owner account when it does not already exist, so later deploys/builds will not overwrite existing user credentials.
@@ -153,6 +165,11 @@ Then configure the rest of the app variables:
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_PUBLISHABLE_KEY`
 - `EMAIL_PROVIDER_API_KEY`
+- `EMAIL_PROVIDER` (`LOG` or `SMTP`; default `LOG`)
+- Optional SMTP fallback env vars (used when admin email settings are not configured):
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
+  - `SMTP_FROM_NAME`, `SMTP_FROM_EMAIL`, `SMTP_REPLY_TO`
+  - `SMTP_USE_TLS`, `SMTP_USE_STARTTLS`
 - `APP_BASE_URL` (same as public URL)
 - Optional S3 vars for future journal image uploads:
   - `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`
