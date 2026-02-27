@@ -5,9 +5,27 @@ import Scene from "@/components/landing/Scene";
 
 type HeroProps = {
   image: string;
+  instagramUrl?: string | null;
 };
 
-export default function Hero({ image }: HeroProps) {
+function getSafeInstagramUrl(instagramUrl?: string | null) {
+  if (!instagramUrl) return null;
+
+  try {
+    const candidate = new URL(instagramUrl);
+    if (!["http:", "https:"].includes(candidate.protocol)) {
+      return null;
+    }
+
+    return candidate.toString();
+  } catch {
+    return null;
+  }
+}
+
+export default function Hero({ image, instagramUrl }: HeroProps) {
+  const safeInstagramUrl = getSafeInstagramUrl(instagramUrl);
+
   return (
     <Scene
       image={image}
@@ -17,11 +35,23 @@ export default function Hero({ image }: HeroProps) {
       sectionClassName="relative h-screen w-full overflow-hidden"
       contentClassName="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-between px-6 pb-14 pt-8 md:px-12 md:pb-20"
     >
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-3">
         <p className="text-xs uppercase tracking-[0.35em] text-white/75">Lashed and Lifted</p>
-        <Link href="/login" className="text-sm font-medium text-white/85 transition hover:text-white">
-          Login
-        </Link>
+        <div className="flex items-center gap-3">
+          {safeInstagramUrl ? (
+            <a
+              href={safeInstagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-white/85 transition hover:text-white"
+            >
+              Instagram
+            </a>
+          ) : null}
+          <Link href="/login" className="text-sm font-medium text-white/85 transition hover:text-white">
+            Login
+          </Link>
+        </div>
       </header>
       <div className="max-w-3xl">
         <h1 className="text-5xl font-semibold leading-tight md:text-8xl">Lash design in motion.</h1>

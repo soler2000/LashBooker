@@ -5,9 +5,27 @@ import { z } from "zod";
 
 const roleAllowlist = ["ADMIN", "OWNER"];
 
+const MAX_URL_LENGTH = 2048;
+
+function normalizeInstagramUrl(value: string | null | undefined) {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
 const updateSchema = z
   .object({
     depositRequired: z.boolean().optional(),
+    instagramUrl: z.preprocess(
+      (value) => normalizeInstagramUrl(value as string | null | undefined),
+      z.string().url().max(MAX_URL_LENGTH).nullable().optional(),
+    ),
     mailProviderType: z.string().trim().max(64).nullable().optional(),
     smtpHost: z.string().trim().max(255).nullable().optional(),
     smtpPort: z.number().int().min(1).max(65535).nullable().optional(),
@@ -39,6 +57,7 @@ async function ensureSettings() {
       currency: "gbp",
       depositDefaultType: "PERCENT",
       depositDefaultValue: 30,
+      instagramUrl: null,
       reminderScheduleJson: "[48,24]",
       smtpUseTls: false,
       smtpUseStarttls: false,
@@ -51,6 +70,7 @@ function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) 
     depositRequired: settings.depositDefaultType !== "NONE",
     depositDefaultType: settings.depositDefaultType,
     depositDefaultValue: settings.depositDefaultValue,
+    instagramUrl: settings.instagramUrl,
     mailProviderType: settings.mailProviderType,
     smtpHost: settings.smtpHost,
     smtpPort: settings.smtpPort,
@@ -88,6 +108,7 @@ export async function PUT(request: Request) {
     }
   };
 
+  assignIfPresent("instagramUrl");
   assignIfPresent("mailProviderType");
   assignIfPresent("smtpHost");
   assignIfPresent("smtpPort");

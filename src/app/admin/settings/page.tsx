@@ -12,6 +12,7 @@ import {
 
 type AdminSettingsResponse = {
   depositRequired: boolean;
+  instagramUrl: string | null;
 };
 
 type TransactionalEmailTemplate = {
@@ -68,6 +69,7 @@ export default function AdminSettingsPage() {
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
   const [depositRequired, setDepositRequired] = useState(true);
+  const [instagramUrl, setInstagramUrl] = useState("");
   const [depositStatus, setDepositStatus] = useState("");
 
   const [templates, setTemplates] = useState<TransactionalEmailTemplate[]>([]);
@@ -91,15 +93,23 @@ export default function AdminSettingsPage() {
     }
   }, []);
 
-  const loadDepositSettings = async () => {
+  const normalizeInstagramInput = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
+
+  const loadSettings = async () => {
     const response = await fetch("/api/admin/settings", { cache: "no-store" });
     if (!response.ok) {
-      setDepositStatus("Could not load deposit settings.");
+      setDepositStatus("Could not load settings.");
       return;
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
     setDepositRequired(data.depositRequired);
+    setInstagramUrl(data.instagramUrl ?? "");
   };
 
   const loadTemplates = async () => {
@@ -116,7 +126,7 @@ export default function AdminSettingsPage() {
   };
 
   useEffect(() => {
-    loadDepositSettings();
+    loadSettings();
     loadTemplates();
   }, []);
 
@@ -147,19 +157,24 @@ export default function AdminSettingsPage() {
     const response = await fetch("/api/admin/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ depositRequired }),
+      body: JSON.stringify({
+        depositRequired,
+        instagramUrl: normalizeInstagramInput(instagramUrl) || null,
+      }),
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      setDepositStatus(data.error ?? "Could not save deposit settings.");
+      setDepositStatus(data.error ?? "Could not save settings. Please enter a valid Instagram URL.");
       return;
     }
 
+    const data = (await response.json()) as AdminSettingsResponse;
+    setInstagramUrl(data.instagramUrl ?? "");
     setDepositStatus(
       depositRequired
-        ? "Deposits are required for new bookings."
-        : "Deposits are disabled. Bookings confirm immediately.",
+        ? "Settings saved. Deposits are required for new bookings."
+        : "Settings saved. Deposits are disabled; bookings confirm immediately.",
     );
   };
 
@@ -314,6 +329,19 @@ export default function AdminSettingsPage() {
           />
           Require deposit payment for new bookings
         </label>
+        <div className="space-y-1">
+          <label htmlFor="instagram-url" className="text-sm font-medium text-slate-100">Instagram profile URL</label>
+          <input
+            id="instagram-url"
+            type="url"
+            placeholder="https://instagram.com/yourhandle"
+            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            value={instagramUrl}
+            onChange={(event) => setInstagramUrl(event.target.value)}
+          />
+          <p className="text-xs text-slate-400">Used on the public homepage header. Leave blank to hide the link.</p>
+        </div>
+
         <button
           type="button"
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"

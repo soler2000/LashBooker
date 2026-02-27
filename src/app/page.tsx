@@ -8,8 +8,13 @@ import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
 
+type PublicSettingsResponse = {
+  instagramUrl: string | null;
+};
+
 export default function Home() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
+  const [instagramUrl, setInstagramUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -26,9 +31,24 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const loadPublicSettings = async () => {
+      const response = await fetch("/api/settings", { cache: "no-store" });
+      if (!response.ok) {
+        setInstagramUrl(null);
+        return;
+      }
+
+      const data = (await response.json()) as PublicSettingsResponse;
+      setInstagramUrl(data.instagramUrl ?? null);
+    };
+
+    loadPublicSettings();
+  }, []);
+
   return (
     <main className="bg-black text-white">
-      <Hero image={images.hero} />
+      <Hero image={images.hero} instagramUrl={instagramUrl} />
 
       <StickyStoryScene
         eyebrow="Scene 2"
