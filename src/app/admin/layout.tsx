@@ -9,6 +9,7 @@ const links = [
   ["Consumables", "/admin/consumables"],
   ["Clients", "/admin/clients"],
   ["Marketing", "/admin/marketing"],
+  ["Visitor Analytics", "/admin/visitors"],
   ["Working Times", "/admin/working-times"],
 ];
 
