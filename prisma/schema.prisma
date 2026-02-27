@@ -63,6 +63,12 @@ enum CampaignRecipientStatus {
   UNSUBSCRIBED
 }
 
+enum TransactionalEmailLogStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -79,6 +85,7 @@ model User {
   accounts     Account[]
   sessions     Session[]
   campaignRecipients CampaignRecipient[]
+  transactionalEmailLogs TransactionalEmailLog[]
 }
 
 model ClientProfile {
@@ -134,6 +141,7 @@ model Booking {
   service          Service       @relation(fields: [serviceId], references: [id])
   payments         Payment[]
   journalEntries   JournalEntry[]
+  transactionalEmailLogs TransactionalEmailLog[]
 }
 
 model JournalEntry {
@@ -211,6 +219,25 @@ model TransactionalEmailTemplate {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model TransactionalEmailLog {
+  id                String                      @id @default(uuid())
+  templateKey       String
+  recipientEmail    String
+  recipientUserId   String?
+  bookingId         String?
+  dedupeKey         String?
+  status            TransactionalEmailLogStatus @default(QUEUED)
+  providerMessageId String?
+  error             String?
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+  recipientUser     User?                       @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
+  booking           Booking?                    @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([dedupeKey, status])
+  @@index([createdAt])
 }
 
 model WorkingHours {

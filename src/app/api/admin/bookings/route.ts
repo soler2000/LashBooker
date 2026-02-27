@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { sendTemplatedEmail } from "@/lib/email";
+import { sendLoggedTransactionalEmail, sendTemplatedEmail } from "@/lib/email";
 
 const roleAllowlist = ["ADMIN", "OWNER", "STAFF"];
 const CALENDAR_BLOCKING_STATUSES = ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED", "NO_SHOW"] as const;
@@ -161,7 +161,7 @@ export async function PUT(request: Request) {
   }
 
   if (statusChanged && parsed.data.status === "NO_SHOW") {
-    const noShowEmail = await sendTemplatedEmail({
+    const noShowEmail = await sendLoggedTransactionalEmail({
       to: updated.client.email,
       templateKey: "missed_booking_notification",
       variables: {
@@ -171,6 +171,9 @@ export async function PUT(request: Request) {
         startAt: updated.startAt,
       },
       metadata: { bookingId: updated.id, type: "missed_booking_notification" },
+      bookingId: updated.id,
+      recipientUserId: updated.clientId,
+      dedupeKey: `no_show:${updated.id}`,
     });
 
     if (!noShowEmail.ok) {

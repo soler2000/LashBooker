@@ -31,6 +31,7 @@ export async function POST(req: Request) {
   const now = Date.now();
   const oneHourMs = 60 * 60 * 1000;
   const sent: Array<{ bookingId: string; hours: number }> = [];
+  const skipped: Array<{ bookingId: string; hours: number }> = [];
 
   for (const hours of schedule) {
     const windowStart = new Date(now + hours * oneHourMs);
@@ -45,17 +46,23 @@ export async function POST(req: Request) {
     });
 
     for (const booking of bookings) {
-      await sendBookingReminderEmail({
+      const result = await sendBookingReminderEmail({
         to: booking.client.email,
         bookingId: booking.id,
         firstName: booking.client.clientProfile?.firstName || "there",
         serviceName: booking.serviceName,
         startAt: booking.startAt,
         scheduledHours: hours,
+        recipientUserId: booking.clientId,
       });
-      sent.push({ bookingId: booking.id, hours });
+
+      if (result.skipped) {
+        skipped.push({ bookingId: booking.id, hours });
+      } else if (result.ok) {
+        sent.push({ bookingId: booking.id, hours });
+      }
     }
   }
 
-  return NextResponse.json({ sentCount: sent.length, sent });
+  return NextResponse.json({ sentCount: sent.length, skippedCount: skipped.length, sent, skipped });
 }
