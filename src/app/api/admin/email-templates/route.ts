@@ -1,3 +1,8 @@
+import {
+  getAllowedPlaceholders,
+  getAllowedUnescapedPlaceholders,
+  type TransactionalTemplateKey,
+} from "@/lib/email-template-security";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -16,5 +21,14 @@ export async function GET() {
     orderBy: [{ name: "asc" }],
   });
 
-  return NextResponse.json(templates);
+  return NextResponse.json(
+    templates.map((template) => {
+      const templateKey = template.key as TransactionalTemplateKey;
+      return {
+        ...template,
+        allowedPlaceholders: getAllowedPlaceholders(templateKey),
+        allowedUnescapedPlaceholders: getAllowedUnescapedPlaceholders(templateKey),
+      };
+    }),
+  );
 }

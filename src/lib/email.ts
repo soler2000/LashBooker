@@ -2,6 +2,12 @@ import crypto from "node:crypto";
 import net from "node:net";
 import tls from "node:tls";
 
+import {
+  getAllowedUnescapedPlaceholders,
+  renderTemplateString,
+  sanitizeHtmlTemplate,
+  type TransactionalTemplateKey,
+} from "@/lib/email-template-security";
 import { prisma } from "@/lib/prisma";
 
 export type DeliveryResult = {
@@ -27,15 +33,6 @@ export type ProviderWebhookEvent = {
 
 type TemplateVariables = Record<string, string | number | boolean | null | undefined | Date>;
 
-type TransactionalTemplateKey =
-  | "account_created"
-  | "password_changed"
-  | "password_recovery"
-  | "booking_confirmed"
-  | "booking_cancellation_confirmed"
-  | "booking_change_confirmed"
-  | "booking_reminder"
-  | "missed_booking_notification";
 
 type ResolvedTransport =
   | {
@@ -57,18 +54,6 @@ type SmtpResponse = { code: number; lines: string[] };
 function readBooleanEnv(value: string | undefined): boolean | undefined {
   if (typeof value === "undefined") return undefined;
   return value.trim().toLowerCase() === "true";
-}
-
-function normalizeTemplateValue(value: TemplateVariables[string]): string {
-  if (value === null || value === undefined) return "";
-  if (value instanceof Date) return value.toISOString();
-  return String(value);
-}
-
-function renderTemplateString(template: string, variables: TemplateVariables): string {
-  return template.replace(/{{\s*([\w.-]+)\s*}}/g, (_match, key: string) => {
-    return normalizeTemplateValue(variables[key]);
-  });
 }
 
 async function resolveTransport(): Promise<ResolvedTransport> {
@@ -346,11 +331,13 @@ export async function sendTemplatedEmail(input: {
     };
   }
 
+  const allowUnescapedPlaceholders = new Set(getAllowedUnescapedPlaceholders(input.templateKey));
+
   return sendEmail({
     to: input.to,
-    subject: renderTemplateString(template.subject, input.variables),
-    html: renderTemplateString(template.htmlBody, input.variables),
-    text: renderTemplateString(template.textBody, input.variables),
+    subject: renderTemplateString(template.subject, input.variables, { allowUnescapedPlaceholders }),
+    html: sanitizeHtmlTemplate(renderTemplateString(template.htmlBody, input.variables, { allowUnescapedPlaceholders })),
+    text: renderTemplateString(template.textBody, input.variables, { allowUnescapedPlaceholders }),
     metadata: {
       ...input.metadata,
       templateKey: input.templateKey,
