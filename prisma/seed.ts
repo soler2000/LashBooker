@@ -31,10 +31,12 @@ async function main() {
       depositDefaultType: DepositType.PERCENT,
       depositDefaultValue: 30,
       pendingPaymentExpiryMinutes: 30,
+      instagramUrl: null,
       reminderScheduleJson: JSON.stringify([48, 24]),
     },
     update: {
       pendingPaymentExpiryMinutes: 30,
+      instagramUrl: null,
     },
   });
 
