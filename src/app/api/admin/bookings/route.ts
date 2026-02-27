@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     prisma.booking.findMany({
       where,
       include: {
-        client: { select: { email: true } },
+        client: { select: { id: true, email: true, clientProfile: { select: { firstName: true, lastName: true, phone: true } } } },
         payments: { select: { amountCents: true, status: true, capturedAt: true } },
       },
       orderBy: { startAt: "asc" },

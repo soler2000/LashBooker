@@ -9,7 +9,23 @@ type Booking = {
   status: "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED_BY_CLIENT" | "CANCELLED_BY_ADMIN" | "NO_SHOW";
   notes: string | null;
   serviceName: string;
-  client: { email: string };
+  servicePriceCents: number;
+  serviceDepositType: "NONE" | "FIXED" | "PERCENT";
+  serviceDepositValue: number;
+  client: {
+    id: string;
+    email: string;
+    clientProfile: {
+      firstName: string;
+      lastName: string;
+      phone: string | null;
+    } | null;
+  };
+  payments: Array<{
+    amountCents: number;
+    status: "REQUIRES_PAYMENT_METHOD" | "SUCCEEDED" | "FAILED" | "CANCELED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+    capturedAt: string | null;
+  }>;
 };
 
 type Blockout = { id: string; startAt: string; endAt: string; reason: string };
@@ -27,11 +43,29 @@ function isoDay(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
+function formatCurrency(amountCents: number) {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "GBP",
+  }).format(amountCents / 100);
+}
+
+function getDepositRequiredCents(booking: Booking) {
+  if (booking.serviceDepositType === "NONE") return 0;
+  if (booking.serviceDepositType === "FIXED") return booking.serviceDepositValue;
+  return Math.round((booking.servicePriceCents * booking.serviceDepositValue) / 100);
+}
+
 export default function AdminCalendarPage() {
   const [view, setView] = useState<"day" | "week">("week");
   const [anchor, setAnchor] = useState(() => new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [blockouts, setBlockouts] = useState<Blockout[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [postResultNotes, setPostResultNotes] = useState("");
+  const [postResultFiles, setPostResultFiles] = useState<File[]>([]);
+  const [savingPostResults, setSavingPostResults] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   const range = useMemo(() => {
     const dayStart = new Date(anchor);
@@ -81,6 +115,69 @@ export default function AdminCalendarPage() {
     await load();
   }
 
+  async function uploadPostResult(booking: Booking) {
+    if (postResultFiles.length === 0) {
+      setModalError("Please select at least one image.");
+      return;
+    }
+
+    if (!postResultNotes.trim()) {
+      setModalError("Please add treatment notes for the journal entry.");
+      return;
+    }
+
+    setSavingPostResults(true);
+    setModalError(null);
+
+    try {
+      const uploadedImages: Array<{ objectKey: string; mimeType: string }> = [];
+
+      for (const file of postResultFiles) {
+        const presignResponse = await fetch(`/api/admin/clients/${booking.client.id}/journal/images/presign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            contentType: file.type || "application/octet-stream",
+            ext: file.name.split(".").pop(),
+          }),
+        });
+
+        if (!presignResponse.ok) throw new Error("Unable to generate upload URL for image.");
+        const presignJson = await presignResponse.json();
+
+        const uploadResponse = await fetch(presignJson.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        });
+
+        if (!uploadResponse.ok) throw new Error("Image upload failed.");
+        uploadedImages.push({ objectKey: presignJson.objectKey, mimeType: file.type || "application/octet-stream" });
+      }
+
+      const createResponse = await fetch(`/api/admin/clients/${booking.client.id}/journal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          notes: postResultNotes.trim(),
+          images: uploadedImages,
+        }),
+      });
+
+      if (!createResponse.ok) throw new Error("Unable to save post-result photos.");
+
+      setPostResultFiles([]);
+      setPostResultNotes("");
+      setSelectedBooking(null);
+    } catch (error) {
+      setModalError(error instanceof Error ? error.message : "Unexpected upload error.");
+    } finally {
+      setSavingPostResults(false);
+    }
+  }
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-semibold">Calendar</h1>
@@ -116,9 +213,11 @@ export default function AdminCalendarPage() {
 
                 {dayBookings.map((booking) => (
                   <article key={booking.id} className="rounded border border-slate-200 bg-slate-50 p-2 text-sm text-slate-900">
-                    <p className="font-medium text-slate-900">{booking.serviceName}</p>
-                    <p className="text-slate-800">{new Date(booking.startAt).toLocaleTimeString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
-                    <p className="text-slate-600">{booking.client.email}</p>
+                    <button className="w-full text-left" onClick={() => setSelectedBooking(booking)}>
+                      <p className="font-medium text-slate-900">{booking.serviceName}</p>
+                      <p className="text-slate-800">{new Date(booking.startAt).toLocaleTimeString()} - {new Date(booking.endAt).toLocaleTimeString()}</p>
+                      <p className="text-slate-600">{booking.client.email}</p>
+                    </button>
                     <select
                       className="mt-2 w-full rounded border border-slate-300 bg-white px-2 py-1 text-slate-900"
                       value={booking.status}
@@ -139,6 +238,67 @@ export default function AdminCalendarPage() {
           );
         })}
       </div>
+
+      {selectedBooking ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded border bg-white p-4 text-slate-900">
+            <div className="mb-3 flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Appointment details</h2>
+                <p className="text-sm text-slate-600">{selectedBooking.serviceName}</p>
+              </div>
+              <button
+                className="rounded border px-2 py-1 text-sm"
+                onClick={() => {
+                  setSelectedBooking(null);
+                  setPostResultFiles([]);
+                  setPostResultNotes("");
+                  setModalError(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="grid gap-2 rounded border bg-slate-50 p-3 text-sm">
+              <p><span className="font-medium">Client:</span> {selectedBooking.client.clientProfile?.firstName} {selectedBooking.client.clientProfile?.lastName}</p>
+              <p><span className="font-medium">Email:</span> {selectedBooking.client.email}</p>
+              <p><span className="font-medium">Phone:</span> {selectedBooking.client.clientProfile?.phone || "Not provided"}</p>
+              <p><span className="font-medium">Start time:</span> {new Date(selectedBooking.startAt).toLocaleString()}</p>
+              <p><span className="font-medium">Price:</span> {formatCurrency(selectedBooking.servicePriceCents)}</p>
+              <p>
+                <span className="font-medium">Deposit:</span>{" "}
+                {getDepositRequiredCents(selectedBooking) === 0
+                  ? "No deposit required"
+                  : `${formatCurrency(selectedBooking.payments.filter((payment) => payment.status === "SUCCEEDED").reduce((sum, payment) => sum + payment.amountCents, 0))} paid of ${formatCurrency(getDepositRequiredCents(selectedBooking))}`}
+              </p>
+              {selectedBooking.notes ? <p><span className="font-medium">Notes:</span> {selectedBooking.notes}</p> : null}
+            </div>
+
+            <section className="mt-4 space-y-2 rounded border p-3">
+              <h3 className="font-medium">Capture post-result photos</h3>
+              <p className="text-xs text-slate-600">These files are saved on the client&apos;s profile journal for this appointment.</p>
+              {modalError ? <p className="rounded border border-red-300 bg-red-50 p-2 text-sm text-red-700">{modalError}</p> : null}
+              <textarea
+                className="min-h-24 w-full rounded border px-3 py-2"
+                value={postResultNotes}
+                onChange={(event) => setPostResultNotes(event.target.value)}
+                placeholder="Procedure notes"
+              />
+              <input type="file" multiple accept="image/*" onChange={(event) => setPostResultFiles(Array.from(event.target.files || []))} />
+              <p className="text-xs text-slate-500">{postResultFiles.length} image(s) selected.</p>
+              <button
+                type="button"
+                onClick={() => uploadPostResult(selectedBooking)}
+                disabled={savingPostResults}
+                className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+              >
+                {savingPostResults ? "Saving…" : "Save to client journal"}
+              </button>
+            </section>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
