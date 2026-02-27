@@ -63,12 +63,18 @@ export default function PoliciesPage() {
         </ul>
       </section>
 
-      <div className="mt-10">
+      <div className="mt-10 flex flex-wrap gap-3">
         <Link
           href="/book"
           className="inline-flex rounded bg-black px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
         >
           Book your appointment
+        </Link>
+        <Link
+          href="/cookie-policy"
+          className="inline-flex rounded border border-white/30 px-5 py-3 text-sm font-medium text-white transition hover:border-white/60"
+        >
+          Cookie policy
         </Link>
       </div>
     </main>

@@ -6,6 +6,7 @@ const links = [
   ["Appointments", "/portal/appointments"],
   ["Book New", "/book"],
   ["Policies", "/policies"],
+  ["Cookie Policy", "/cookie-policy"],
 ];
 
 export default function PortalLayout({ children }: { children: ReactNode }) {
