@@ -83,6 +83,17 @@ export function getDayBoundsInTimezone(date: string, timeZone: string) {
   return { dayStart, dayEnd };
 }
 
+function formatUtcDate(date: Date) {
+  return date.toISOString().split("T")[0];
+}
+
+function addDaysUtc(date: string, days: number) {
+  const parsed = parseDateParts(date);
+  const nextDate = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day));
+  nextDate.setUTCDate(nextDate.getUTCDate() + days);
+  return formatUtcDate(nextDate);
+}
+
 export function getWorkingWindowInTimezone(date: string, startTime: string, endTime: string, timeZone: string) {
   const parsedDate = parseDateParts(date);
   const [hStart, mStart] = startTime.split(":").map(Number);
@@ -142,4 +153,28 @@ export async function getAvailableSlots(serviceId: string, date: string, increme
   }
 
   return slots;
+}
+
+type Slot = { startAt: string; endAt: string };
+
+export type WeeklyAvailabilityDay = {
+  date: string;
+  slots: Slot[];
+};
+
+export async function getWeeklyAvailableSlots(
+  serviceId: string,
+  startDate: string,
+  days = 7,
+  getSlotsForDate: (serviceId: string, date: string) => Promise<Slot[]> = getAvailableSlots,
+) {
+  const availability: WeeklyAvailabilityDay[] = [];
+
+  for (let i = 0; i < days; i += 1) {
+    const date = addDaysUtc(startDate, i);
+    const slots = await getSlotsForDate(serviceId, date);
+    availability.push({ date, slots });
+  }
+
+  return availability;
 }
