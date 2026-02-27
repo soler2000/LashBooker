@@ -1,5 +1,10 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  defaultQualificationCertificates,
+  sanitizeQualificationCertificates,
+  type QualificationCertificateContent,
+} from "@/lib/qualification-certificates";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -37,6 +42,16 @@ const updateSchema = z
     mailReplyTo: z.string().trim().email().max(320).nullable().optional(),
     smtpUseTls: z.boolean().nullable().optional(),
     smtpUseStarttls: z.boolean().nullable().optional(),
+    qualificationCertificates: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(120),
+          description: z.string().trim().min(1).max(320),
+        }),
+      )
+      .min(1)
+      .max(6)
+      .optional(),
   })
   .strict();
 
@@ -58,6 +73,7 @@ async function ensureSettings() {
       depositDefaultType: "PERCENT",
       depositDefaultValue: 30,
       instagramUrl: null,
+      qualificationCertificatesJson: JSON.stringify(defaultQualificationCertificates),
       reminderScheduleJson: "[48,24]",
       smtpUseTls: false,
       smtpUseStarttls: false,
@@ -66,6 +82,17 @@ async function ensureSettings() {
 }
 
 function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) {
+  const qualificationCertificates = sanitizeQualificationCertificates(
+    (() => {
+      if (!settings.qualificationCertificatesJson) return null;
+      try {
+        return JSON.parse(settings.qualificationCertificatesJson) as QualificationCertificateContent[];
+      } catch {
+        return null;
+      }
+    })(),
+  );
+
   return {
     depositRequired: settings.depositDefaultType !== "NONE",
     depositDefaultType: settings.depositDefaultType,
@@ -82,6 +109,7 @@ function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) 
     smtpUseTls: settings.smtpUseTls ?? false,
     smtpUseStarttls: settings.smtpUseStarttls ?? false,
     smtpPasswordConfigured: Boolean(settings.smtpPasswordEncrypted),
+    qualificationCertificates,
   };
 }
 
@@ -119,6 +147,10 @@ export async function PUT(request: Request) {
   assignIfPresent("mailReplyTo");
   assignIfPresent("smtpUseTls");
   assignIfPresent("smtpUseStarttls");
+
+  if (typeof parsed.data.qualificationCertificates !== "undefined") {
+    data.qualificationCertificatesJson = JSON.stringify(parsed.data.qualificationCertificates);
+  }
 
   if (typeof parsed.data.smtpPassword !== "undefined") {
     data.smtpPasswordEncrypted = parsed.data.smtpPassword ? parsed.data.smtpPassword : null;

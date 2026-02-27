@@ -8,6 +8,10 @@ import QualificationCertificates, { type CertificateItem } from "@/components/la
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
+import {
+  defaultQualificationCertificates,
+  type QualificationCertificateContent,
+} from "@/lib/qualification-certificates";
 
 type PublicSettingsResponse = {
   instagramUrl: string | null;
@@ -18,6 +22,7 @@ type PublicSettingsResponse = {
   addressCity: string | null;
   addressPostcode: string | null;
   addressCountry: string | null;
+  qualificationCertificates: QualificationCertificateContent[];
 };
 
 const defaultPublicSettings: PublicSettingsResponse = {
@@ -29,6 +34,7 @@ const defaultPublicSettings: PublicSettingsResponse = {
   addressCity: null,
   addressPostcode: null,
   addressCountry: null,
+  qualificationCertificates: defaultQualificationCertificates,
 };
 
 export default function Home() {
@@ -50,23 +56,12 @@ export default function Home() {
     }
   }, []);
 
-  const certificateItems: CertificateItem[] = [
-    {
-      title: "Advanced Lash Styling Certification",
-      description: "Covers eye-shape analysis, custom lash mapping, and blend design for natural-to-editorial looks.",
-      image: images.precision,
-    },
-    {
-      title: "Professional Hygiene & Safety Training",
-      description: "Focuses on sanitation standards, adhesive handling, and safe isolation practices for every appointment.",
-      image: images.closeup,
-    },
-    {
-      title: "Volume Technique Masterclass",
-      description: "Specialized education in handmade fan creation, retention strategy, and lightweight volume application.",
-      image: images.luxury,
-    },
-  ];
+  const certificateImages = [images.precision, images.closeup, images.luxury];
+  const certificateItems: CertificateItem[] = publicSettings.qualificationCertificates.map((certificate, index) => ({
+    title: certificate.title,
+    description: certificate.description,
+    image: certificateImages[index % certificateImages.length],
+  }));
 
   useEffect(() => {
     const loadPublicSettings = async () => {

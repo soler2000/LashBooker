@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import {
+  sanitizeQualificationCertificates,
+  type QualificationCertificateContent,
+} from "@/lib/qualification-certificates";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +16,7 @@ type PublicSettingsInput = {
   addressCity?: string | null;
   addressPostcode?: string | null;
   addressCountry?: string | null;
+  qualificationCertificatesJson?: string | null;
 };
 
 function normalizeOptionalText(value: string | null | undefined) {
@@ -34,20 +39,30 @@ function buildContactAndAddress(settings: PublicSettingsInput | null | undefined
 function toPublicSettings(settings: PublicSettingsInput | null | undefined) {
   const publicContactAndAddress = buildContactAndAddress(settings);
   const normalizedInstagramUrl = normalizeOptionalText(settings?.instagramUrl);
+  const qualificationCertificates = sanitizeQualificationCertificates(
+    (() => {
+      if (!settings?.qualificationCertificatesJson) return null;
+      try {
+        return JSON.parse(settings.qualificationCertificatesJson) as QualificationCertificateContent[];
+      } catch {
+        return null;
+      }
+    })(),
+  );
 
   if (!normalizedInstagramUrl) {
-    return { instagramUrl: null, ...publicContactAndAddress };
+    return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
   }
 
   try {
     const candidate = new URL(normalizedInstagramUrl);
     if (!["http:", "https:"].includes(candidate.protocol)) {
-      return { instagramUrl: null, ...publicContactAndAddress };
+      return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
     }
 
-    return { instagramUrl: candidate.toString(), ...publicContactAndAddress };
+    return { instagramUrl: candidate.toString(), qualificationCertificates, ...publicContactAndAddress };
   } catch {
-    return { instagramUrl: null, ...publicContactAndAddress };
+    return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
   }
 }
 
@@ -63,6 +78,7 @@ export async function GET() {
       addressCity: true,
       addressPostcode: true,
       addressCountry: true,
+      qualificationCertificatesJson: true,
     },
   });
 
