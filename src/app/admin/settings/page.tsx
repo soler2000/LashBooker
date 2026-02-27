@@ -15,29 +15,6 @@ type AdminSettingsResponse = {
   instagramUrl: string | null;
 };
 
-type TransactionalEmailTemplate = {
-  id: string;
-  key: string;
-  name: string;
-  subject: string;
-  htmlBody: string;
-  textBody: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  allowedPlaceholders: string[];
-  allowedUnescapedPlaceholders: string[];
-};
-
-type TemplatePreviewResponse = {
-  rendered: {
-    subject: string;
-    htmlBody: string;
-    textBody: string;
-  };
-  sampleVariables: Record<string, string>;
-};
-
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
   Object.keys(defaultSiteImages) as SiteImageKey[]
 ).map((key) => ({
@@ -71,12 +48,6 @@ export default function AdminSettingsPage() {
   const [depositRequired, setDepositRequired] = useState(true);
   const [instagramUrl, setInstagramUrl] = useState("");
   const [depositStatus, setDepositStatus] = useState("");
-
-  const [templates, setTemplates] = useState<TransactionalEmailTemplate[]>([]);
-  const [templatesStatus, setTemplatesStatus] = useState("");
-  const [savingTemplateId, setSavingTemplateId] = useState<string | null>(null);
-  const [previewingTemplateId, setPreviewingTemplateId] = useState<string | null>(null);
-  const [previewByTemplateId, setPreviewByTemplateId] = useState<Record<string, TemplatePreviewResponse>>({});
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -112,22 +83,8 @@ export default function AdminSettingsPage() {
     setInstagramUrl(data.instagramUrl ?? "");
   };
 
-  const loadTemplates = async () => {
-    setTemplatesStatus("");
-    const response = await fetch("/api/admin/email-templates", { cache: "no-store" });
-
-    if (!response.ok) {
-      setTemplatesStatus("Could not load transactional email templates.");
-      return;
-    }
-
-    const data = (await response.json()) as TransactionalEmailTemplate[];
-    setTemplates(data);
-  };
-
   useEffect(() => {
     loadSettings();
-    loadTemplates();
   }, []);
 
   const save = (event: FormEvent<HTMLFormElement>) => {
@@ -176,88 +133,6 @@ export default function AdminSettingsPage() {
         ? "Settings saved. Deposits are required for new bookings."
         : "Settings saved. Deposits are disabled; bookings confirm immediately.",
     );
-  };
-
-  const updateTemplateValue = (
-    id: string,
-    field: "subject" | "htmlBody" | "textBody" | "isActive",
-    value: string | boolean,
-  ) => {
-    setTemplates((current) =>
-      current.map((template) =>
-        template.id === id
-          ? {
-              ...template,
-              [field]: value,
-            }
-          : template,
-      ),
-    );
-  };
-
-  const saveTemplate = async (id: string) => {
-    const template = templates.find((item) => item.id === id);
-    if (!template) {
-      return;
-    }
-
-    setSavingTemplateId(id);
-    setTemplatesStatus("");
-
-    const response = await fetch(`/api/admin/email-templates/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: template.subject,
-        htmlBody: template.htmlBody,
-        textBody: template.textBody,
-        isActive: template.isActive,
-      }),
-    });
-
-    setSavingTemplateId(null);
-
-    if (!response.ok) {
-      const data = (await response.json().catch(() => ({}))) as { error?: string; details?: string[] };
-      const details = data.details ? ` ${data.details.join(" ")}` : "";
-      setTemplatesStatus((data.error ?? `Could not save ${template.name}.`) + details);
-      return;
-    }
-
-    const updated = (await response.json()) as TransactionalEmailTemplate;
-    setTemplates((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-    setTemplatesStatus(`Saved “${updated.name}”.`);
-  };
-
-  const previewTemplate = async (id: string) => {
-    const template = templates.find((item) => item.id === id);
-    if (!template) return;
-
-    setPreviewingTemplateId(id);
-    setTemplatesStatus("");
-
-    const response = await fetch(`/api/admin/email-templates/${id}/preview`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: template.subject,
-        htmlBody: template.htmlBody,
-        textBody: template.textBody,
-      }),
-    });
-
-    setPreviewingTemplateId(null);
-
-    if (!response.ok) {
-      const data = (await response.json().catch(() => ({}))) as { error?: string; details?: string[] };
-      const details = data.details ? ` ${data.details.join(" ")}` : "";
-      setTemplatesStatus((data.error ?? `Could not preview ${template.name}.`) + details);
-      return;
-    }
-
-    const preview = (await response.json()) as TemplatePreviewResponse;
-    setPreviewByTemplateId((current) => ({ ...current, [id]: preview }));
-    setTemplatesStatus(`Preview rendered for “${template.name}”.`);
   };
 
   return (
@@ -352,107 +227,6 @@ export default function AdminSettingsPage() {
         {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
       </section>
 
-      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Transactional email templates</h2>
-          <p className="text-sm text-slate-300">
-            Edit subject and body content for customer notifications. Variables in <code>{"{{token}}"}</code> are escaped by
-            default.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {templates.map((template) => {
-            const preview = previewByTemplateId[template.id];
-            return (
-              <article key={template.id} className="space-y-3 rounded border border-slate-800 bg-slate-900/30 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">{template.name}</h3>
-                    <p className="text-xs text-slate-400">Key: {template.key}</p>
-                  </div>
-                  <label className="flex items-center gap-2 text-xs text-slate-200">
-                    <input
-                      type="checkbox"
-                      checked={template.isActive}
-                      onChange={(event) => updateTemplateValue(template.id, "isActive", event.target.checked)}
-                    />
-                    Active
-                  </label>
-                </div>
-
-                <p className="text-xs text-slate-400">
-                  Allowed placeholders: {template.allowedPlaceholders.map((token) => `{{${token}}}`).join(", ")}
-                </p>
-
-                <label className="block space-y-1">
-                  <span className="text-xs text-slate-300">Subject</span>
-                  <input
-                    className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                    value={template.subject}
-                    onChange={(event) => updateTemplateValue(template.id, "subject", event.target.value)}
-                  />
-                </label>
-
-                <label className="block space-y-1">
-                  <span className="text-xs text-slate-300">HTML body</span>
-                  <textarea
-                    className="h-32 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                    value={template.htmlBody}
-                    onChange={(event) => updateTemplateValue(template.id, "htmlBody", event.target.value)}
-                  />
-                </label>
-
-                <label className="block space-y-1">
-                  <span className="text-xs text-slate-300">Plain text body</span>
-                  <textarea
-                    className="h-28 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                    value={template.textBody}
-                    onChange={(event) => updateTemplateValue(template.id, "textBody", event.target.value)}
-                  />
-                </label>
-
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={savingTemplateId === template.id}
-                    onClick={() => saveTemplate(template.id)}
-                  >
-                    {savingTemplateId === template.id ? "Saving..." : "Save template"}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded border border-slate-400 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={previewingTemplateId === template.id}
-                    onClick={() => previewTemplate(template.id)}
-                  >
-                    {previewingTemplateId === template.id ? "Rendering preview..." : "Preview"}
-                  </button>
-                </div>
-
-                {preview ? (
-                  <div className="space-y-2 rounded border border-slate-700 bg-slate-950 p-3">
-                    <p className="text-xs text-slate-300">Preview subject: {preview.rendered.subject}</p>
-                    <p className="text-xs text-slate-400">Sample data: {JSON.stringify(preview.sampleVariables)}</p>
-                    <p className="text-xs text-slate-300">Preview text:</p>
-                    <pre className="whitespace-pre-wrap rounded bg-slate-900 p-2 text-xs text-slate-200">
-                      {preview.rendered.textBody}
-                    </pre>
-                    <p className="text-xs text-slate-300">Preview HTML:</p>
-                    <div
-                      className="rounded bg-white p-3 text-black"
-                      dangerouslySetInnerHTML={{ __html: preview.rendered.htmlBody }}
-                    />
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
-        </div>
-
-        {templatesStatus ? <p className="text-sm text-slate-200">{templatesStatus}</p> : null}
-      </section>
     </section>
   );
 }
