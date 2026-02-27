@@ -70,37 +70,73 @@ enum TransactionalEmailLogStatus {
 }
 
 model User {
-  id           String         @id @default(uuid())
-  email        String         @unique
-  passwordHash String?
-  mustChangePassword Boolean   @default(false)
-  role         Role           @default(CLIENT)
-  lastLoginAt  DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  clientProfile ClientProfile?
-  bookings     Booking[]
-  clientJournalEntries JournalEntry[] @relation("ClientJournalEntries")
-  authoredJournalEntries JournalEntry[] @relation("AuthoredJournalEntries")
-  accounts     Account[]
-  sessions     Session[]
-  campaignRecipients CampaignRecipient[]
+  id                     String                  @id @default(uuid())
+  email                  String                  @unique
+  passwordHash           String?
+  mustChangePassword     Boolean                 @default(false)
+  role                   Role                    @default(CLIENT)
+  lastLoginAt            DateTime?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  clientProfile          ClientProfile?
+  bookings               Booking[]
+  clientJournalEntries   JournalEntry[]          @relation("ClientJournalEntries")
+  authoredJournalEntries JournalEntry[]          @relation("AuthoredJournalEntries")
+  accounts               Account[]
+  sessions               Session[]
+  campaignRecipients     CampaignRecipient[]
   transactionalEmailLogs TransactionalEmailLog[]
+  visitorSessions        VisitorSession[]
+}
+
+model VisitorSession {
+  id           String      @id @default(cuid())
+  visitorKey   String
+  startedAt    DateTime    @default(now())
+  lastSeenAt   DateTime    @default(now())
+  isNewVisitor Boolean     @default(true)
+  country      String?
+  region       String?
+  city         String?
+  userAgent    String?
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pageVisits   PageVisit[]
+
+  @@index([visitorKey])
+  @@index([startedAt])
+  @@index([lastSeenAt])
+  @@index([country])
+}
+
+model PageVisit {
+  id               String         @id @default(cuid())
+  visitorSessionId String
+  path             String
+  referrer         String?
+  visitedAt        DateTime       @default(now())
+  durationSeconds  Int?
+  visitorSession   VisitorSession @relation(fields: [visitorSessionId], references: [id], onDelete: Cascade)
+
+  @@index([visitedAt])
+  @@index([path])
+  @@index([visitorSessionId])
+  @@index([visitedAt, path])
 }
 
 model ClientProfile {
-  id                String   @id @default(uuid())
-  userId             String   @unique
-  firstName          String
-  lastName           String
-  phone              String?
-  marketingConsent   Boolean  @default(false)
-  notes              String?
-  contraindications  String?
-  patchTestAt        DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  firstName         String
+  lastName          String
+  phone             String?
+  marketingConsent  Boolean   @default(false)
+  notes             String?
+  contraindications String?
+  patchTestAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Service {
@@ -120,28 +156,28 @@ model Service {
 }
 
 model Booking {
-  id               String        @id @default(uuid())
-  clientId         String
-  serviceId        String
-  serviceName      String
-  serviceDurationMinutes Int
-  servicePriceCents Int
-  serviceDepositType DepositType
-  serviceDepositValue Int
+  id                         String                  @id @default(uuid())
+  clientId                   String
+  serviceId                  String
+  serviceName                String
+  serviceDurationMinutes     Int
+  servicePriceCents          Int
+  serviceDepositType         DepositType
+  serviceDepositValue        Int
   serviceBufferBeforeMinutes Int
-  serviceBufferAfterMinutes Int
-  startAt          DateTime
-  endAt            DateTime
-  status           BookingStatus @default(PENDING_PAYMENT)
-  policyAcceptedAt DateTime
-  notes            String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  client           User          @relation(fields: [clientId], references: [id])
-  service          Service       @relation(fields: [serviceId], references: [id])
-  payments         Payment[]
-  journalEntries   JournalEntry[]
-  transactionalEmailLogs TransactionalEmailLog[]
+  serviceBufferAfterMinutes  Int
+  startAt                    DateTime
+  endAt                      DateTime
+  status                     BookingStatus           @default(PENDING_PAYMENT)
+  policyAcceptedAt           DateTime
+  notes                      String?
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+  client                     User                    @relation(fields: [clientId], references: [id])
+  service                    Service                 @relation(fields: [serviceId], references: [id])
+  payments                   Payment[]
+  journalEntries             JournalEntry[]
+  transactionalEmailLogs     TransactionalEmailLog[]
 }
 
 model JournalEntry {
@@ -170,43 +206,43 @@ model JournalImage {
 }
 
 model Payment {
-  id                      String        @id @default(uuid())
+  id                      String          @id @default(uuid())
   bookingId               String
   provider                PaymentProvider
-  providerPaymentIntentId String        @unique
+  providerPaymentIntentId String          @unique
   amountCents             Int
   currency                String
   status                  PaymentStatus
   capturedAt              DateTime?
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
-  booking                 Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  booking                 Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }
 
 model BusinessSettings {
-  id                    String   @id @default("default")
-  businessName          String
-  timezone              String
-  currency              String
-  depositDefaultType    DepositType
-  depositDefaultValue   Int
-  mailProviderType      String?
-  smtpHost              String?
-  smtpPort              Int?
-  smtpUsername          String?
-  smtpPasswordEncrypted String?
-  smtpSecretRef         String?
-  mailFromName          String?
-  mailFromEmail         String?
-  mailReplyTo           String?
-  smtpUseTls            Boolean?
-  smtpUseStarttls       Boolean?
-  rescheduleCutoffHours Int      @default(24)
-  cancelCutoffHours     Int      @default(24)
-  pendingPaymentExpiryMinutes Int @default(30)
-  reminderScheduleJson  String
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                          String      @id @default("default")
+  businessName                String
+  timezone                    String
+  currency                    String
+  depositDefaultType          DepositType
+  depositDefaultValue         Int
+  mailProviderType            String?
+  smtpHost                    String?
+  smtpPort                    Int?
+  smtpUsername                String?
+  smtpPasswordEncrypted       String?
+  smtpSecretRef               String?
+  mailFromName                String?
+  mailFromEmail               String?
+  mailReplyTo                 String?
+  smtpUseTls                  Boolean?
+  smtpUseStarttls             Boolean?
+  rescheduleCutoffHours       Int         @default(24)
+  cancelCutoffHours           Int         @default(24)
+  pendingPaymentExpiryMinutes Int         @default(30)
+  reminderScheduleJson        String
+  createdAt                   DateTime    @default(now())
+  updatedAt                   DateTime    @updatedAt
 }
 
 model TransactionalEmailTemplate {
@@ -257,17 +293,17 @@ model Blockout {
 }
 
 model Campaign {
-  id            String              @id @default(uuid())
-  name          String
-  subject       String
-  bodyHtml      String
-  bodyText      String?
-  segmentType   CampaignSegmentType
-  status        CampaignStatus      @default(DRAFT)
-  sentAt        DateTime?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  recipients    CampaignRecipient[]
+  id          String              @id @default(uuid())
+  name        String
+  subject     String
+  bodyHtml    String
+  bodyText    String?
+  segmentType CampaignSegmentType
+  status      CampaignStatus      @default(DRAFT)
+  sentAt      DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  recipients  CampaignRecipient[]
 
   @@index([createdAt])
 }
@@ -295,16 +331,15 @@ model CampaignRecipient {
 }
 
 model Consumable {
-  id             String   @id @default(uuid())
-  name           String   @unique
-  unit           String?
-  targetStock    Int
-  currentStock   Int
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String   @unique
+  unit         String?
+  targetStock  Int
+  currentStock Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
-
 
 model Account {
   userId            String
