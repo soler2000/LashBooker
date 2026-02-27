@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { bookingWindow, canManageClientBookingStatus, isWithinCutoffWindow } from "@/lib/portal-bookings";
+import { sendTemplatedEmail } from "@/lib/email";
 
 const bodySchema = z.object({
   startAt: z.string().datetime(),
@@ -17,6 +18,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   const booking = await prisma.booking.findUnique({
     where: { id: params.id },
+    include: {
+      client: { include: { clientProfile: true } },
+    },
   });
 
   if (!booking || booking.clientId !== session.user.id) {
@@ -61,6 +65,27 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       endAt: nextEndAt,
     },
   });
+
+  const rescheduleEmail = await sendTemplatedEmail({
+    to: booking.client.email,
+    templateKey: "booking_change_confirmed",
+    variables: {
+      bookingId: booking.id,
+      firstName: booking.client.clientProfile?.firstName || "there",
+      serviceName: booking.serviceName,
+      startAt: nextStartAt,
+    },
+    metadata: { bookingId: booking.id, type: "booking_change_confirmed" },
+  });
+
+  if (!rescheduleEmail.ok) {
+    console.warn(JSON.stringify({
+      event: "booking_reschedule_email_failed",
+      bookingId: booking.id,
+      email: booking.client.email,
+      ...rescheduleEmail,
+    }));
+  }
 
   return NextResponse.json({ booking: updated });
 }

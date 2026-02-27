@@ -23,11 +23,17 @@ export async function POST(req: Request) {
     const payment = await prisma.payment.update({
       where: { providerPaymentIntentId: pi.id },
       data: { status: "SUCCEEDED", capturedAt: new Date() },
-      include: { booking: { include: { client: true } } },
+      include: { booking: { include: { client: { include: { clientProfile: true } } } } },
     });
 
     await prisma.booking.update({ where: { id: payment.bookingId }, data: { status: "CONFIRMED" } });
-    await sendBookingConfirmationEmail(payment.booking.client.email, payment.bookingId);
+    await sendBookingConfirmationEmail({
+      to: payment.booking.client.email,
+      bookingId: payment.bookingId,
+      firstName: payment.booking.client.clientProfile?.firstName || "there",
+      serviceName: payment.booking.serviceName,
+      startAt: payment.booking.startAt,
+    });
   }
 
   if (event.type === "payment_intent.payment_failed") {
