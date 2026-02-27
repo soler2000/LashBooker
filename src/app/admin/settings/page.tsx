@@ -17,6 +17,13 @@ import {
 type AdminSettingsResponse = {
   depositRequired: boolean;
   instagramUrl: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  addressCity: string | null;
+  addressPostcode: string | null;
+  addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
 };
 
@@ -52,6 +59,13 @@ export default function AdminSettingsPage() {
 
   const [depositRequired, setDepositRequired] = useState(true);
   const [instagramUrl, setInstagramUrl] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [addressCity, setAddressCity] = useState("");
+  const [addressPostcode, setAddressPostcode] = useState("");
+  const [addressCountry, setAddressCountry] = useState("");
   const [depositStatus, setDepositStatus] = useState("");
   const [qualificationCertificates, setQualificationCertificates] = useState<QualificationCertificateContent[]>(
     defaultQualificationCertificates,
@@ -89,6 +103,13 @@ export default function AdminSettingsPage() {
     const data = (await response.json()) as AdminSettingsResponse;
     setDepositRequired(data.depositRequired);
     setInstagramUrl(data.instagramUrl ?? "");
+    setContactPhone(data.contactPhone ?? "");
+    setContactEmail(data.contactEmail ?? "");
+    setAddressLine1(data.addressLine1 ?? "");
+    setAddressLine2(data.addressLine2 ?? "");
+    setAddressCity(data.addressCity ?? "");
+    setAddressPostcode(data.addressPostcode ?? "");
+    setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
   };
 
@@ -126,7 +147,7 @@ export default function AdminSettingsPage() {
     );
   };
 
-  const saveDepositSettings = async () => {
+  const saveBusinessSettings = async () => {
     setDepositStatus("");
     const response = await fetch("/api/admin/settings", {
       method: "PUT",
@@ -134,6 +155,13 @@ export default function AdminSettingsPage() {
       body: JSON.stringify({
         depositRequired,
         instagramUrl: normalizeInstagramInput(instagramUrl) || null,
+        contactPhone: contactPhone.trim() || null,
+        contactEmail: contactEmail.trim() || null,
+        addressLine1: addressLine1.trim() || null,
+        addressLine2: addressLine2.trim() || null,
+        addressCity: addressCity.trim() || null,
+        addressPostcode: addressPostcode.trim() || null,
+        addressCountry: addressCountry.trim() || null,
         qualificationCertificates: qualificationCertificates.map((certificate) => ({
           title: certificate.title.trim(),
           description: certificate.description.trim(),
@@ -143,12 +171,20 @@ export default function AdminSettingsPage() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      setDepositStatus(data.error ?? "Could not save settings. Please enter a valid Instagram URL.");
+      const errorDetail = data.detail ? ` ${data.detail}` : "";
+      setDepositStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save settings.");
       return;
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
     setInstagramUrl(data.instagramUrl ?? "");
+    setContactPhone(data.contactPhone ?? "");
+    setContactEmail(data.contactEmail ?? "");
+    setAddressLine1(data.addressLine1 ?? "");
+    setAddressLine2(data.addressLine2 ?? "");
+    setAddressCity(data.addressCity ?? "");
+    setAddressPostcode(data.addressPostcode ?? "");
+    setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setDepositStatus(
       depositRequired
@@ -239,6 +275,102 @@ export default function AdminSettingsPage() {
           <p className="text-xs text-slate-400">Used on the public homepage header. Leave blank to hide the link.</p>
         </div>
 
+        <div className="space-y-1">
+          <label htmlFor="contact-phone" className="text-sm font-medium text-slate-100">Business phone number</label>
+          <input
+            id="contact-phone"
+            type="text"
+            maxLength={40}
+            placeholder="+44 7700 900123"
+            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            value={contactPhone}
+            onChange={(event) => setContactPhone(event.target.value)}
+          />
+          <p className="text-xs text-slate-400">Displayed on the homepage contact section. Leave blank to hide it.</p>
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="contact-email" className="text-sm font-medium text-slate-100">Business email address</label>
+          <input
+            id="contact-email"
+            type="email"
+            maxLength={320}
+            placeholder="hello@example.com"
+            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            value={contactEmail}
+            onChange={(event) => setContactEmail(event.target.value)}
+          />
+          <p className="text-xs text-slate-400">Used for the public contact section. Leave blank to hide it.</p>
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="address-line-1" className="text-sm font-medium text-slate-100">Address line 1</label>
+          <input
+            id="address-line-1"
+            type="text"
+            maxLength={120}
+            placeholder="123 Example Street"
+            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            value={addressLine1}
+            onChange={(event) => setAddressLine1(event.target.value)}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="address-line-2" className="text-sm font-medium text-slate-100">Address line 2</label>
+          <input
+            id="address-line-2"
+            type="text"
+            maxLength={120}
+            placeholder="Suite, unit, or building"
+            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            value={addressLine2}
+            onChange={(event) => setAddressLine2(event.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="space-y-1">
+            <label htmlFor="address-city" className="text-sm font-medium text-slate-100">Town/City</label>
+            <input
+              id="address-city"
+              type="text"
+              maxLength={80}
+              placeholder="London"
+              className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              value={addressCity}
+              onChange={(event) => setAddressCity(event.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="address-postcode" className="text-sm font-medium text-slate-100">Postcode</label>
+            <input
+              id="address-postcode"
+              type="text"
+              maxLength={24}
+              placeholder="SW1A 1AA"
+              className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              value={addressPostcode}
+              onChange={(event) => setAddressPostcode(event.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="address-country" className="text-sm font-medium text-slate-100">Country</label>
+            <input
+              id="address-country"
+              type="text"
+              maxLength={80}
+              placeholder="United Kingdom"
+              className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              value={addressCountry}
+              onChange={(event) => setAddressCountry(event.target.value)}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-400">Address fields are shown on the homepage. Leave any field blank to hide it.</p>
+
         <div className="space-y-3">
           <p className="text-sm font-medium text-slate-100">Homepage qualification certificates</p>
           <p className="text-xs text-slate-400">Edit the titles and descriptions shown in the qualifications section.</p>
@@ -268,9 +400,9 @@ export default function AdminSettingsPage() {
         <button
           type="button"
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
-          onClick={saveDepositSettings}
+          onClick={saveBusinessSettings}
         >
-          Save deposit settings
+          Save business settings
         </button>
         {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
       </section>

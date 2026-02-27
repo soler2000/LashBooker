@@ -11,6 +11,18 @@ import { z } from "zod";
 const roleAllowlist = ["ADMIN", "OWNER"];
 
 const MAX_URL_LENGTH = 2048;
+const MAX_PHONE_LENGTH = 40;
+const MAX_EMAIL_LENGTH = 320;
+const MAX_ADDRESS_LINE_LENGTH = 120;
+const MAX_ADDRESS_CITY_LENGTH = 80;
+const MAX_ADDRESS_POSTCODE_LENGTH = 24;
+const MAX_ADDRESS_COUNTRY_LENGTH = 80;
+
+function normalizeOptionalText(value: string | null | undefined) {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
 
 function normalizeInstagramUrl(value: string | null | undefined) {
   if (typeof value !== "string") return value;
@@ -30,6 +42,34 @@ const updateSchema = z
     instagramUrl: z.preprocess(
       (value) => normalizeInstagramUrl(value as string | null | undefined),
       z.string().url().max(MAX_URL_LENGTH).nullable().optional(),
+    ),
+    contactPhone: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().max(MAX_PHONE_LENGTH).nullable().optional(),
+    ),
+    contactEmail: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().email().max(MAX_EMAIL_LENGTH).nullable().optional(),
+    ),
+    addressLine1: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().max(MAX_ADDRESS_LINE_LENGTH).nullable().optional(),
+    ),
+    addressLine2: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().max(MAX_ADDRESS_LINE_LENGTH).nullable().optional(),
+    ),
+    addressCity: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().max(MAX_ADDRESS_CITY_LENGTH).nullable().optional(),
+    ),
+    addressPostcode: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().max(MAX_ADDRESS_POSTCODE_LENGTH).nullable().optional(),
+    ),
+    addressCountry: z.preprocess(
+      (value) => normalizeOptionalText(value as string | null | undefined),
+      z.string().max(MAX_ADDRESS_COUNTRY_LENGTH).nullable().optional(),
     ),
     mailProviderType: z.string().trim().max(64).nullable().optional(),
     smtpHost: z.string().trim().max(255).nullable().optional(),
@@ -73,6 +113,13 @@ async function ensureSettings() {
       depositDefaultType: "PERCENT",
       depositDefaultValue: 30,
       instagramUrl: null,
+      contactPhone: null,
+      contactEmail: null,
+      addressLine1: null,
+      addressLine2: null,
+      addressCity: null,
+      addressPostcode: null,
+      addressCountry: null,
       qualificationCertificatesJson: JSON.stringify(defaultQualificationCertificates),
       reminderScheduleJson: "[48,24]",
       smtpUseTls: false,
@@ -98,6 +145,13 @@ function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) 
     depositDefaultType: settings.depositDefaultType,
     depositDefaultValue: settings.depositDefaultValue,
     instagramUrl: settings.instagramUrl,
+    contactPhone: settings.contactPhone,
+    contactEmail: settings.contactEmail,
+    addressLine1: settings.addressLine1,
+    addressLine2: settings.addressLine2,
+    addressCity: settings.addressCity,
+    addressPostcode: settings.addressPostcode,
+    addressCountry: settings.addressCountry,
     mailProviderType: settings.mailProviderType,
     smtpHost: settings.smtpHost,
     smtpPort: settings.smtpPort,
@@ -124,7 +178,16 @@ export async function PUT(request: Request) {
   if (!(await guard())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const parsed = updateSchema.safeParse(await request.json());
-  if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  if (!parsed.success) {
+    const detail = parsed.error.issues
+      .map((issue) => {
+        const field = issue.path.join(".") || "request";
+        return `${field}: ${issue.message}`;
+      })
+      .join("; ");
+
+    return NextResponse.json({ error: "Bad request", detail }, { status: 400 });
+  }
 
   const existing = await ensureSettings();
 
@@ -137,6 +200,13 @@ export async function PUT(request: Request) {
   };
 
   assignIfPresent("instagramUrl");
+  assignIfPresent("contactPhone");
+  assignIfPresent("contactEmail");
+  assignIfPresent("addressLine1");
+  assignIfPresent("addressLine2");
+  assignIfPresent("addressCity");
+  assignIfPresent("addressPostcode");
+  assignIfPresent("addressCountry");
   assignIfPresent("mailProviderType");
   assignIfPresent("smtpHost");
   assignIfPresent("smtpPort");
