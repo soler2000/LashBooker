@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Hero from "@/components/landing/Hero";
 import HorizontalChapter from "@/components/landing/HorizontalChapter";
+import QualificationCertificates, { type CertificateItem } from "@/components/landing/QualificationCertificates";
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
@@ -30,6 +31,24 @@ export default function Home() {
       setImages(defaultSiteImages);
     }
   }, []);
+
+  const certificateItems: CertificateItem[] = [
+    {
+      title: "Advanced Lash Styling Certification",
+      description: "Covers eye-shape analysis, custom lash mapping, and blend design for natural-to-editorial looks.",
+      image: images.precision,
+    },
+    {
+      title: "Professional Hygiene & Safety Training",
+      description: "Focuses on sanitation standards, adhesive handling, and safe isolation practices for every appointment.",
+      image: images.closeup,
+    },
+    {
+      title: "Volume Technique Masterclass",
+      description: "Specialized education in handmade fan creation, retention strategy, and lightweight volume application.",
+      image: images.luxury,
+    },
+  ];
 
   useEffect(() => {
     const loadPublicSettings = async () => {
@@ -65,6 +84,8 @@ export default function Home() {
       />
 
       <HorizontalChapter images={images} />
+
+      <QualificationCertificates items={certificateItems} />
 
       <Scene
         image={images.booking}
