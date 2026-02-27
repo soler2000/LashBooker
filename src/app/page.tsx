@@ -7,6 +7,11 @@ import HorizontalChapter from "@/components/landing/HorizontalChapter";
 import QualificationCertificates, { type CertificateItem } from "@/components/landing/QualificationCertificates";
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
+import {
+  defaultQualifications,
+  QUALIFICATIONS_STORAGE_KEY,
+  type QualificationItem,
+} from "@/lib/qualifications";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
 
 type PublicSettingsResponse = {
@@ -16,6 +21,7 @@ type PublicSettingsResponse = {
 export default function Home() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [instagramUrl, setInstagramUrl] = useState<string | null>(null);
+  const [qualifications, setQualifications] = useState<QualificationItem[]>(defaultQualifications);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -32,23 +38,26 @@ export default function Home() {
     }
   }, []);
 
-  const certificateItems: CertificateItem[] = [
-    {
-      title: "Advanced Lash Styling Certification",
-      description: "Covers eye-shape analysis, custom lash mapping, and blend design for natural-to-editorial looks.",
-      image: images.precision,
-    },
-    {
-      title: "Professional Hygiene & Safety Training",
-      description: "Focuses on sanitation standards, adhesive handling, and safe isolation practices for every appointment.",
-      image: images.closeup,
-    },
-    {
-      title: "Volume Technique Masterclass",
-      description: "Specialized education in handmade fan creation, retention strategy, and lightweight volume application.",
-      image: images.luxury,
-    },
-  ];
+  useEffect(() => {
+    const stored = window.localStorage.getItem(QUALIFICATIONS_STORAGE_KEY);
+
+    if (!stored) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as QualificationItem[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setQualifications(parsed);
+        return;
+      }
+      setQualifications(defaultQualifications);
+    } catch {
+      setQualifications(defaultQualifications);
+    }
+  }, []);
+
+  const certificateItems: CertificateItem[] = qualifications.length > 0 ? qualifications : defaultQualifications;
 
   useEffect(() => {
     const loadPublicSettings = async () => {

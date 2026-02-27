@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 export type CertificateItem = {
+  id: string;
   title: string;
   description: string;
   image: string;
@@ -24,7 +25,7 @@ export default function QualificationCertificates({ items }: QualificationCertif
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <article key={item.title} className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03]">
+            <article key={item.id} className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03]">
               <div className="relative aspect-[4/3] w-full">
                 <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" />
               </div>

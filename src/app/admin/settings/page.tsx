@@ -3,6 +3,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import {
+  defaultQualifications,
+  QUALIFICATIONS_STORAGE_KEY,
+  type QualificationItem,
+} from "@/lib/qualifications";
+import {
   defaultSiteImages,
   SITE_IMAGES_STORAGE_KEY,
   siteImageUsage,
@@ -40,8 +45,16 @@ function fileToDataUrl(file: File) {
   });
 }
 
+const createQualification = (): QualificationItem => ({
+  id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now()),
+  title: "",
+  description: "",
+  image: defaultQualifications[0]?.image ?? defaultSiteImages.precision,
+});
+
 export default function AdminSettingsPage() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
+  const [qualifications, setQualifications] = useState<QualificationItem[]>(defaultQualifications);
   const [savedMessage, setSavedMessage] = useState("");
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
@@ -50,17 +63,32 @@ export default function AdminSettingsPage() {
   const [depositStatus, setDepositStatus] = useState("");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
+    const storedImages = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
 
-    if (!stored) {
+    if (storedImages) {
+      try {
+        const parsed = JSON.parse(storedImages) as Partial<SiteImages>;
+        setImages({ ...defaultSiteImages, ...parsed });
+      } catch {
+        setImages(defaultSiteImages);
+      }
+    }
+
+    const storedQualifications = window.localStorage.getItem(QUALIFICATIONS_STORAGE_KEY);
+
+    if (!storedQualifications) {
       return;
     }
 
     try {
-      const parsed = JSON.parse(stored) as Partial<SiteImages>;
-      setImages({ ...defaultSiteImages, ...parsed });
+      const parsed = JSON.parse(storedQualifications) as QualificationItem[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setQualifications(parsed);
+        return;
+      }
+      setQualifications(defaultQualifications);
     } catch {
-      setImages(defaultSiteImages);
+      setQualifications(defaultQualifications);
     }
   }, []);
 
@@ -90,7 +118,8 @@ export default function AdminSettingsPage() {
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     window.localStorage.setItem(SITE_IMAGES_STORAGE_KEY, JSON.stringify(images));
-    setSavedMessage("Saved. Refresh the front page to see updates.");
+    window.localStorage.setItem(QUALIFICATIONS_STORAGE_KEY, JSON.stringify(qualifications));
+    setSavedMessage("Saved. Refresh the front page to see updated images and qualifications.");
   };
 
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
@@ -107,6 +136,40 @@ export default function AdminSettingsPage() {
     } catch {
       setImageUploadStatus("Could not upload image. Please try a different file.");
     }
+  };
+
+  const uploadQualificationImage = async (id: string, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setQualifications((current) =>
+        current.map((qualification) =>
+          qualification.id === id ? { ...qualification, image: dataUrl } : qualification,
+        ),
+      );
+      setImageUploadStatus("Qualification image uploaded. Click save to apply.");
+    } catch {
+      setImageUploadStatus("Could not upload qualification image. Please try a different file.");
+    }
+  };
+
+  const updateQualification = (id: string, field: "title" | "description", value: string) => {
+    setQualifications((current) =>
+      current.map((qualification) =>
+        qualification.id === id ? { ...qualification, [field]: value } : qualification,
+      ),
+    );
+  };
+
+  const addQualification = () => {
+    setQualifications((current) => [...current, createQualification()]);
+  };
+
+  const removeQualification = (id: string) => {
+    setQualifications((current) => current.filter((qualification) => qualification.id !== id));
   };
 
   const saveDepositSettings = async () => {
@@ -141,51 +204,132 @@ export default function AdminSettingsPage() {
         <h1 className="text-2xl font-semibold text-white">Settings</h1>
       </div>
 
-      <form onSubmit={save} className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Landing page images</h2>
-          <p className="text-sm text-slate-300">Upload custom images for key sections on the public site.</p>
-        </div>
+      <form onSubmit={save} className="space-y-8 rounded border border-slate-800 bg-slate-950 p-4">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">Landing page images</h2>
+            <p className="text-sm text-slate-300">Upload custom images for key sections on the public site.</p>
+          </div>
 
-        {imageFields.map((field) => (
-          <label key={field.key} className="block space-y-2 rounded border border-slate-800 bg-slate-900/30 p-3">
-            <span className="text-sm font-medium text-slate-100">{field.label}</span>
-            <p className="text-xs text-slate-300">Ideal size: {idealImageDimensions[field.key]}</p>
-            <p className="text-xs text-slate-400">Used on: {siteImageUsage[field.key].usedOn.join(", ")}</p>
-            <div className="flex h-24 w-36 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
-              <Image
-                src={images[field.key]}
-                alt={`${field.label} preview`}
-                width={240}
-                height={160}
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept="image/*"
-                className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
-                onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
-              />
-              <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
+          {imageFields.map((field) => (
+            <label key={field.key} className="block space-y-2 rounded border border-slate-800 bg-slate-900/30 p-3">
+              <span className="text-sm font-medium text-slate-100">{field.label}</span>
+              <p className="text-xs text-slate-300">Ideal size: {idealImageDimensions[field.key]}</p>
+              <p className="text-xs text-slate-400">Used on: {siteImageUsage[field.key].usedOn.join(", ")}</p>
+              <div className="flex h-24 w-36 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
                 <Image
                   src={images[field.key]}
-                  alt={`${field.label} small preview`}
-                  width={120}
-                  height={84}
+                  alt={`${field.label} preview`}
+                  width={240}
+                  height={160}
                   className="h-full w-full object-contain"
                 />
               </div>
-            </div>
-          </label>
-        ))}
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                  onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
+                />
+                <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
+                  <Image
+                    src={images[field.key]}
+                    alt={`${field.label} small preview`}
+                    width={120}
+                    height={84}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <div className="space-y-4 rounded border border-slate-800 bg-slate-900/30 p-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">Qualification certificates</h2>
+            <p className="text-sm text-slate-300">
+              Add, edit, and reorder qualification cards shown on the homepage.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {qualifications.length === 0 ? (
+              <p className="text-sm text-slate-300">No certificates configured yet. Add one to display this section on the homepage.</p>
+            ) : null}
+
+            {qualifications.map((qualification, index) => (
+              <div key={qualification.id} className="space-y-3 rounded border border-slate-700 bg-slate-950/70 p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-100">Certificate {index + 1}</p>
+                  <button
+                    type="button"
+                    className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
+                    onClick={() => removeQualification(qualification.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <label className="block space-y-1">
+                  <span className="text-xs text-slate-300">Title</span>
+                  <input
+                    type="text"
+                    className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                    value={qualification.title}
+                    onChange={(event) => updateQualification(qualification.id, "title", event.target.value)}
+                  />
+                </label>
+
+                <label className="block space-y-1">
+                  <span className="text-xs text-slate-300">Description</span>
+                  <textarea
+                    className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                    rows={3}
+                    value={qualification.description}
+                    onChange={(event) => updateQualification(qualification.id, "description", event.target.value)}
+                  />
+                </label>
+
+                <div className="space-y-2">
+                  <span className="text-xs text-slate-300">Certificate image</span>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                      onChange={(event) => uploadQualificationImage(qualification.id, event.target.files?.[0] ?? null)}
+                    />
+                    <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
+                      <Image
+                        src={qualification.image}
+                        alt={`${qualification.title || `Certificate ${index + 1}`} preview`}
+                        width={120}
+                        height={84}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:bg-slate-800"
+            onClick={addQualification}
+          >
+            Add qualification
+          </button>
+        </div>
 
         <button
           type="submit"
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
         >
-          Save image settings
+          Save image and qualification settings
         </button>
         {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
         {savedMessage ? <p className="text-sm text-green-300">{savedMessage}</p> : null}
