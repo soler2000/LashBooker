@@ -11,11 +11,29 @@ import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/l
 
 type PublicSettingsResponse = {
   instagramUrl: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  addressCity: string | null;
+  addressPostcode: string | null;
+  addressCountry: string | null;
+};
+
+const defaultPublicSettings: PublicSettingsResponse = {
+  instagramUrl: null,
+  contactPhone: null,
+  contactEmail: null,
+  addressLine1: null,
+  addressLine2: null,
+  addressCity: null,
+  addressPostcode: null,
+  addressCountry: null,
 };
 
 export default function Home() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
-  const [instagramUrl, setInstagramUrl] = useState<string | null>(null);
+  const [publicSettings, setPublicSettings] = useState<PublicSettingsResponse>(defaultPublicSettings);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
@@ -54,12 +72,12 @@ export default function Home() {
     const loadPublicSettings = async () => {
       const response = await fetch("/api/settings", { cache: "no-store" });
       if (!response.ok) {
-        setInstagramUrl(null);
+        setPublicSettings(defaultPublicSettings);
         return;
       }
 
       const data = (await response.json()) as PublicSettingsResponse;
-      setInstagramUrl(data.instagramUrl ?? null);
+      setPublicSettings({ ...defaultPublicSettings, ...data });
     };
 
     loadPublicSettings();
@@ -67,7 +85,17 @@ export default function Home() {
 
   return (
     <main className="bg-black text-white">
-      <Hero image={images.hero} instagramUrl={instagramUrl} />
+      <Hero
+        image={images.hero}
+        instagramUrl={publicSettings.instagramUrl}
+        contactPhone={publicSettings.contactPhone}
+        contactEmail={publicSettings.contactEmail}
+        addressLine1={publicSettings.addressLine1}
+        addressLine2={publicSettings.addressLine2}
+        addressCity={publicSettings.addressCity}
+        addressPostcode={publicSettings.addressPostcode}
+        addressCountry={publicSettings.addressCountry}
+      />
 
       <StickyStoryScene
         eyebrow="Scene 2"

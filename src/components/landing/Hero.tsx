@@ -6,14 +6,21 @@ import Scene from "@/components/landing/Scene";
 type HeroProps = {
   image: string;
   instagramUrl?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  addressCity?: string | null;
+  addressPostcode?: string | null;
+  addressCountry?: string | null;
 };
 
-function getSafeInstagramUrl(instagramUrl?: string | null) {
-  if (!instagramUrl) return null;
+function getSafeUrl(value: string | null | undefined, allowedProtocols: string[]) {
+  if (!value) return null;
 
   try {
-    const candidate = new URL(instagramUrl);
-    if (!["http:", "https:"].includes(candidate.protocol)) {
+    const candidate = new URL(value);
+    if (!allowedProtocols.includes(candidate.protocol)) {
       return null;
     }
 
@@ -23,8 +30,23 @@ function getSafeInstagramUrl(instagramUrl?: string | null) {
   }
 }
 
-export default function Hero({ image, instagramUrl }: HeroProps) {
-  const safeInstagramUrl = getSafeInstagramUrl(instagramUrl);
+export default function Hero({
+  image,
+  instagramUrl,
+  contactPhone,
+  contactEmail,
+  addressLine1,
+  addressLine2,
+  addressCity,
+  addressPostcode,
+  addressCountry,
+}: HeroProps) {
+  const safeInstagramUrl = getSafeUrl(instagramUrl, ["http:", "https:"]);
+  const safeMailtoUrl = getSafeUrl(contactEmail ? `mailto:${contactEmail}` : null, ["mailto:"]);
+  const safeTelUrl = getSafeUrl(contactPhone ? `tel:${contactPhone}` : null, ["tel:"]);
+
+  const addressParts = [addressLine1, addressLine2, addressCity, addressPostcode, addressCountry].filter(Boolean);
+  const hasContactDetails = Boolean(safeMailtoUrl || safeTelUrl || addressParts.length);
 
   return (
     <Scene
@@ -58,6 +80,31 @@ export default function Hero({ image, instagramUrl }: HeroProps) {
         <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">
           A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.
         </p>
+        {hasContactDetails ? (
+          <div className="mt-5 space-y-1 text-sm text-white/80">
+            {safeTelUrl ? (
+              <p>
+                <span className="text-white/60">Phone:</span>{" "}
+                <a href={safeTelUrl} className="transition hover:text-white">
+                  {contactPhone}
+                </a>
+              </p>
+            ) : null}
+            {safeMailtoUrl ? (
+              <p>
+                <span className="text-white/60">Email:</span>{" "}
+                <a href={safeMailtoUrl} className="transition hover:text-white">
+                  {contactEmail}
+                </a>
+              </p>
+            ) : null}
+            {addressParts.length ? (
+              <p>
+                <span className="text-white/60">Address:</span> {addressParts.join(", ")}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <div className="mt-9 flex flex-wrap gap-3">
           <Link href="/book" className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-white/85">
             Book now
