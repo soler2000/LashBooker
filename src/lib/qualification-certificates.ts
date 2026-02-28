@@ -1,3 +1,6 @@
+import { isDeprecatedUnsplashImage } from "@/lib/site-images";
+
+
 export type QualificationCertificateContent = {
   title: string;
   description: string;
@@ -32,6 +35,10 @@ function normalizeCertificateImage(value: unknown) {
 
   const trimmed = value.trim();
   if (!trimmed || trimmed.length > MAX_CERTIFICATE_IMAGE_LENGTH) {
+    return undefined;
+  }
+
+  if (isDeprecatedUnsplashImage(trimmed)) {
     return undefined;
   }
 
