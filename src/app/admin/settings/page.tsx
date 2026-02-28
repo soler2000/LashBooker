@@ -11,6 +11,7 @@ import {
 } from "@/lib/site-images";
 import {
   defaultQualificationCertificates,
+  isPdfCertificateAsset,
   type QualificationCertificateContent,
 } from "@/lib/qualification-certificates";
 
@@ -47,7 +48,7 @@ function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(new Error("Could not read image file."));
+    reader.onerror = () => reject(new Error("Could not read file."));
     reader.readAsDataURL(file);
   });
 }
@@ -155,9 +156,9 @@ export default function AdminSettingsPage() {
     try {
       const dataUrl = await fileToDataUrl(file);
       updateCertificateField(index, "image", dataUrl);
-      setImageUploadStatus(`Certificate ${index + 1} image uploaded. Click save to apply.`);
+      setImageUploadStatus(`Certificate ${index + 1} file uploaded. Click save to apply.`);
     } catch {
-      setImageUploadStatus("Could not upload certificate image. Please try a different file.");
+      setImageUploadStatus("Could not upload certificate file. Please try a different file.");
     }
   };
 
@@ -409,22 +410,26 @@ export default function AdminSettingsPage() {
                 placeholder="Certificate description"
               />
               <div className="space-y-2">
-                <p className="text-xs text-slate-300">Certificate image</p>
+                <p className="text-xs text-slate-300">Certificate file (image or PDF)</p>
                 <div className="flex items-center gap-3">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf"
                     className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
                     onChange={(event) => uploadCertificateImage(index, event.target.files?.[0] ?? null)}
                   />
                   <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
-                    <Image
-                      src={certificate.image?.trim() || images.closeup}
-                      alt={`Certificate ${index + 1} preview`}
-                      width={120}
-                      height={84}
-                      className="h-full w-full object-contain"
-                    />
+                    {isPdfCertificateAsset(certificate.image) ? (
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-200">PDF</span>
+                    ) : (
+                      <Image
+                        src={certificate.image?.trim() || images.closeup}
+                        alt={`Certificate ${index + 1} preview`}
+                        width={120}
+                        height={84}
+                        className="h-full w-full object-contain"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
