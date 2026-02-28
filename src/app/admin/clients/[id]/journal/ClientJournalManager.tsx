@@ -46,24 +46,28 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
   const [selectedBookingId, setSelectedBookingId] = useState("");
   const [entryNotes, setEntryNotes] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [journalImageUploadEnabled, setJournalImageUploadEnabled] = useState(false);
 
   async function loadData() {
     setLoading(true);
     setError(null);
     try {
-      const [clientResponse, journalResponse] = await Promise.all([
+      const [clientResponse, journalResponse, capabilitiesResponse] = await Promise.all([
         fetch(`/api/admin/clients/${clientId}`),
         fetch(`/api/admin/clients/${clientId}/journal`),
+        fetch(`/api/admin/capabilities`),
       ]);
 
-      if (!clientResponse.ok || !journalResponse.ok) throw new Error("Failed to load client data");
+      if (!clientResponse.ok || !journalResponse.ok || !capabilitiesResponse.ok) throw new Error("Failed to load client data");
 
       const clientJson = await clientResponse.json();
       const journalJson = await journalResponse.json();
+      const capabilitiesJson = await capabilitiesResponse.json();
       const loadedClient: ClientPayload = clientJson.client;
 
       setClient(loadedClient);
       setEntries(journalJson.entries || []);
+      setJournalImageUploadEnabled(Boolean(capabilitiesJson.journalImageUploadEnabled));
       setSelectedBookingId(loadedClient.bookings?.[0]?.id || "");
       setProfileForm({
         firstName: loadedClient.clientProfile?.firstName || "",
@@ -112,6 +116,10 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
   }
 
   async function createEntry() {
+    if (!journalImageUploadEnabled) {
+      setError("Image uploads are unavailable because storage is not configured. Please set the required S3 environment variables.");
+      return;
+    }
     if (!canCreateEntry) return;
     setSavingEntry(true);
     setError(null);
@@ -190,9 +198,15 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
           ))}
         </select>
         <textarea className="min-h-24 w-full rounded border px-3 py-2" value={entryNotes} onChange={(e) => setEntryNotes(e.target.value)} placeholder="Procedure notes" />
-        <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} />
+        {!journalImageUploadEnabled ? (
+          <p className="rounded border border-amber-300 bg-amber-50 p-2 text-sm text-amber-800">
+            Image uploads are disabled because storage is not configured. Set the required S3 environment variables to enable journal image uploads.
+          </p>
+        ) : (
+          <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} />
+        )}
         <p className="text-xs text-slate-500">Attach {MIN_IMAGES} to {MAX_IMAGES} images per appointment.</p>
-        <button type="button" onClick={createEntry} disabled={!canCreateEntry || savingEntry} className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50">{savingEntry ? "Saving…" : "Create journal entry"}</button>
+        <button type="button" onClick={createEntry} disabled={!canCreateEntry || savingEntry || !journalImageUploadEnabled} className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50">{savingEntry ? "Saving…" : "Create journal entry"}</button>
       </section>
 
       <section className="space-y-3">

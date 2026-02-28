@@ -66,6 +66,7 @@ export default function AdminCalendarPage() {
   const [postResultFiles, setPostResultFiles] = useState<File[]>([]);
   const [savingPostResults, setSavingPostResults] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [journalImageUploadEnabled, setJournalImageUploadEnabled] = useState(false);
 
   function closeAppointmentDetails() {
     setSelectedBooking(null);
@@ -93,10 +94,15 @@ export default function AdminCalendarPage() {
       startAt: range.startAt.toISOString(),
       endAt: range.endAt.toISOString(),
     });
-    const response = await fetch(`/api/admin/bookings?${params.toString()}`, { cache: "no-store" });
-    const data = await response.json();
-    setBookings(data.bookings ?? []);
-    setBlockouts(data.blockouts ?? []);
+    const [bookingsResponse, capabilitiesResponse] = await Promise.all([
+      fetch(`/api/admin/bookings?${params.toString()}`, { cache: "no-store" }),
+      fetch("/api/admin/capabilities", { cache: "no-store" }),
+    ]);
+    const bookingsData = await bookingsResponse.json();
+    const capabilitiesData = await capabilitiesResponse.json().catch(() => ({}));
+    setBookings(bookingsData.bookings ?? []);
+    setBlockouts(bookingsData.blockouts ?? []);
+    setJournalImageUploadEnabled(Boolean(capabilitiesData.journalImageUploadEnabled));
   }
 
   useEffect(() => {
@@ -123,6 +129,11 @@ export default function AdminCalendarPage() {
   }
 
   async function uploadPostResult(booking: Booking) {
+    if (!journalImageUploadEnabled) {
+      setModalError("Image uploads are unavailable because storage is not configured. Please set the required S3 environment variables.");
+      return;
+    }
+
     if (postResultFiles.length === 0) {
       setModalError("Please select at least one image.");
       return;
@@ -297,12 +308,18 @@ export default function AdminCalendarPage() {
                 onChange={(event) => setPostResultNotes(event.target.value)}
                 placeholder="Procedure notes"
               />
-              <input type="file" multiple accept="image/*" onChange={(event) => setPostResultFiles(Array.from(event.target.files || []))} />
+              {!journalImageUploadEnabled ? (
+                <p className="rounded border border-amber-300 bg-amber-50 p-2 text-sm text-amber-800">
+                  Image uploads are disabled because storage is not configured. Set the required S3 environment variables to enable journal image uploads.
+                </p>
+              ) : (
+                <input type="file" multiple accept="image/*" onChange={(event) => setPostResultFiles(Array.from(event.target.files || []))} />
+              )}
               <p className="text-xs text-slate-500">{postResultFiles.length} image(s) selected.</p>
               <button
                 type="button"
                 onClick={() => uploadPostResult(selectedBooking)}
-                disabled={savingPostResults}
+                disabled={savingPostResults || !journalImageUploadEnabled}
                 className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
               >
                 {savingPostResults ? "Saving…" : "Save to client journal"}
