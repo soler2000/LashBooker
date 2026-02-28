@@ -70,3 +70,13 @@ export function sanitizeQualificationCertificates(
 
   return parsed;
 }
+
+export function isPdfCertificateAsset(value: string | undefined) {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  return normalized.startsWith("data:application/pdf") || normalized.endsWith(".pdf");
+}

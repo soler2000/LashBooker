@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { isPdfCertificateAsset } from "@/lib/qualification-certificates";
 
 export type CertificateItem = {
   title: string;
@@ -26,11 +27,29 @@ export default function QualificationCertificates({ items }: QualificationCertif
           {items.map((item) => (
             <article key={item.title} className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03]">
               <div className="relative aspect-[4/3] w-full">
-                <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" />
+                {isPdfCertificateAsset(item.image) ? (
+                  <iframe
+                    src={item.image}
+                    title={`${item.title} PDF certificate`}
+                    className="h-full w-full border-0 bg-slate-900"
+                  />
+                ) : (
+                  <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" />
+                )}
               </div>
               <div className="p-5">
                 <h3 className="text-xl font-medium text-white">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/70">{item.description}</p>
+                {isPdfCertificateAsset(item.image) ? (
+                  <a
+                    href={item.image}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex text-sm font-medium text-white underline underline-offset-4 hover:text-slate-200"
+                  >
+                    Open certificate PDF
+                  </a>
+                ) : null}
               </div>
             </article>
           ))}
