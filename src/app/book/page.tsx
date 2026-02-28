@@ -312,7 +312,7 @@ export default function BookPage() {
                   />
                 </Elements>
               ) : (
-                <p className="text-sm text-rose-700">Stripe is not configured. Please contact support to complete payment.</p>
+                <p className="text-sm text-rose-700">There is no backend configured for credit card payments. Please contact support to complete payment.</p>
               )}
             </div>
           ) : null}
