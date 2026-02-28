@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { isVideoAsset } from "@/lib/media";
 import {
@@ -80,6 +80,7 @@ function fileToDataUrl(file: File) {
 }
 
 export default function AdminSettingsPage() {
+  const heroMp4InputRef = useRef<HTMLInputElement | null>(null);
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [savedMessage, setSavedMessage] = useState("");
   const [imageUploadStatus, setImageUploadStatus] = useState("");
@@ -290,6 +291,27 @@ export default function AdminSettingsPage() {
                   event.currentTarget.value = "";
                 }}
               />
+              {field.key === "hero" ? (
+                <>
+                  <input
+                    ref={heroMp4InputRef}
+                    type="file"
+                    accept="video/mp4,.mp4"
+                    className="hidden"
+                    onChange={(event) => {
+                      uploadImage(field.key, event.target.files?.[0] ?? null);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="rounded border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-100 hover:bg-slate-700"
+                    onClick={() => heroMp4InputRef.current?.click()}
+                  >
+                    Select MP4
+                  </button>
+                </>
+              ) : null}
               <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
                 <SiteMediaPreview src={images[field.key]} alt={`${field.label} small preview`} />
               </div>
