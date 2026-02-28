@@ -1,6 +1,7 @@
 export type QualificationCertificateContent = {
   title: string;
   description: string;
+  image?: string;
 };
 
 export const defaultQualificationCertificates: QualificationCertificateContent[] = [
@@ -20,6 +21,21 @@ export const defaultQualificationCertificates: QualificationCertificateContent[]
 
 export function normalizeCertificateText(value: string | null | undefined) {
   return value?.trim() ?? "";
+}
+
+const MAX_CERTIFICATE_IMAGE_LENGTH = 2_000_000;
+
+function normalizeCertificateImage(value: unknown) {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > MAX_CERTIFICATE_IMAGE_LENGTH) {
+    return undefined;
+  }
+
+  return trimmed;
 }
 
 export function sanitizeQualificationCertificates(
@@ -42,7 +58,9 @@ export function sanitizeQualificationCertificates(
         return null;
       }
 
-      return { title, description };
+      const image = normalizeCertificateImage((item as { image?: unknown }).image);
+
+      return image ? { title, description, image } : { title, description };
     })
     .filter((item): item is QualificationCertificateContent => item !== null);
 
