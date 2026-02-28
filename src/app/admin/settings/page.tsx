@@ -37,10 +37,13 @@ const imageFields: Array<{ key: SiteImageKey; label: string }> = (
 
 const idealImageDimensions: Record<SiteImageKey, string> = {
   hero: "2000 × 1200 px",
-  precision: "1800 × 1200 px",
-  closeup: "1800 × 1200 px",
-  luxury: "1800 × 1200 px",
-  booking: "1800 × 1200 px",
+  scene2Story: "1800 × 1200 px",
+  scene3Story: "1800 × 1200 px",
+  chapterClassic: "1800 × 1200 px",
+  chapterHybrid: "1800 × 1200 px",
+  chapterVolume: "1800 × 1200 px",
+  chapterRefill: "1800 × 1200 px",
+  bookingCta: "1800 × 1200 px",
   policies: "1800 × 1200 px",
 };
 
@@ -423,7 +426,7 @@ export default function AdminSettingsPage() {
                       <span className="text-xs font-semibold uppercase tracking-wide text-slate-200">PDF</span>
                     ) : (
                       <Image
-                        src={certificate.image?.trim() || images.closeup}
+                        src={certificate.image?.trim() || images.chapterHybrid}
                         alt={`Certificate ${index + 1} preview`}
                         width={120}
                         height={84}

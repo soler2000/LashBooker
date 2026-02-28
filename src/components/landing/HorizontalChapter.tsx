@@ -16,10 +16,10 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
   const [imageLoadFailed, setImageLoadFailed] = useState<Record<string, boolean>>({});
 
   const panels = [
-    { title: "Classic sets", copy: "Soft definition for an elegant everyday finish.", image: images.precision, fallback: defaultSiteImages.precision },
-    { title: "Hybrid blends", copy: "The balance between texture and featherlight volume.", image: images.closeup, fallback: defaultSiteImages.closeup },
-    { title: "Volume artistry", copy: "Full-bodied drama designed to still feel weightless.", image: images.luxury, fallback: defaultSiteImages.luxury },
-    { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.booking, fallback: defaultSiteImages.booking },
+    { title: "Classic sets", copy: "Soft definition for an elegant everyday finish.", image: images.chapterClassic, fallback: defaultSiteImages.chapterClassic },
+    { title: "Hybrid blends", copy: "The balance between texture and featherlight volume.", image: images.chapterHybrid, fallback: defaultSiteImages.chapterHybrid },
+    { title: "Volume artistry", copy: "Full-bodied drama designed to still feel weightless.", image: images.chapterVolume, fallback: defaultSiteImages.chapterVolume },
+    { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.chapterRefill, fallback: defaultSiteImages.chapterRefill },
   ];
 
   const panelCount = panels.length;

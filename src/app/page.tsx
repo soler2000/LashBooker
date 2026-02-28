@@ -57,7 +57,7 @@ export default function Home() {
     }
   }, []);
 
-  const certificateImages = [images.precision, images.closeup, images.luxury];
+  const certificateImages = [images.chapterClassic, images.chapterHybrid, images.chapterVolume];
   const certificateItems: CertificateItem[] = publicSettings.qualificationCertificates.map((certificate, index) => ({
     title: certificate.title,
     description: certificate.description,
@@ -97,14 +97,14 @@ export default function Home() {
         eyebrow="Scene 2"
         title="Designed around your features."
         description="Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them."
-        image={images.precision}
+        image={images.scene2Story}
       />
 
       <StickyStoryScene
         eyebrow="Scene 3"
         title="Studio calm, editorial results."
         description="From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail."
-        image={images.luxury}
+        image={images.scene3Story}
       />
 
       <HorizontalChapter images={images} />
@@ -116,7 +116,7 @@ export default function Home() {
       </section>
 
       <Scene
-        image={images.booking}
+        image={images.bookingCta}
         overlay="linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,.82))"
         sectionClassName="relative flex h-screen w-full items-center justify-center overflow-hidden px-6 md:px-12"
         contentClassName="relative z-10 text-center"
