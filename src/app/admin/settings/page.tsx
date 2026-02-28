@@ -147,6 +147,20 @@ export default function AdminSettingsPage() {
     );
   };
 
+  const uploadCertificateImage = async (index: number, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      updateCertificateField(index, "image", dataUrl);
+      setImageUploadStatus(`Certificate ${index + 1} image uploaded. Click save to apply.`);
+    } catch {
+      setImageUploadStatus("Could not upload certificate image. Please try a different file.");
+    }
+  };
+
   const saveBusinessSettings = async () => {
     setDepositStatus("");
     const response = await fetch("/api/admin/settings", {
@@ -165,6 +179,7 @@ export default function AdminSettingsPage() {
         qualificationCertificates: qualificationCertificates.map((certificate) => ({
           title: certificate.title.trim(),
           description: certificate.description.trim(),
+          ...(certificate.image?.trim() ? { image: certificate.image.trim() } : {}),
         })),
       }),
     });
@@ -393,6 +408,26 @@ export default function AdminSettingsPage() {
                 onChange={(event) => updateCertificateField(index, "description", event.target.value)}
                 placeholder="Certificate description"
               />
+              <div className="space-y-2">
+                <p className="text-xs text-slate-300">Certificate image</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                    onChange={(event) => uploadCertificateImage(index, event.target.files?.[0] ?? null)}
+                  />
+                  <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
+                    <Image
+                      src={certificate.image?.trim() || images.closeup}
+                      alt={`Certificate ${index + 1} preview`}
+                      width={120}
+                      height={84}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
