@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { clamp, usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
+import { isVideoAsset } from "@/lib/media";
 
 type StickyStorySceneProps = {
   eyebrow: string;
@@ -15,6 +16,7 @@ export default function StickyStoryScene({ eyebrow, title, description, image }:
   const sectionRef = useRef<HTMLElement | null>(null);
   const progress = useSectionProgress(sectionRef);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const usesVideoBackground = isVideoAsset(image);
 
   const bgScale = prefersReducedMotion ? 1 : 1 + progress * 0.08;
   const fadeIn = clamp((progress - 0.15) / 0.2);
@@ -33,7 +35,11 @@ export default function StickyStoryScene({ eyebrow, title, description, image }:
           }}
           aria-hidden
         >
-          <Image src={image} alt="" fill className="object-cover" sizes="100vw" />
+          {usesVideoBackground ? (
+            <video src={image} autoPlay muted loop playsInline className="h-full w-full object-cover" preload="metadata" />
+          ) : (
+            <Image src={image} alt="" fill className="object-cover" sizes="100vw" />
+          )}
         </div>
         <div
           className="absolute inset-0"
