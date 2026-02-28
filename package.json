@@ -21,7 +21,9 @@
     "react-dom": "18.3.1",
     "stripe": "^16.10.0",
     "zod": "^3.23.8",
-    "recharts": "^2.13.3"
+    "recharts": "^2.13.3",
+    "@stripe/react-stripe-js": "^2.8.0",
+    "@stripe/stripe-js": "^4.9.0"
   },
   "devDependencies": {
     "@types/node": "^22.8.1",
