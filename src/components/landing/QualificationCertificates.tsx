@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { shouldUseUnoptimizedImage } from "@/lib/media";
 import { isPdfCertificateAsset } from "@/lib/qualification-certificates";
 
 export type CertificateItem = {
@@ -34,7 +35,7 @@ export default function QualificationCertificates({ items }: QualificationCertif
                     className="h-full w-full border-0 bg-slate-900"
                   />
                 ) : (
-                  <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" />
+                  <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" unoptimized={shouldUseUnoptimizedImage(item.image)} />
                 )}
               </div>
               <div className="p-5">
