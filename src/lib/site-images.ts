@@ -21,7 +21,7 @@ const deprecatedUnsplashPhotoIds = new Set([
   "1583241800698-90a4f4d29f4a",
 ]);
 
-function isDeprecatedUnsplashImage(src: string) {
+export function isDeprecatedUnsplashImage(src: string) {
   try {
     const url = new URL(src);
     if (url.hostname !== "images.unsplash.com") {
