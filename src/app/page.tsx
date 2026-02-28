@@ -61,7 +61,7 @@ export default function Home() {
   const certificateItems: CertificateItem[] = publicSettings.qualificationCertificates.map((certificate, index) => ({
     title: certificate.title,
     description: certificate.description,
-    image: certificateImages[index % certificateImages.length],
+    image: certificate.image?.trim() || certificateImages[index % certificateImages.length],
   }));
 
   useEffect(() => {
