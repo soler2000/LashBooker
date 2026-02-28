@@ -67,6 +67,16 @@ export default function AdminCalendarPage() {
   const [savingPostResults, setSavingPostResults] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [journalImageUploadEnabled, setJournalImageUploadEnabled] = useState(false);
+  const [journalImageStorageBackend, setJournalImageStorageBackend] = useState<"s3" | "database">("database");
+
+  function fileToDataUrl(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => reject(new Error("Could not read image file."));
+      reader.readAsDataURL(file);
+    });
+  }
 
   function closeAppointmentDetails() {
     setSelectedBooking(null);
@@ -103,6 +113,7 @@ export default function AdminCalendarPage() {
     setBookings(bookingsData.bookings ?? []);
     setBlockouts(bookingsData.blockouts ?? []);
     setJournalImageUploadEnabled(Boolean(capabilitiesData.journalImageUploadEnabled));
+    setJournalImageStorageBackend(capabilitiesData.journalImageStorageBackend === "s3" ? "s3" : "database");
   }
 
   useEffect(() => {
@@ -130,7 +141,7 @@ export default function AdminCalendarPage() {
 
   async function uploadPostResult(booking: Booking) {
     if (!journalImageUploadEnabled) {
-      setModalError("Image uploads are unavailable because storage is not configured. Please set the required S3 environment variables.");
+      setModalError("Image uploads are unavailable for the current storage setup.");
       return;
     }
 
@@ -148,43 +159,52 @@ export default function AdminCalendarPage() {
     setModalError(null);
 
     try {
-      const uploadedImages: Array<{ objectKey: string; mimeType: string }> = [];
+      const uploadedImages: Array<{ objectKey?: string; mimeType: string; dataUrl?: string }> = [];
 
-      for (const file of postResultFiles) {
-        const presignResponse = await fetch(`/api/admin/clients/${booking.client.id}/journal/images/presign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            contentType: file.type || "application/octet-stream",
-            ext: file.name.split(".").pop(),
-          }),
-        });
+      if (journalImageStorageBackend === "s3") {
+        for (const file of postResultFiles) {
+          const presignResponse = await fetch(`/api/admin/clients/${booking.client.id}/journal/images/presign`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: booking.id,
+              contentType: file.type || "application/octet-stream",
+              ext: file.name.split(".").pop(),
+            }),
+          });
 
-        if (!presignResponse.ok) {
-          const errorData = (await presignResponse.json().catch(() => ({}))) as {
-            error?: string;
-            detail?: string;
-            message?: string;
-          };
-          const serverError = errorData.error ?? errorData.detail ?? errorData.message;
-          const fallbackError = "Unable to generate upload URL for image.";
-          throw new Error(
-            serverError
-              ? `Upload URL generation failed (${presignResponse.status}): ${serverError}`
-              : `${fallbackError} (status ${presignResponse.status})`,
-          );
+          if (!presignResponse.ok) {
+            const errorData = (await presignResponse.json().catch(() => ({}))) as {
+              error?: string;
+              detail?: string;
+              message?: string;
+            };
+            const serverError = errorData.error ?? errorData.detail ?? errorData.message;
+            const fallbackError = "Unable to generate upload URL for image.";
+            throw new Error(
+              serverError
+                ? `Upload URL generation failed (${presignResponse.status}): ${serverError}`
+                : `${fallbackError} (status ${presignResponse.status})`,
+            );
+          }
+          const presignJson = await presignResponse.json();
+
+          const uploadResponse = await fetch(presignJson.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+            body: file,
+          });
+
+          if (!uploadResponse.ok) throw new Error("Image upload failed.");
+          uploadedImages.push({ objectKey: presignJson.objectKey, mimeType: file.type || "application/octet-stream" });
         }
-        const presignJson = await presignResponse.json();
-
-        const uploadResponse = await fetch(presignJson.uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": file.type || "application/octet-stream" },
-          body: file,
-        });
-
-        if (!uploadResponse.ok) throw new Error("Image upload failed.");
-        uploadedImages.push({ objectKey: presignJson.objectKey, mimeType: file.type || "application/octet-stream" });
+      } else {
+        for (const file of postResultFiles) {
+          uploadedImages.push({
+            dataUrl: await fileToDataUrl(file),
+            mimeType: file.type || "application/octet-stream",
+          });
+        }
       }
 
       const createResponse = await fetch(`/api/admin/clients/${booking.client.id}/journal`, {
@@ -310,7 +330,7 @@ export default function AdminCalendarPage() {
               />
               {!journalImageUploadEnabled ? (
                 <p className="rounded border border-amber-300 bg-amber-50 p-2 text-sm text-amber-800">
-                  Image uploads are disabled because storage is not configured. Set the required S3 environment variables to enable journal image uploads.
+                  Image uploads are disabled for the current storage setup. If using S3, set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET, and S3_ENDPOINT.
                 </p>
               ) : (
                 <input type="file" multiple accept="image/*" onChange={(event) => setPostResultFiles(Array.from(event.target.files || []))} />

@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { auth } from "@/lib/auth";
+import { getJournalImageStorageBackend } from "@/lib/journal-image-storage";
 import { prisma } from "@/lib/prisma";
 import { createSignedUploadUrl, hasS3StorageConfig } from "@/lib/s3-storage";
 import { NextResponse } from "next/server";
@@ -23,6 +24,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const session = await auth();
   if (!session || !ADMIN_ROLES.includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  if (getJournalImageStorageBackend() !== "s3") {
+    return NextResponse.json({ error: "S3 upload is disabled for the current image storage backend" }, { status: 400 });
   }
 
   if (!hasS3StorageConfig()) {
