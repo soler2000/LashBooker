@@ -274,7 +274,7 @@ export default function AdminSettingsPage() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Landing page images</h2>
           <p className="text-sm text-slate-300">Upload custom images for key sections on the public site.</p>
-          <p className="text-xs text-slate-400">For iOS uploads, if the combined picker hides videos, use the dedicated video picker below.</p>
+          <p className="text-xs text-slate-400">For iOS uploads, use the Video picker for MP4/MOV files on sections that support video.</p>
         </div>
 
         {imageFields.map((field) => (
@@ -287,6 +287,7 @@ export default function AdminSettingsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-full space-y-2">
+                <p className="text-xs text-slate-400">Image picker</p>
                 <input
                   type="file"
                   accept={imageUploadAccept}
@@ -297,15 +298,18 @@ export default function AdminSettingsPage() {
                   }}
                 />
                 {videoEnabledImageFields[field.key] ? (
-                  <input
-                    type="file"
-                    accept={videoUploadAccept}
-                    className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
-                    onChange={(event) => {
-                      uploadImage(field.key, event.target.files?.[0] ?? null);
-                      event.currentTarget.value = "";
-                    }}
-                  />
+                  <>
+                    <p className="text-xs text-slate-400">Video picker (MP4/MOV)</p>
+                    <input
+                      type="file"
+                      accept={videoUploadAccept}
+                      className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                      onChange={(event) => {
+                        uploadImage(field.key, event.target.files?.[0] ?? null);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </>
                 ) : null}
               </div>
               <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
