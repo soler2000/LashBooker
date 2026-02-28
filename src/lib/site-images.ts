@@ -17,6 +17,23 @@ export type SiteImages = Record<SiteImageKey, string>;
 
 export const MAX_SITE_IMAGE_VALUE_LENGTH = 8_000_000;
 
+const deprecatedUnsplashPhotoIds = new Set([
+  "1583241800698-90a4f4d29f4a",
+]);
+
+function isDeprecatedUnsplashImage(src: string) {
+  try {
+    const url = new URL(src);
+    if (url.hostname !== "images.unsplash.com") {
+      return false;
+    }
+
+    return [...deprecatedUnsplashPhotoIds].some((photoId) => url.pathname.includes(photoId));
+  } catch {
+    return false;
+  }
+}
+
 export function sanitizeSiteImages(input: Partial<SiteImages> | null | undefined): SiteImages {
   const merged = { ...defaultSiteImages } as SiteImages;
 
@@ -37,7 +54,7 @@ export function sanitizeSiteImages(input: Partial<SiteImages> | null | undefined
       continue;
     }
 
-    merged[key] = trimmed;
+    merged[key] = isDeprecatedUnsplashImage(trimmed) ? defaultSiteImages[key] : trimmed;
   }
 
   return merged;
