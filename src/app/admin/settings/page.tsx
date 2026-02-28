@@ -46,6 +46,9 @@ const videoEnabledImageFields: Partial<Record<SiteImageKey, boolean>> = {
 
 const videoUploadAccept = "image/*,video/*,.mp4,.mov,video/mp4,video/quicktime";
 
+const imageFileNamePattern = /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i;
+const videoFileNamePattern = /\.(mp4|mov|m4v|webm|ogv)$/i;
+
 function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
   if (isVideoAsset(src)) {
     return <video src={src} className="h-full w-full object-contain" muted loop playsInline controls preload="metadata" />;
@@ -152,10 +155,14 @@ export default function AdminSettingsPage() {
     }
 
     const isVideoField = Boolean(videoEnabledImageFields[key]);
+    const hasImageFileName = imageFileNamePattern.test(file.name);
+    const hasVideoFileName = videoFileNamePattern.test(file.name);
     const isImageMimeType = file.type.startsWith("image/");
     const isVideoMimeType = file.type.startsWith("video/");
+    const isImageFile = isImageMimeType || hasImageFileName;
+    const isVideoFile = isVideoMimeType || hasVideoFileName;
 
-    if (!isImageMimeType && !(isVideoField && isVideoMimeType)) {
+    if (!isImageFile && !(isVideoField && isVideoFile)) {
       setImageUploadStatus(
         isVideoField
           ? "Please choose an image or video file for this section."
