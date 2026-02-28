@@ -15,6 +15,34 @@ export const defaultSiteImages = {
 export type SiteImageKey = keyof typeof defaultSiteImages;
 export type SiteImages = Record<SiteImageKey, string>;
 
+export const MAX_SITE_IMAGE_VALUE_LENGTH = 8_000_000;
+
+export function sanitizeSiteImages(input: Partial<SiteImages> | null | undefined): SiteImages {
+  const merged = { ...defaultSiteImages } as SiteImages;
+
+  if (!input) {
+    return merged;
+  }
+
+  for (const key of Object.keys(defaultSiteImages) as SiteImageKey[]) {
+    const value = input[key];
+
+    if (typeof value !== "string") {
+      continue;
+    }
+
+    const trimmed = value.trim();
+
+    if (!trimmed || trimmed.length > MAX_SITE_IMAGE_VALUE_LENGTH) {
+      continue;
+    }
+
+    merged[key] = trimmed;
+  }
+
+  return merged;
+}
+
 export const siteImageUsage: Record<SiteImageKey, { label: string; usedOn: string[] }> = {
   hero: { label: "Hero image", usedOn: ["/"] },
   scene2Story: { label: "Scene 2 story image", usedOn: ["/"] },

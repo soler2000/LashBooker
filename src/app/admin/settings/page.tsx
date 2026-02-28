@@ -5,7 +5,7 @@ import Image from "next/image";
 import { isVideoAsset } from "@/lib/media";
 import {
   defaultSiteImages,
-  SITE_IMAGES_STORAGE_KEY,
+  sanitizeSiteImages,
   siteImageUsage,
   type SiteImageKey,
   type SiteImages,
@@ -27,6 +27,7 @@ type AdminSettingsResponse = {
   addressPostcode: string | null;
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
+  siteImages: SiteImages;
 };
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
@@ -44,7 +45,9 @@ const videoEnabledImageFields: Partial<Record<SiteImageKey, boolean>> = {
   bookingCta: true,
 };
 
-const videoUploadAccept = "image/*,video/*,.mp4,.mov,video/mp4,video/quicktime";
+const imageUploadAccept = "image/*,.avif,.bmp,.gif,.jpg,.jpeg,.png,.svg,.webp";
+const videoUploadAccept = "video/mp4,video/quicktime,video/x-m4v,video/*,.mp4,.mov,.m4v,.webm,.ogv";
+const MAX_MEDIA_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 const imageFileNamePattern = /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const videoFileNamePattern = /\.(mp4|mov|m4v|webm|ogv)$/i;
@@ -97,21 +100,6 @@ export default function AdminSettingsPage() {
     defaultQualificationCertificates,
   );
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
-
-    if (!stored) {
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(stored) as Partial<SiteImages>;
-      setImages({ ...defaultSiteImages, ...parsed });
-    } catch {
-      setImages(defaultSiteImages);
-    }
-  }, []);
-
   const normalizeInstagramInput = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return "";
@@ -137,16 +125,31 @@ export default function AdminSettingsPage() {
     setAddressPostcode(data.addressPostcode ?? "");
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
+    setImages(sanitizeSiteImages(data.siteImages));
   };
 
   useEffect(() => {
     loadSettings();
   }, []);
 
-  const save = (event: FormEvent<HTMLFormElement>) => {
+  const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    window.localStorage.setItem(SITE_IMAGES_STORAGE_KEY, JSON.stringify(images));
-    setSavedMessage("Saved. Refresh the front page to see updates.");
+    setSavedMessage("");
+
+    const response = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ siteImages: images }),
+    });
+
+    if (!response.ok) {
+      setSavedMessage("Could not save image settings.");
+      return;
+    }
+
+    const data = (await response.json()) as AdminSettingsResponse;
+    setImages(sanitizeSiteImages(data.siteImages));
+    setSavedMessage("Image settings saved and now sync across devices.");
   };
 
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
@@ -155,6 +158,11 @@ export default function AdminSettingsPage() {
     }
 
     const isVideoField = Boolean(videoEnabledImageFields[key]);
+
+    if (file.size > MAX_MEDIA_UPLOAD_BYTES) {
+      setImageUploadStatus("Please choose a media file up to 20MB.");
+      return;
+    }
     const hasImageFileName = imageFileNamePattern.test(file.name);
     const hasVideoFileName = videoFileNamePattern.test(file.name);
     const isImageMimeType = file.type.startsWith("image/");
@@ -250,6 +258,7 @@ export default function AdminSettingsPage() {
     setAddressPostcode(data.addressPostcode ?? "");
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
+    setImages(sanitizeSiteImages(data.siteImages));
     setDepositStatus(
       depositRequired
         ? "Settings saved. Deposits are required for new bookings."
@@ -267,6 +276,7 @@ export default function AdminSettingsPage() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Landing page images</h2>
           <p className="text-sm text-slate-300">Upload custom images for key sections on the public site.</p>
+          <p className="text-xs text-slate-400">For iOS uploads, if the combined picker hides videos, use the dedicated video picker below.</p>
         </div>
 
         {imageFields.map((field) => (
@@ -278,12 +288,28 @@ export default function AdminSettingsPage() {
               <SiteMediaPreview src={images[field.key]} alt={`${field.label} preview`} />
             </div>
             <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept={videoEnabledImageFields[field.key] ? videoUploadAccept : "image/*"}
-                className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
-                onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
-              />
+              <div className="w-full space-y-2">
+                <input
+                  type="file"
+                  accept={imageUploadAccept}
+                  className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                  onChange={(event) => {
+                    uploadImage(field.key, event.target.files?.[0] ?? null);
+                    event.currentTarget.value = "";
+                  }}
+                />
+                {videoEnabledImageFields[field.key] ? (
+                  <input
+                    type="file"
+                    accept={videoUploadAccept}
+                    className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                    onChange={(event) => {
+                      uploadImage(field.key, event.target.files?.[0] ?? null);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                ) : null}
+              </div>
               <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
                 <SiteMediaPreview src={images[field.key]} alt={`${field.label} small preview`} />
               </div>

@@ -11,8 +11,8 @@ export function isVideoAsset(src: string) {
 
   try {
     const url = new URL(trimmed);
-    return /\.mp4($|\?)/i.test(url.pathname + url.search);
+    return /\.(mp4|mov|m4v|webm|ogv)($|\?)/i.test(url.pathname + url.search);
   } catch {
-    return /\.mp4($|\?)/i.test(trimmed);
+    return /\.(mp4|mov|m4v|webm|ogv)($|\?)/i.test(trimmed);
   }
 }
