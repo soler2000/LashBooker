@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
+import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import { defaultSiteImages, type SiteImages } from "@/lib/site-images";
 
 type HorizontalChapterProps = {
@@ -43,15 +44,28 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
           {panels.map((panel, index) => (
             <article key={panel.title} className="relative h-screen w-screen shrink-0">
               <div className="absolute inset-0" aria-hidden>
-                <Image
-                  src={imageLoadFailed[panel.title] ? panel.fallback : panel.image}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="100vw"
-                  priority={index < 2}
-                  onError={() => setImageLoadFailed((current) => ({ ...current, [panel.title]: true }))}
-                />
+                {isVideoAsset(imageLoadFailed[panel.title] ? panel.fallback : panel.image) ? (
+                  <video
+                    src={imageLoadFailed[panel.title] ? panel.fallback : panel.image}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="h-full w-full object-cover"
+                    preload={index < 2 ? "auto" : "metadata"}
+                  />
+                ) : (
+                  <Image
+                    src={imageLoadFailed[panel.title] ? panel.fallback : panel.image}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority={index < 2}
+                    unoptimized={shouldUseUnoptimizedImage(imageLoadFailed[panel.title] ? panel.fallback : panel.image)}
+                    onError={() => setImageLoadFailed((current) => ({ ...current, [panel.title]: true }))}
+                  />
+                )}
               </div>
               <div
                 className="absolute inset-0"

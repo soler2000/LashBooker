@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, type ReactNode, type RefObject } from "react";
-import { isVideoAsset } from "@/lib/media";
+import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 
 type SceneProps = {
   children: ReactNode;
@@ -84,6 +84,7 @@ export default function Scene({
   contentClassName = "relative z-10",
 }: SceneProps) {
   const isVideo = image ? isVideoAsset(image) : false;
+  const useUnoptimizedImage = image ? shouldUseUnoptimizedImage(image) : false;
 
   return (
     <section className={sectionClassName}>
@@ -101,7 +102,7 @@ export default function Scene({
                 preload={imagePriority ? "auto" : "metadata"}
               />
             ) : (
-              <Image src={image} alt="" fill className="object-cover" sizes={imageSizes} priority={imagePriority} />
+              <Image src={image} alt="" fill className="object-cover" sizes={imageSizes} priority={imagePriority} unoptimized={useUnoptimizedImage} />
             )}
           </div>
           <div className="absolute inset-0" style={{ backgroundImage: overlay }} aria-hidden />
