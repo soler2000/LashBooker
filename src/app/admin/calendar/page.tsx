@@ -67,6 +67,13 @@ export default function AdminCalendarPage() {
   const [savingPostResults, setSavingPostResults] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
+  function closeAppointmentDetails() {
+    setSelectedBooking(null);
+    setPostResultFiles([]);
+    setPostResultNotes("");
+    setModalError(null);
+  }
+
   const range = useMemo(() => {
     const dayStart = new Date(anchor);
     dayStart.setUTCHours(0, 0, 0, 0);
@@ -240,22 +247,14 @@ export default function AdminCalendarPage() {
       </div>
 
       {selectedBooking ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded border bg-white p-4 text-slate-900">
-            <div className="mb-3 flex items-start justify-between">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-white text-slate-900">
+          <div className="min-h-screen w-full p-4 sm:p-6">
+            <div className="sticky top-0 z-10 mb-3 flex items-start justify-between border-b bg-white pb-3">
               <div>
                 <h2 className="text-xl font-semibold">Appointment details</h2>
                 <p className="text-sm text-slate-600">{selectedBooking.serviceName}</p>
               </div>
-              <button
-                className="rounded border px-2 py-1 text-sm"
-                onClick={() => {
-                  setSelectedBooking(null);
-                  setPostResultFiles([]);
-                  setPostResultNotes("");
-                  setModalError(null);
-                }}
-              >
+              <button className="rounded border px-2 py-1 text-sm" onClick={closeAppointmentDetails}>
                 Close
               </button>
             </div>
