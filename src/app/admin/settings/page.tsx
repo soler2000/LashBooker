@@ -44,7 +44,7 @@ const videoEnabledImageFields: Partial<Record<SiteImageKey, boolean>> = {
   bookingCta: true,
 };
 
-const videoUploadAccept = "image/*,.mp4,video/mp4,video/*";
+const videoUploadAccept = "image/*,video/*,.mp4,.mov,video/mp4,video/quicktime";
 
 function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
   if (isVideoAsset(src)) {
@@ -148,6 +148,19 @@ export default function AdminSettingsPage() {
 
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
     if (!file) {
+      return;
+    }
+
+    const isVideoField = Boolean(videoEnabledImageFields[key]);
+    const isImageMimeType = file.type.startsWith("image/");
+    const isVideoMimeType = file.type.startsWith("video/");
+
+    if (!isImageMimeType && !(isVideoField && isVideoMimeType)) {
+      setImageUploadStatus(
+        isVideoField
+          ? "Please choose an image or video file for this section."
+          : "This section only supports image files.",
+      );
       return;
     }
 
