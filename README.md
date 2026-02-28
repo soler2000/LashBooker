@@ -72,7 +72,7 @@ NEXTAUTH_SECRET="replace-with-strong-secret"
 NEXTAUTH_URL="http://localhost:3000"
 STRIPE_SECRET_KEY="sk_test_xxx"
 STRIPE_WEBHOOK_SECRET="whsec_xxx"
-STRIPE_PUBLISHABLE_KEY="pk_test_xxx"
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_xxx"
 EMAIL_PROVIDER_API_KEY=""
 EMAIL_PROVIDER="LOG"
 SMTP_HOST=""
@@ -163,7 +163,7 @@ Then configure the rest of the app variables:
 - `NEXTAUTH_URL` (e.g. `https://app.yourdomain.com`)
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 - `EMAIL_PROVIDER_API_KEY`
 - `EMAIL_PROVIDER` (`LOG` or `SMTP`; default `LOG`)
 - Optional SMTP fallback env vars (used when admin email settings are not configured):

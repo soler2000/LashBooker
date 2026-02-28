@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import DepositPaymentForm from "@/components/payments/DepositPaymentForm";
 
 type Service = { id: string; name: string; description: string; priceCents: number };
 type Slot = { startAt: string; endAt: string };
 type WeeklyAvailabilityDay = { date: string; slots: Slot[] };
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "");
 
 function formatSlot(slot: Slot) {
   return `${new Date(slot.startAt).toLocaleString()} - ${new Date(slot.endAt).toLocaleTimeString()}`;
@@ -49,6 +54,8 @@ export default function BookPage() {
   const [acceptPolicies, setAcceptPolicies] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [weekStart, setWeekStart] = useState(getWeekStart(formatDate(new Date())));
+  const [paymentClientSecret, setPaymentClientSecret] = useState("");
+  const [paymentBookingId, setPaymentBookingId] = useState("");
   const selectedService = services.find((service) => service.id === serviceId);
   const weekDates = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)), [weekStart]);
   const allWeekSlots = weekDates.flatMap((date) => weeklySlots[date] ?? []);
@@ -284,18 +291,38 @@ export default function BookPage() {
 
               setAuthRequired(false);
 
-              setMessage(
-                data.requiresPayment
-                  ? `Booking ${data.bookingId} created. Deposit payment is required before confirmation.`
-                  : `Booking ${data.bookingId} confirmed.`
-              );
+              if (data.requiresPayment) {
+                setPaymentClientSecret(data.clientSecret ?? "");
+                setPaymentBookingId(data.bookingId);
+                setMessage(`Booking ${data.bookingId} created. Complete your deposit payment below to confirm.`);
+                return;
+              }
 
+              setMessage(`Booking ${data.bookingId} confirmed.`);
               router.push(`/portal/appointments/${data.bookingId}`);
             }}
           >
             Create booking
           </button>
           {message ? <p className="mt-2 text-sm">{message}</p> : null}
+          {paymentClientSecret && paymentBookingId ? (
+            <div className="mt-4 rounded border border-gray-300 bg-white p-3">
+              {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? (
+                <Elements stripe={stripePromise} options={{ clientSecret: paymentClientSecret }}>
+                  <DepositPaymentForm
+                    bookingId={paymentBookingId}
+                    returnUrl={`${window.location.origin}/portal/appointments/${paymentBookingId}`}
+                    onSuccess={() => {
+                      setMessage(`Payment successful. Booking ${paymentBookingId} is now confirmed.`);
+                      router.push(`/portal/appointments/${paymentBookingId}`);
+                    }}
+                  />
+                </Elements>
+              ) : (
+                <p className="text-sm text-rose-700">Stripe is not configured. Please contact support to complete payment.</p>
+              )}
+            </div>
+          ) : null}
           {authRequired && !isLoggedIn ? (
             <p className="mt-2 text-sm text-gray-800">
               You need an account to book. <Link href="/register?redirectTo=%2Fbook" className="underline">Create account</Link> or{" "}
