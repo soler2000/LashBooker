@@ -4,7 +4,6 @@ import {
   type QualificationCertificateContent,
 } from "@/lib/qualification-certificates";
 import { NextResponse } from "next/server";
-import { defaultSiteImages, sanitizeSiteImages, type SiteImages } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +17,6 @@ type PublicSettingsInput = {
   addressPostcode?: string | null;
   addressCountry?: string | null;
   qualificationCertificatesJson?: string | null;
-  siteImagesJson?: string | null;
 };
 
 function normalizeOptionalText(value: string | null | undefined) {
@@ -38,16 +36,6 @@ function buildContactAndAddress(settings: PublicSettingsInput | null | undefined
   };
 }
 
-function parseSiteImages(siteImagesJson: string | null | undefined): SiteImages {
-  if (!siteImagesJson) return defaultSiteImages;
-
-  try {
-    return sanitizeSiteImages(JSON.parse(siteImagesJson) as Partial<SiteImages>);
-  } catch {
-    return defaultSiteImages;
-  }
-}
-
 function toPublicSettings(settings: PublicSettingsInput | null | undefined) {
   const publicContactAndAddress = buildContactAndAddress(settings);
   const normalizedInstagramUrl = normalizeOptionalText(settings?.instagramUrl);
@@ -62,21 +50,19 @@ function toPublicSettings(settings: PublicSettingsInput | null | undefined) {
     })(),
   );
 
-  const siteImages = parseSiteImages(settings?.siteImagesJson);
-
   if (!normalizedInstagramUrl) {
-    return { instagramUrl: null, siteImages, qualificationCertificates, ...publicContactAndAddress };
+    return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
   }
 
   try {
     const candidate = new URL(normalizedInstagramUrl);
     if (!["http:", "https:"].includes(candidate.protocol)) {
-      return { instagramUrl: null, siteImages, qualificationCertificates, ...publicContactAndAddress };
+      return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
     }
 
-    return { instagramUrl: candidate.toString(), siteImages, qualificationCertificates, ...publicContactAndAddress };
+    return { instagramUrl: candidate.toString(), qualificationCertificates, ...publicContactAndAddress };
   } catch {
-    return { instagramUrl: null, siteImages, qualificationCertificates, ...publicContactAndAddress };
+    return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
   }
 }
 
@@ -93,7 +79,6 @@ export async function GET() {
       addressPostcode: true,
       addressCountry: true,
       qualificationCertificatesJson: true,
-      siteImagesJson: true,
     },
   });
 

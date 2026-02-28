@@ -8,7 +8,7 @@ import QualificationCertificates, { type CertificateItem } from "@/components/la
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
 import ContactUsForm from "@/components/landing/ContactUsForm";
-import { defaultSiteImages, sanitizeSiteImages, type SiteImages } from "@/lib/site-images";
+import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
 import {
   defaultQualificationCertificates,
   type QualificationCertificateContent,
@@ -24,7 +24,6 @@ type PublicSettingsResponse = {
   addressPostcode: string | null;
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
-  siteImages: SiteImages;
 };
 
 const defaultPublicSettings: PublicSettingsResponse = {
@@ -37,12 +36,26 @@ const defaultPublicSettings: PublicSettingsResponse = {
   addressPostcode: null,
   addressCountry: null,
   qualificationCertificates: defaultQualificationCertificates,
-  siteImages: defaultSiteImages,
 };
 
 export default function Home() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [publicSettings, setPublicSettings] = useState<PublicSettingsResponse>(defaultPublicSettings);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
+
+    if (!stored) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as Partial<SiteImages>;
+      setImages({ ...defaultSiteImages, ...parsed });
+    } catch {
+      setImages(defaultSiteImages);
+    }
+  }, []);
 
   const certificateImages = [images.chapterClassic, images.chapterHybrid, images.chapterVolume];
   const certificateItems: CertificateItem[] = publicSettings.qualificationCertificates.map((certificate, index) => ({
@@ -60,8 +73,7 @@ export default function Home() {
       }
 
       const data = (await response.json()) as PublicSettingsResponse;
-      setPublicSettings({ ...defaultPublicSettings, ...data, siteImages: sanitizeSiteImages(data.siteImages) });
-      setImages(sanitizeSiteImages(data.siteImages));
+      setPublicSettings({ ...defaultPublicSettings, ...data });
     };
 
     loadPublicSettings();

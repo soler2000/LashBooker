@@ -5,7 +5,7 @@ import Image from "next/image";
 import { isVideoAsset } from "@/lib/media";
 import {
   defaultSiteImages,
-  sanitizeSiteImages,
+  SITE_IMAGES_STORAGE_KEY,
   siteImageUsage,
   type SiteImageKey,
   type SiteImages,
@@ -27,7 +27,6 @@ type AdminSettingsResponse = {
   addressPostcode: string | null;
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
-  siteImages: SiteImages;
 };
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
@@ -125,31 +124,31 @@ export default function AdminSettingsPage() {
     setAddressPostcode(data.addressPostcode ?? "");
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
-    setImages(sanitizeSiteImages(data.siteImages));
   };
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
+
+    if (!stored) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as Partial<SiteImages>;
+      setImages({ ...defaultSiteImages, ...parsed });
+    } catch {
+      setImages(defaultSiteImages);
+    }
+  }, []);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
-  const save = async (event: FormEvent<HTMLFormElement>) => {
+  const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSavedMessage("");
-
-    const response = await fetch("/api/admin/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ siteImages: images }),
-    });
-
-    if (!response.ok) {
-      setSavedMessage("Could not save image settings.");
-      return;
-    }
-
-    const data = (await response.json()) as AdminSettingsResponse;
-    setImages(sanitizeSiteImages(data.siteImages));
-    setSavedMessage("Image settings saved and now sync across devices.");
+    window.localStorage.setItem(SITE_IMAGES_STORAGE_KEY, JSON.stringify(images));
+    setSavedMessage("Saved. Refresh the front page to see updates.");
   };
 
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
@@ -258,7 +257,6 @@ export default function AdminSettingsPage() {
     setAddressPostcode(data.addressPostcode ?? "");
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
-    setImages(sanitizeSiteImages(data.siteImages));
     setDepositStatus(
       depositRequired
         ? "Settings saved. Deposits are required for new bookings."

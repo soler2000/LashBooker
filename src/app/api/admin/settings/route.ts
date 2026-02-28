@@ -7,12 +7,6 @@ import {
 } from "@/lib/qualification-certificates";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  defaultSiteImages,
-  MAX_SITE_IMAGE_VALUE_LENGTH,
-  sanitizeSiteImages,
-  type SiteImages,
-} from "@/lib/site-images";
 
 const roleAllowlist = ["ADMIN", "OWNER"];
 
@@ -42,19 +36,6 @@ function normalizeInstagramUrl(value: string | null | undefined) {
 
   return `https://${trimmed}`;
 }
-
-
-const siteImagesSchema = z.object({
-  hero: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  scene2Story: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  scene3Story: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  chapterClassic: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  chapterHybrid: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  chapterVolume: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  chapterRefill: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  bookingCta: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-  policies: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
-});
 
 const updateSchema = z
   .object({
@@ -102,7 +83,6 @@ const updateSchema = z
     mailReplyTo: z.string().trim().email().max(320).nullable().optional(),
     smtpUseTls: z.boolean().nullable().optional(),
     smtpUseStarttls: z.boolean().nullable().optional(),
-    siteImages: siteImagesSchema.optional(),
     qualificationCertificates: z
       .array(
         z.object({
@@ -143,24 +123,11 @@ async function ensureSettings() {
       addressPostcode: null,
       addressCountry: null,
       qualificationCertificatesJson: JSON.stringify(defaultQualificationCertificates),
-      siteImagesJson: JSON.stringify(defaultSiteImages),
       reminderScheduleJson: "[48,24]",
       smtpUseTls: false,
       smtpUseStarttls: false,
     },
   });
-}
-
-function parseSiteImages(siteImagesJson: string | null): SiteImages {
-  if (!siteImagesJson) {
-    return defaultSiteImages;
-  }
-
-  try {
-    return sanitizeSiteImages(JSON.parse(siteImagesJson) as Partial<SiteImages>);
-  } catch {
-    return defaultSiteImages;
-  }
 }
 
 function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) {
@@ -198,7 +165,6 @@ function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) 
     smtpUseTls: settings.smtpUseTls ?? false,
     smtpUseStarttls: settings.smtpUseStarttls ?? false,
     smtpPasswordConfigured: Boolean(settings.smtpPasswordEncrypted),
-    siteImages: parseSiteImages(settings.siteImagesJson),
     qualificationCertificates,
   };
 }
@@ -253,10 +219,6 @@ export async function PUT(request: Request) {
   assignIfPresent("mailReplyTo");
   assignIfPresent("smtpUseTls");
   assignIfPresent("smtpUseStarttls");
-
-  if (typeof parsed.data.siteImages !== "undefined") {
-    data.siteImagesJson = JSON.stringify(sanitizeSiteImages(parsed.data.siteImages));
-  }
 
   if (typeof parsed.data.qualificationCertificates !== "undefined") {
     data.qualificationCertificatesJson = JSON.stringify(parsed.data.qualificationCertificates);
