@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { hasS3StorageConfig } from "@/lib/s3-storage";
+import { getJournalImageStorageBackend, isJournalImageUploadEnabled } from "@/lib/journal-image-storage";
 import { NextResponse } from "next/server";
 
 const ADMIN_ROLES = ["ADMIN", "OWNER", "STAFF"];
@@ -11,6 +11,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    journalImageUploadEnabled: hasS3StorageConfig(),
+    journalImageUploadEnabled: isJournalImageUploadEnabled(),
+    journalImageStorageBackend: getJournalImageStorageBackend(),
   });
 }

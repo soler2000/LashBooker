@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDepositAmount } from "@/lib/payments";
 import { canManageClientBookingStatus, isWithinCutoffWindow } from "@/lib/portal-bookings";
-import { createSignedReadUrlOrNull } from "@/lib/s3-storage";
+import { getJournalImageReadUrl } from "@/lib/journal-image-storage";
 import AppointmentActions from "./AppointmentActions";
 
 function formatMoney(cents: number, currency: string) {
@@ -128,7 +128,7 @@ export default async function PortalAppointmentDetailPage({ params }: { params: 
               <p className="whitespace-pre-wrap text-sm text-slate-800">{entry.notes}</p>
               <div className="grid gap-2 md:grid-cols-3">
                 {entry.images.map((image) => {
-                  const readUrl = createSignedReadUrlOrNull(image.objectKey);
+                  const readUrl = getJournalImageReadUrl(image.objectKey);
                   if (!readUrl) {
                     return <div key={image.id} className="flex h-36 items-center justify-center rounded bg-slate-100 text-xs text-slate-600">Image unavailable</div>;
                   }

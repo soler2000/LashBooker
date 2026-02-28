@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
+import { getJournalImageReadUrl, getJournalImageStorageBackend } from "@/lib/journal-image-storage";
 import { prisma } from "@/lib/prisma";
-import { createSignedReadUrlOrNull } from "@/lib/s3-storage";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -11,7 +11,16 @@ const MAX_IMAGES = 6;
 const createEntrySchema = z.object({
   bookingId: z.string().uuid(),
   notes: z.string().trim().min(1).max(8000),
-  images: z.array(z.object({ objectKey: z.string().min(1), mimeType: z.string().min(1).max(120) })).min(MIN_IMAGES).max(MAX_IMAGES),
+  images: z
+    .array(
+      z.object({
+        objectKey: z.string().min(1).optional(),
+        mimeType: z.string().min(1).max(120),
+        dataUrl: z.string().min(32).max(8_000_000).optional(),
+      }),
+    )
+    .min(MIN_IMAGES)
+    .max(MAX_IMAGES),
 });
 
 async function guard() {
@@ -27,7 +36,7 @@ function addReadUrls<T extends { images: Array<{ id: string; mimeType: string; o
       id: image.id,
       mimeType: image.mimeType,
       createdAt: image.createdAt,
-      readUrl: createSignedReadUrlOrNull(image.objectKey),
+      readUrl: getJournalImageReadUrl(image.objectKey),
     })),
   }));
 }
@@ -54,6 +63,15 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const parsed = createEntrySchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  const storageBackend = getJournalImageStorageBackend();
+
+  if (
+    parsed.data.images.some((image) =>
+      storageBackend === "s3" ? !image.objectKey : !image.dataUrl || !image.dataUrl.startsWith("data:"),
+    )
+  ) {
+    return NextResponse.json({ error: "Image payload does not match configured storage backend" }, { status: 400 });
+  }
 
   const booking = await prisma.booking.findFirst({
     where: { id: parsed.data.bookingId, clientId: params.id },
@@ -69,7 +87,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
       notes: parsed.data.notes,
       images: {
         createMany: {
-          data: parsed.data.images.map((image) => ({ objectKey: image.objectKey, mimeType: image.mimeType })),
+          data: parsed.data.images.map((image) => ({
+            objectKey: storageBackend === "s3" ? (image.objectKey as string) : (image.dataUrl as string),
+            mimeType: image.mimeType,
+          })),
         },
       },
     },

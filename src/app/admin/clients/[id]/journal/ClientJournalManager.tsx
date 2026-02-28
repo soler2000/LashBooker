@@ -34,6 +34,15 @@ type JournalEntry = {
 const MIN_IMAGES = 1;
 const MAX_IMAGES = 6;
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ClientJournalManager({ clientId }: { clientId: string }) {
   const [client, setClient] = useState<ClientPayload | null>(null);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -47,6 +56,7 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
   const [entryNotes, setEntryNotes] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [journalImageUploadEnabled, setJournalImageUploadEnabled] = useState(false);
+  const [journalImageStorageBackend, setJournalImageStorageBackend] = useState<"s3" | "database">("database");
 
   async function loadData() {
     setLoading(true);
@@ -68,6 +78,7 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
       setClient(loadedClient);
       setEntries(journalJson.entries || []);
       setJournalImageUploadEnabled(Boolean(capabilitiesJson.journalImageUploadEnabled));
+      setJournalImageStorageBackend(capabilitiesJson.journalImageStorageBackend === "s3" ? "s3" : "database");
       setSelectedBookingId(loadedClient.bookings?.[0]?.id || "");
       setProfileForm({
         firstName: loadedClient.clientProfile?.firstName || "",
@@ -117,7 +128,7 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
 
   async function createEntry() {
     if (!journalImageUploadEnabled) {
-      setError("Image uploads are unavailable because storage is not configured. Please set the required S3 environment variables.");
+      setError("Image uploads are unavailable for the current storage setup.");
       return;
     }
     if (!canCreateEntry) return;
@@ -125,30 +136,39 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
     setError(null);
 
     try {
-      const uploadedImages: Array<{ objectKey: string; mimeType: string }> = [];
+      const uploadedImages: Array<{ objectKey?: string; mimeType: string; dataUrl?: string }> = [];
 
-      for (const file of files) {
-        const presignResponse = await fetch(`/api/admin/clients/${clientId}/journal/images/presign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: selectedBookingId,
-            contentType: file.type || "application/octet-stream",
-            ext: file.name.split(".").pop(),
-          }),
-        });
+      if (journalImageStorageBackend === "s3") {
+        for (const file of files) {
+          const presignResponse = await fetch(`/api/admin/clients/${clientId}/journal/images/presign`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: selectedBookingId,
+              contentType: file.type || "application/octet-stream",
+              ext: file.name.split(".").pop(),
+            }),
+          });
 
-        if (!presignResponse.ok) throw new Error("Unable to generate upload URL");
-        const presignJson = await presignResponse.json();
+          if (!presignResponse.ok) throw new Error("Unable to generate upload URL");
+          const presignJson = await presignResponse.json();
 
-        const uploadResponse = await fetch(presignJson.uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": file.type || "application/octet-stream" },
-          body: file,
-        });
+          const uploadResponse = await fetch(presignJson.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+            body: file,
+          });
 
-        if (!uploadResponse.ok) throw new Error("File upload failed");
-        uploadedImages.push({ objectKey: presignJson.objectKey, mimeType: file.type || "application/octet-stream" });
+          if (!uploadResponse.ok) throw new Error("File upload failed");
+          uploadedImages.push({ objectKey: presignJson.objectKey, mimeType: file.type || "application/octet-stream" });
+        }
+      } else {
+        for (const file of files) {
+          uploadedImages.push({
+            dataUrl: await fileToDataUrl(file),
+            mimeType: file.type || "application/octet-stream",
+          });
+        }
       }
 
       const createResponse = await fetch(`/api/admin/clients/${clientId}/journal`, {
@@ -200,7 +220,7 @@ export default function ClientJournalManager({ clientId }: { clientId: string })
         <textarea className="min-h-24 w-full rounded border px-3 py-2" value={entryNotes} onChange={(e) => setEntryNotes(e.target.value)} placeholder="Procedure notes" />
         {!journalImageUploadEnabled ? (
           <p className="rounded border border-amber-300 bg-amber-50 p-2 text-sm text-amber-800">
-            Image uploads are disabled because storage is not configured. Set the required S3 environment variables to enable journal image uploads.
+            Image uploads are disabled for the current storage setup. If using S3, set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET, and S3_ENDPOINT.
           </p>
         ) : (
           <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} />

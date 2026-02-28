@@ -85,9 +85,11 @@ SMTP_REPLY_TO=""
 SMTP_USE_TLS="false"
 SMTP_USE_STARTTLS="true"
 S3_ENDPOINT=""
-S3_ACCESS_KEY=""
-S3_SECRET_KEY=""
+S3_ACCESS_KEY_ID=""
+S3_SECRET_ACCESS_KEY=""
 S3_BUCKET=""
+S3_REGION="us-east-1"
+JOURNAL_IMAGE_STORAGE_BACKEND="database"
 APP_BASE_URL="http://localhost:3000"
 DEFAULT_OWNER_EMAIL="owner@lashbooker.local"
 DEFAULT_OWNER_PASSWORD="ChangeMe123!"
@@ -172,7 +174,8 @@ Then configure the rest of the app variables:
   - `SMTP_USE_TLS`, `SMTP_USE_STARTTLS`
 - `APP_BASE_URL` (same as public URL)
 - Optional S3 vars for future journal image uploads:
-  - `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`
+  - `JOURNAL_IMAGE_STORAGE_BACKEND` (`database` or `s3`, default `database`)
+  - When using `s3`: `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, optional `S3_REGION`
 
 If the app still cannot connect, verify the Postgres service is in the same Railway project/environment and that the variable reference points to the correct service name (`Postgres` in the examples above). The startup script can fall back to `DATABASE_PRIVATE_URL`, `DATABASE_PUBLIC_URL`, `POSTGRES_URL`, or `POSTGRES_URL_NON_POOLING` when `DATABASE_URL` is missing, but setting `DATABASE_URL` explicitly is still recommended.
 
