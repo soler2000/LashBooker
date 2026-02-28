@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { isVideoAsset } from "@/lib/media";
 import {
@@ -80,7 +80,6 @@ function fileToDataUrl(file: File) {
 }
 
 export default function AdminSettingsPage() {
-  const heroMp4InputRef = useRef<HTMLInputElement | null>(null);
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [savedMessage, setSavedMessage] = useState("");
   const [imageUploadStatus, setImageUploadStatus] = useState("");
@@ -190,6 +189,17 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const selectMp4ForField = (key: SiteImageKey) => {
+    const picker = document.createElement("input");
+    picker.type = "file";
+    picker.accept = "video/mp4,.mp4";
+    picker.onchange = () => {
+      void uploadImage(key, picker.files?.[0] ?? null);
+      picker.value = "";
+    };
+    picker.click();
+  };
+
   const updateCertificateField = (index: number, field: keyof QualificationCertificateContent, value: string) => {
     setQualificationCertificates((current) =>
       current.map((certificate, certificateIndex) =>
@@ -281,36 +291,24 @@ export default function AdminSettingsPage() {
             <div className="flex h-24 w-36 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
               <SiteMediaPreview src={images[field.key]} alt={`${field.label} preview`} />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
               <input
                 type="file"
                 accept={videoEnabledImageFields[field.key] ? videoUploadAccept : "image/*"}
-                className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                className="w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
                 onChange={(event) => {
                   uploadImage(field.key, event.target.files?.[0] ?? null);
                   event.currentTarget.value = "";
                 }}
               />
-              {field.key === "hero" ? (
-                <>
-                  <input
-                    ref={heroMp4InputRef}
-                    type="file"
-                    accept="video/mp4,.mp4"
-                    className="hidden"
-                    onChange={(event) => {
-                      uploadImage(field.key, event.target.files?.[0] ?? null);
-                      event.currentTarget.value = "";
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="rounded border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-100 hover:bg-slate-700"
-                    onClick={() => heroMp4InputRef.current?.click()}
-                  >
-                    Select MP4
-                  </button>
-                </>
+              {videoEnabledImageFields[field.key] ? (
+                <button
+                  type="button"
+                  className="shrink-0 rounded border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-100 hover:bg-slate-700"
+                  onClick={() => selectMp4ForField(field.key)}
+                >
+                  Select MP4
+                </button>
               ) : null}
               <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
                 <SiteMediaPreview src={images[field.key]} alt={`${field.label} small preview`} />
