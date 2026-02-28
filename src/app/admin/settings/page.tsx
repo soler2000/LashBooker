@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
+import { isVideoAsset } from "@/lib/media";
 import {
   defaultSiteImages,
   SITE_IMAGES_STORAGE_KEY,
@@ -34,6 +35,22 @@ const imageFields: Array<{ key: SiteImageKey; label: string }> = (
   key,
   label: siteImageUsage[key].label,
 }));
+
+
+const videoEnabledImageFields: Partial<Record<SiteImageKey, boolean>> = {
+  hero: true,
+  scene2Story: true,
+  scene3Story: true,
+  bookingCta: true,
+};
+
+function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
+  if (isVideoAsset(src)) {
+    return <video src={src} className="h-full w-full object-contain" muted loop playsInline controls preload="metadata" />;
+  }
+
+  return <Image src={src} alt={alt} width={240} height={160} className="h-full w-full object-contain" />;
+}
 
 const idealImageDimensions: Record<SiteImageKey, string> = {
   hero: "2000 × 1200 px",
@@ -134,12 +151,18 @@ export default function AdminSettingsPage() {
 
     try {
       const dataUrl = await fileToDataUrl(file);
+
+      if (isVideoAsset(dataUrl) && !videoEnabledImageFields[key]) {
+        setImageUploadStatus("This section only supports images. Please choose an image file.");
+        return;
+      }
+
       setImages((current) => ({ ...current, [key]: dataUrl }));
       setImageUploadStatus(
-        `${imageFields.find((field) => field.key === key)?.label ?? "Image"} uploaded. Click save to apply.`,
+        `${imageFields.find((field) => field.key === key)?.label ?? "Media"} uploaded. Click save to apply.`,
       );
     } catch {
-      setImageUploadStatus("Could not upload image. Please try a different file.");
+      setImageUploadStatus("Could not upload media. Please try a different file.");
     }
   };
 
@@ -230,29 +253,17 @@ export default function AdminSettingsPage() {
             <p className="text-xs text-slate-300">Ideal size: {idealImageDimensions[field.key]}</p>
             <p className="text-xs text-slate-400">Used on: {siteImageUsage[field.key].usedOn.join(", ")}</p>
             <div className="flex h-24 w-36 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
-              <Image
-                src={images[field.key]}
-                alt={`${field.label} preview`}
-                width={240}
-                height={160}
-                className="h-full w-full object-contain"
-              />
+              <SiteMediaPreview src={images[field.key]} alt={`${field.label} preview`} />
             </div>
             <div className="flex items-center gap-3">
               <input
                 type="file"
-                accept="image/*"
+                accept={videoEnabledImageFields[field.key] ? "image/*,video/mp4" : "image/*"}
                 className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
                 onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
               />
               <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-700 bg-slate-900 p-1">
-                <Image
-                  src={images[field.key]}
-                  alt={`${field.label} small preview`}
-                  width={120}
-                  height={84}
-                  className="h-full w-full object-contain"
-                />
+                <SiteMediaPreview src={images[field.key]} alt={`${field.label} small preview`} />
               </div>
             </div>
           </label>

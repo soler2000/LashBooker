@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, type ReactNode, type RefObject } from "react";
+import { isVideoAsset } from "@/lib/media";
 
 type SceneProps = {
   children: ReactNode;
@@ -82,12 +83,26 @@ export default function Scene({
   sectionClassName = "relative h-screen w-full overflow-hidden",
   contentClassName = "relative z-10",
 }: SceneProps) {
+  const isVideo = image ? isVideoAsset(image) : false;
+
   return (
     <section className={sectionClassName}>
       {image ? (
         <>
           <div className="absolute inset-0" aria-hidden>
-            <Image src={image} alt="" fill className="object-cover" sizes={imageSizes} priority={imagePriority} />
+            {isVideo ? (
+              <video
+                src={image}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-cover"
+                preload={imagePriority ? "auto" : "metadata"}
+              />
+            ) : (
+              <Image src={image} alt="" fill className="object-cover" sizes={imageSizes} priority={imagePriority} />
+            )}
           </div>
           <div className="absolute inset-0" style={{ backgroundImage: overlay }} aria-hidden />
         </>
