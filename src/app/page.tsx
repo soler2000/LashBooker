@@ -7,6 +7,7 @@ import HorizontalChapter from "@/components/landing/HorizontalChapter";
 import QualificationCertificates, { type CertificateItem } from "@/components/landing/QualificationCertificates";
 import Scene from "@/components/landing/Scene";
 import StickyStoryScene from "@/components/landing/StickyStoryScene";
+import ContactUsForm from "@/components/landing/ContactUsForm";
 import { defaultSiteImages, SITE_IMAGES_STORAGE_KEY, type SiteImages } from "@/lib/site-images";
 import {
   defaultQualificationCertificates,
@@ -109,6 +110,10 @@ export default function Home() {
       <HorizontalChapter images={images} />
 
       <QualificationCertificates items={certificateItems} />
+
+      <section className="bg-black px-6 py-24 md:px-12">
+        <ContactUsForm />
+      </section>
 
       <Scene
         image={images.booking}

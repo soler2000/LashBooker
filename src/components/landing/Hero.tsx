@@ -109,6 +109,12 @@ export default function Hero({
           <Link href="/book" className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-white/85">
             Book now
           </Link>
+          <a
+            href="#contact-us"
+            className="rounded-full border border-white/40 px-7 py-3 text-sm font-semibold text-white transition hover:border-white/70 hover:bg-white/10"
+          >
+            Contact us
+          </a>
         </div>
         <p className="mt-5 flex flex-wrap items-center gap-2 text-sm text-white/75">
           <span>Deposits secure your slot • 24h changes</span>
