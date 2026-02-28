@@ -6,96 +6,10 @@ import {
   type QualificationCertificateContent,
 } from "@/lib/qualification-certificates";
 import { NextResponse } from "next/server";
-import { z } from "zod";
+
+import { updateSchema } from "./schema";
 
 const roleAllowlist = ["ADMIN", "OWNER"];
-
-const MAX_URL_LENGTH = 2048;
-const MAX_PHONE_LENGTH = 40;
-const MAX_EMAIL_LENGTH = 320;
-const MAX_ADDRESS_LINE_LENGTH = 120;
-const MAX_ADDRESS_CITY_LENGTH = 80;
-const MAX_ADDRESS_POSTCODE_LENGTH = 24;
-const MAX_ADDRESS_COUNTRY_LENGTH = 80;
-const MAX_CERTIFICATE_IMAGE_LENGTH = 2_000_000;
-
-function normalizeOptionalText(value: string | null | undefined) {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
-}
-
-function normalizeInstagramUrl(value: string | null | undefined) {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-
-  return `https://${trimmed}`;
-}
-
-const updateSchema = z
-  .object({
-    depositRequired: z.boolean().optional(),
-    instagramUrl: z.preprocess(
-      (value) => normalizeInstagramUrl(value as string | null | undefined),
-      z.string().url().max(MAX_URL_LENGTH).nullable().optional(),
-    ),
-    contactPhone: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().max(MAX_PHONE_LENGTH).nullable().optional(),
-    ),
-    contactEmail: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().email().max(MAX_EMAIL_LENGTH).nullable().optional(),
-    ),
-    addressLine1: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().max(MAX_ADDRESS_LINE_LENGTH).nullable().optional(),
-    ),
-    addressLine2: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().max(MAX_ADDRESS_LINE_LENGTH).nullable().optional(),
-    ),
-    addressCity: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().max(MAX_ADDRESS_CITY_LENGTH).nullable().optional(),
-    ),
-    addressPostcode: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().max(MAX_ADDRESS_POSTCODE_LENGTH).nullable().optional(),
-    ),
-    addressCountry: z.preprocess(
-      (value) => normalizeOptionalText(value as string | null | undefined),
-      z.string().max(MAX_ADDRESS_COUNTRY_LENGTH).nullable().optional(),
-    ),
-    mailProviderType: z.string().trim().max(64).nullable().optional(),
-    smtpHost: z.string().trim().max(255).nullable().optional(),
-    smtpPort: z.number().int().min(1).max(65535).nullable().optional(),
-    smtpUsername: z.string().trim().max(255).nullable().optional(),
-    smtpPassword: z.string().max(512).nullable().optional(),
-    smtpSecretRef: z.string().trim().max(255).nullable().optional(),
-    mailFromName: z.string().trim().max(255).nullable().optional(),
-    mailFromEmail: z.string().trim().email().max(320).nullable().optional(),
-    mailReplyTo: z.string().trim().email().max(320).nullable().optional(),
-    smtpUseTls: z.boolean().nullable().optional(),
-    smtpUseStarttls: z.boolean().nullable().optional(),
-    qualificationCertificates: z
-      .array(
-        z.object({
-          title: z.string().trim().min(1).max(120),
-          description: z.string().trim().min(1).max(320),
-          image: z.string().trim().min(1).max(MAX_CERTIFICATE_IMAGE_LENGTH).optional(),
-        }),
-      )
-      .min(1)
-      .max(6)
-      .optional(),
-  })
-  .strict();
 
 async function guard() {
   const session = await auth();
@@ -122,6 +36,25 @@ async function ensureSettings() {
       addressCity: null,
       addressPostcode: null,
       addressCountry: null,
+      heroTitle: "Lash design in motion.",
+      heroSubtitle:
+        "A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.",
+      scene2Title: "Designed around your features.",
+      scene2Description:
+        "Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them.",
+      scene3Title: "Studio calm, editorial results.",
+      scene3Description:
+        "From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.",
+      chapter1Title: "Classic sets",
+      chapter1Copy: "Soft definition for an elegant everyday finish.",
+      chapter2Title: "Hybrid blends",
+      chapter2Copy: "The balance between texture and featherlight volume.",
+      chapter3Title: "Volume artistry",
+      chapter3Copy: "Full-bodied drama designed to still feel weightless.",
+      chapter4Title: "Refill rhythm",
+      chapter4Copy: "A maintenance cadence that keeps your look immaculate.",
+      bookingCtaTitle: "Ready for your next set?",
+      bookingCtaBody: "Reserve your appointment in minutes and we'll guide you to the perfect service choice.",
       qualificationCertificatesJson: JSON.stringify(defaultQualificationCertificates),
       reminderScheduleJson: "[48,24]",
       smtpUseTls: false,
@@ -154,6 +87,22 @@ function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) 
     addressCity: settings.addressCity,
     addressPostcode: settings.addressPostcode,
     addressCountry: settings.addressCountry,
+    heroTitle: settings.heroTitle,
+    heroSubtitle: settings.heroSubtitle,
+    scene2Title: settings.scene2Title,
+    scene2Description: settings.scene2Description,
+    scene3Title: settings.scene3Title,
+    scene3Description: settings.scene3Description,
+    chapter1Title: settings.chapter1Title,
+    chapter1Copy: settings.chapter1Copy,
+    chapter2Title: settings.chapter2Title,
+    chapter2Copy: settings.chapter2Copy,
+    chapter3Title: settings.chapter3Title,
+    chapter3Copy: settings.chapter3Copy,
+    chapter4Title: settings.chapter4Title,
+    chapter4Copy: settings.chapter4Copy,
+    bookingCtaTitle: settings.bookingCtaTitle,
+    bookingCtaBody: settings.bookingCtaBody,
     mailProviderType: settings.mailProviderType,
     smtpHost: settings.smtpHost,
     smtpPort: settings.smtpPort,
@@ -209,6 +158,22 @@ export async function PUT(request: Request) {
   assignIfPresent("addressCity");
   assignIfPresent("addressPostcode");
   assignIfPresent("addressCountry");
+  assignIfPresent("heroTitle");
+  assignIfPresent("heroSubtitle");
+  assignIfPresent("scene2Title");
+  assignIfPresent("scene2Description");
+  assignIfPresent("scene3Title");
+  assignIfPresent("scene3Description");
+  assignIfPresent("chapter1Title");
+  assignIfPresent("chapter1Copy");
+  assignIfPresent("chapter2Title");
+  assignIfPresent("chapter2Copy");
+  assignIfPresent("chapter3Title");
+  assignIfPresent("chapter3Copy");
+  assignIfPresent("chapter4Title");
+  assignIfPresent("chapter4Copy");
+  assignIfPresent("bookingCtaTitle");
+  assignIfPresent("bookingCtaBody");
   assignIfPresent("mailProviderType");
   assignIfPresent("smtpHost");
   assignIfPresent("smtpPort");

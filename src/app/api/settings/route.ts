@@ -1,70 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import {
-  sanitizeQualificationCertificates,
-  type QualificationCertificateContent,
-} from "@/lib/qualification-certificates";
 import { NextResponse } from "next/server";
 
+import { toPublicSettings } from "./public-settings";
+
 export const dynamic = "force-dynamic";
-
-type PublicSettingsInput = {
-  instagramUrl?: string | null;
-  contactPhone?: string | null;
-  contactEmail?: string | null;
-  addressLine1?: string | null;
-  addressLine2?: string | null;
-  addressCity?: string | null;
-  addressPostcode?: string | null;
-  addressCountry?: string | null;
-  qualificationCertificatesJson?: string | null;
-};
-
-function normalizeOptionalText(value: string | null | undefined) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
-}
-
-function buildContactAndAddress(settings: PublicSettingsInput | null | undefined) {
-  return {
-    contactPhone: normalizeOptionalText(settings?.contactPhone),
-    contactEmail: normalizeOptionalText(settings?.contactEmail),
-    addressLine1: normalizeOptionalText(settings?.addressLine1),
-    addressLine2: normalizeOptionalText(settings?.addressLine2),
-    addressCity: normalizeOptionalText(settings?.addressCity),
-    addressPostcode: normalizeOptionalText(settings?.addressPostcode),
-    addressCountry: normalizeOptionalText(settings?.addressCountry),
-  };
-}
-
-function toPublicSettings(settings: PublicSettingsInput | null | undefined) {
-  const publicContactAndAddress = buildContactAndAddress(settings);
-  const normalizedInstagramUrl = normalizeOptionalText(settings?.instagramUrl);
-  const qualificationCertificates = sanitizeQualificationCertificates(
-    (() => {
-      if (!settings?.qualificationCertificatesJson) return null;
-      try {
-        return JSON.parse(settings.qualificationCertificatesJson) as QualificationCertificateContent[];
-      } catch {
-        return null;
-      }
-    })(),
-  );
-
-  if (!normalizedInstagramUrl) {
-    return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
-  }
-
-  try {
-    const candidate = new URL(normalizedInstagramUrl);
-    if (!["http:", "https:"].includes(candidate.protocol)) {
-      return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
-    }
-
-    return { instagramUrl: candidate.toString(), qualificationCertificates, ...publicContactAndAddress };
-  } catch {
-    return { instagramUrl: null, qualificationCertificates, ...publicContactAndAddress };
-  }
-}
 
 export async function GET() {
   const settings = await prisma.businessSettings.findUnique({
@@ -78,6 +17,22 @@ export async function GET() {
       addressCity: true,
       addressPostcode: true,
       addressCountry: true,
+      heroTitle: true,
+      heroSubtitle: true,
+      scene2Title: true,
+      scene2Description: true,
+      scene3Title: true,
+      scene3Description: true,
+      chapter1Title: true,
+      chapter1Copy: true,
+      chapter2Title: true,
+      chapter2Copy: true,
+      chapter3Title: true,
+      chapter3Copy: true,
+      chapter4Title: true,
+      chapter4Copy: true,
+      bookingCtaTitle: true,
+      bookingCtaBody: true,
       qualificationCertificatesJson: true,
     },
   });

@@ -220,38 +220,54 @@ model Payment {
 }
 
 model BusinessSettings {
-  id                          String      @id @default("default")
-  businessName                String
-  timezone                    String
-  currency                    String
-  depositDefaultType          DepositType
-  depositDefaultValue         Int
-  mailProviderType            String?
-  smtpHost                    String?
-  smtpPort                    Int?
-  smtpUsername                String?
-  smtpPasswordEncrypted       String?
-  smtpSecretRef               String?
-  mailFromName                String?
-  mailFromEmail               String?
-  mailReplyTo                 String?
-  smtpUseTls                  Boolean?
-  smtpUseStarttls             Boolean?
-  rescheduleCutoffHours       Int         @default(24)
-  cancelCutoffHours           Int         @default(24)
-  pendingPaymentExpiryMinutes Int         @default(30)
-  instagramUrl                String?
-  contactPhone                String?
-  contactEmail                String?
-  addressLine1                String?
-  addressLine2                String?
-  addressCity                 String?
-  addressPostcode             String?
-  addressCountry              String?
+  id                            String      @id @default("default")
+  businessName                  String
+  timezone                      String
+  currency                      String
+  depositDefaultType            DepositType
+  depositDefaultValue           Int
+  mailProviderType              String?
+  smtpHost                      String?
+  smtpPort                      Int?
+  smtpUsername                  String?
+  smtpPasswordEncrypted         String?
+  smtpSecretRef                 String?
+  mailFromName                  String?
+  mailFromEmail                 String?
+  mailReplyTo                   String?
+  smtpUseTls                    Boolean?
+  smtpUseStarttls               Boolean?
+  rescheduleCutoffHours         Int         @default(24)
+  cancelCutoffHours             Int         @default(24)
+  pendingPaymentExpiryMinutes   Int         @default(30)
+  instagramUrl                  String?
+  contactPhone                  String?
+  contactEmail                  String?
+  addressLine1                  String?
+  addressLine2                  String?
+  addressCity                   String?
+  addressPostcode               String?
+  addressCountry                String?
+  heroTitle                     String      @default("Lash design in motion.")
+  heroSubtitle                  String      @default("A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.")
+  scene2Title                   String      @default("Designed around your features.")
+  scene2Description             String      @default("Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them.")
+  scene3Title                   String      @default("Studio calm, editorial results.")
+  scene3Description             String      @default("From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.")
+  chapter1Title                 String      @default("Classic sets")
+  chapter1Copy                  String      @default("Soft definition for an elegant everyday finish.")
+  chapter2Title                 String      @default("Hybrid blends")
+  chapter2Copy                  String      @default("The balance between texture and featherlight volume.")
+  chapter3Title                 String      @default("Volume artistry")
+  chapter3Copy                  String      @default("Full-bodied drama designed to still feel weightless.")
+  chapter4Title                 String      @default("Refill rhythm")
+  chapter4Copy                  String      @default("A maintenance cadence that keeps your look immaculate.")
+  bookingCtaTitle               String      @default("Ready for your next set?")
+  bookingCtaBody                String      @default("Reserve your appointment in minutes and we'll guide you to the perfect service choice.")
   qualificationCertificatesJson String?
-  reminderScheduleJson        String
-  createdAt                   DateTime    @default(now())
-  updatedAt                   DateTime    @updatedAt
+  reminderScheduleJson          String
+  createdAt                     DateTime    @default(now())
+  updatedAt                     DateTime    @updatedAt
 }
 
 model TransactionalEmailTemplate {

@@ -13,6 +13,8 @@ type HeroProps = {
   addressCity?: string | null;
   addressPostcode?: string | null;
   addressCountry?: string | null;
+  heroTitle?: string | null;
+  heroSubtitle?: string | null;
 };
 
 function getSafeUrl(value: string | null | undefined, allowedProtocols: string[]) {
@@ -40,6 +42,8 @@ export default function Hero({
   addressCity,
   addressPostcode,
   addressCountry,
+  heroTitle,
+  heroSubtitle,
 }: HeroProps) {
   const safeInstagramUrl = getSafeUrl(instagramUrl, ["http:", "https:"]);
   const safeMailtoUrl = getSafeUrl(contactEmail ? `mailto:${contactEmail}` : null, ["mailto:"]);
@@ -76,9 +80,10 @@ export default function Hero({
         </div>
       </header>
       <div className="max-w-3xl">
-        <h1 className="text-5xl font-semibold leading-tight md:text-8xl">Lash design in motion.</h1>
+        <h1 className="text-5xl font-semibold leading-tight md:text-8xl">{heroTitle?.trim() || "Lash design in motion."}</h1>
         <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">
-          A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.
+          {heroSubtitle?.trim() ||
+            "A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service."}
         </p>
         {hasContactDetails ? (
           <div className="mt-5 space-y-1 text-sm text-white/80">

@@ -5,21 +5,27 @@ import { useRef, useState } from "react";
 import { usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
 import { defaultSiteImages, type SiteImages } from "@/lib/site-images";
 
-type HorizontalChapterProps = {
-  images: SiteImages;
+type ChapterPanelContent = {
+  title: string;
+  copy: string;
 };
 
-export default function HorizontalChapter({ images }: HorizontalChapterProps) {
+type HorizontalChapterProps = {
+  images: SiteImages;
+  chapters: [ChapterPanelContent, ChapterPanelContent, ChapterPanelContent, ChapterPanelContent];
+};
+
+export default function HorizontalChapter({ images, chapters }: HorizontalChapterProps) {
   const chapterRef = useRef<HTMLElement | null>(null);
   const progress = useSectionProgress(chapterRef);
   const prefersReducedMotion = usePrefersReducedMotion();
   const [imageLoadFailed, setImageLoadFailed] = useState<Record<string, boolean>>({});
 
   const panels = [
-    { title: "Classic sets", copy: "Soft definition for an elegant everyday finish.", image: images.precision, fallback: defaultSiteImages.precision },
-    { title: "Hybrid blends", copy: "The balance between texture and featherlight volume.", image: images.closeup, fallback: defaultSiteImages.closeup },
-    { title: "Volume artistry", copy: "Full-bodied drama designed to still feel weightless.", image: images.luxury, fallback: defaultSiteImages.luxury },
-    { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.booking, fallback: defaultSiteImages.booking },
+    { ...chapters[0], image: images.precision, fallback: defaultSiteImages.precision },
+    { ...chapters[1], image: images.closeup, fallback: defaultSiteImages.closeup },
+    { ...chapters[2], image: images.luxury, fallback: defaultSiteImages.luxury },
+    { ...chapters[3], image: images.booking, fallback: defaultSiteImages.booking },
   ];
 
   const panelCount = panels.length;
@@ -41,7 +47,7 @@ export default function HorizontalChapter({ images }: HorizontalChapterProps) {
           }}
         >
           {panels.map((panel, index) => (
-            <article key={panel.title} className="relative h-screen w-screen shrink-0">
+            <article key={`${panel.title}-${index}`} className="relative h-screen w-screen shrink-0">
               <div className="absolute inset-0" aria-hidden>
                 <Image
                   src={imageLoadFailed[panel.title] ? panel.fallback : panel.image}

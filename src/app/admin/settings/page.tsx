@@ -26,6 +26,22 @@ type AdminSettingsResponse = {
   addressPostcode: string | null;
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
+  heroTitle: string;
+  heroSubtitle: string;
+  scene2Title: string;
+  scene2Description: string;
+  scene3Title: string;
+  scene3Description: string;
+  chapter1Title: string;
+  chapter1Copy: string;
+  chapter2Title: string;
+  chapter2Copy: string;
+  chapter3Title: string;
+  chapter3Copy: string;
+  chapter4Title: string;
+  chapter4Copy: string;
+  bookingCtaTitle: string;
+  bookingCtaBody: string;
 };
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
@@ -72,6 +88,31 @@ export default function AdminSettingsPage() {
     defaultQualificationCertificates,
   );
 
+  const [heroTitle, setHeroTitle] = useState("Lash design in motion.");
+  const [heroSubtitle, setHeroSubtitle] = useState(
+    "A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.",
+  );
+  const [scene2Title, setScene2Title] = useState("Designed around your features.");
+  const [scene2Description, setScene2Description] = useState(
+    "Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them.",
+  );
+  const [scene3Title, setScene3Title] = useState("Studio calm, editorial results.");
+  const [scene3Description, setScene3Description] = useState(
+    "From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.",
+  );
+  const [chapter1Title, setChapter1Title] = useState("Classic sets");
+  const [chapter1Copy, setChapter1Copy] = useState("Soft definition for an elegant everyday finish.");
+  const [chapter2Title, setChapter2Title] = useState("Hybrid blends");
+  const [chapter2Copy, setChapter2Copy] = useState("The balance between texture and featherlight volume.");
+  const [chapter3Title, setChapter3Title] = useState("Volume artistry");
+  const [chapter3Copy, setChapter3Copy] = useState("Full-bodied drama designed to still feel weightless.");
+  const [chapter4Title, setChapter4Title] = useState("Refill rhythm");
+  const [chapter4Copy, setChapter4Copy] = useState("A maintenance cadence that keeps your look immaculate.");
+  const [bookingCtaTitle, setBookingCtaTitle] = useState("Ready for your next set?");
+  const [bookingCtaBody, setBookingCtaBody] = useState(
+    "Reserve your appointment in minutes and we'll guide you to the perfect service choice.",
+  );
+
   useEffect(() => {
     const stored = window.localStorage.getItem(SITE_IMAGES_STORAGE_KEY);
 
@@ -112,6 +153,34 @@ export default function AdminSettingsPage() {
     setAddressPostcode(data.addressPostcode ?? "");
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
+
+    setHeroTitle(data.heroTitle ?? "Lash design in motion.");
+    setHeroSubtitle(
+      data.heroSubtitle ??
+        "A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.",
+    );
+    setScene2Title(data.scene2Title ?? "Designed around your features.");
+    setScene2Description(
+      data.scene2Description ??
+        "Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them.",
+    );
+    setScene3Title(data.scene3Title ?? "Studio calm, editorial results.");
+    setScene3Description(
+      data.scene3Description ??
+        "From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.",
+    );
+    setChapter1Title(data.chapter1Title ?? "Classic sets");
+    setChapter1Copy(data.chapter1Copy ?? "Soft definition for an elegant everyday finish.");
+    setChapter2Title(data.chapter2Title ?? "Hybrid blends");
+    setChapter2Copy(data.chapter2Copy ?? "The balance between texture and featherlight volume.");
+    setChapter3Title(data.chapter3Title ?? "Volume artistry");
+    setChapter3Copy(data.chapter3Copy ?? "Full-bodied drama designed to still feel weightless.");
+    setChapter4Title(data.chapter4Title ?? "Refill rhythm");
+    setChapter4Copy(data.chapter4Copy ?? "A maintenance cadence that keeps your look immaculate.");
+    setBookingCtaTitle(data.bookingCtaTitle ?? "Ready for your next set?");
+    setBookingCtaBody(
+      data.bookingCtaBody ?? "Reserve your appointment in minutes and we'll guide you to the perfect service choice.",
+    );
   };
 
   useEffect(() => {
@@ -177,6 +246,23 @@ export default function AdminSettingsPage() {
         addressCity: addressCity.trim() || null,
         addressPostcode: addressPostcode.trim() || null,
         addressCountry: addressCountry.trim() || null,
+
+        heroTitle: heroTitle.trim(),
+        heroSubtitle: heroSubtitle.trim(),
+        scene2Title: scene2Title.trim(),
+        scene2Description: scene2Description.trim(),
+        scene3Title: scene3Title.trim(),
+        scene3Description: scene3Description.trim(),
+        chapter1Title: chapter1Title.trim(),
+        chapter1Copy: chapter1Copy.trim(),
+        chapter2Title: chapter2Title.trim(),
+        chapter2Copy: chapter2Copy.trim(),
+        chapter3Title: chapter3Title.trim(),
+        chapter3Copy: chapter3Copy.trim(),
+        chapter4Title: chapter4Title.trim(),
+        chapter4Copy: chapter4Copy.trim(),
+        bookingCtaTitle: bookingCtaTitle.trim(),
+        bookingCtaBody: bookingCtaBody.trim(),
         qualificationCertificates: qualificationCertificates.map((certificate) => ({
           title: certificate.title.trim(),
           description: certificate.description.trim(),
@@ -202,6 +288,34 @@ export default function AdminSettingsPage() {
     setAddressPostcode(data.addressPostcode ?? "");
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
+
+    setHeroTitle(data.heroTitle ?? "Lash design in motion.");
+    setHeroSubtitle(
+      data.heroSubtitle ??
+        "A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.",
+    );
+    setScene2Title(data.scene2Title ?? "Designed around your features.");
+    setScene2Description(
+      data.scene2Description ??
+        "Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them.",
+    );
+    setScene3Title(data.scene3Title ?? "Studio calm, editorial results.");
+    setScene3Description(
+      data.scene3Description ??
+        "From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.",
+    );
+    setChapter1Title(data.chapter1Title ?? "Classic sets");
+    setChapter1Copy(data.chapter1Copy ?? "Soft definition for an elegant everyday finish.");
+    setChapter2Title(data.chapter2Title ?? "Hybrid blends");
+    setChapter2Copy(data.chapter2Copy ?? "The balance between texture and featherlight volume.");
+    setChapter3Title(data.chapter3Title ?? "Volume artistry");
+    setChapter3Copy(data.chapter3Copy ?? "Full-bodied drama designed to still feel weightless.");
+    setChapter4Title(data.chapter4Title ?? "Refill rhythm");
+    setChapter4Copy(data.chapter4Copy ?? "A maintenance cadence that keeps your look immaculate.");
+    setBookingCtaTitle(data.bookingCtaTitle ?? "Ready for your next set?");
+    setBookingCtaBody(
+      data.bookingCtaBody ?? "Reserve your appointment in minutes and we'll guide you to the perfect service choice.",
+    );
     setDepositStatus(
       depositRequired
         ? "Settings saved. Deposits are required for new bookings."
@@ -386,6 +500,91 @@ export default function AdminSettingsPage() {
           </div>
         </div>
         <p className="text-xs text-slate-400">Address fields are shown on the homepage. Leave any field blank to hide it.</p>
+
+
+
+        <div className="space-y-3 rounded border border-slate-800 bg-slate-900/30 p-3">
+          <p className="text-sm font-medium text-slate-100">Homepage copy</p>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-100">Hero title</label>
+            <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={heroTitle} onChange={(event) => setHeroTitle(event.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-100">Hero subtitle</label>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={heroSubtitle} onChange={(event) => setHeroSubtitle(event.target.value)} />
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Scene 2 title</label>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={scene2Title} onChange={(event) => setScene2Title(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Scene 3 title</label>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={scene3Title} onChange={(event) => setScene3Title(event.target.value)} />
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Scene 2 description</label>
+              <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={scene2Description} onChange={(event) => setScene2Description(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Scene 3 description</label>
+              <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={scene3Description} onChange={(event) => setScene3Description(event.target.value)} />
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 1 title</label>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={chapter1Title} onChange={(event) => setChapter1Title(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 1 copy</label>
+              <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={chapter1Copy} onChange={(event) => setChapter1Copy(event.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 2 title</label>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={chapter2Title} onChange={(event) => setChapter2Title(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 2 copy</label>
+              <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={chapter2Copy} onChange={(event) => setChapter2Copy(event.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 3 title</label>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={chapter3Title} onChange={(event) => setChapter3Title(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 3 copy</label>
+              <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={chapter3Copy} onChange={(event) => setChapter3Copy(event.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 4 title</label>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={chapter4Title} onChange={(event) => setChapter4Title(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-100">Chapter 4 copy</label>
+              <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={chapter4Copy} onChange={(event) => setChapter4Copy(event.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-100">Booking CTA title</label>
+            <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={160} value={bookingCtaTitle} onChange={(event) => setBookingCtaTitle(event.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-100">Booking CTA body</label>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100" maxLength={600} value={bookingCtaBody} onChange={(event) => setBookingCtaBody(event.target.value)} />
+          </div>
+        </div>
 
         <div className="space-y-3">
           <p className="text-sm font-medium text-slate-100">Homepage qualification certificates</p>
