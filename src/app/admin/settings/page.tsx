@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
-import { isVideoAsset } from "@/lib/media";
+import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import {
   defaultSiteImages,
   sanitizeSiteImages,
@@ -55,7 +55,7 @@ function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
     return <video src={src} className="h-full w-full object-contain" muted loop playsInline controls preload="metadata" />;
   }
 
-  return <Image src={src} alt={alt} width={240} height={160} className="h-full w-full object-contain" />;
+  return <Image src={src} alt={alt} width={240} height={160} className="h-full w-full object-contain" unoptimized={shouldUseUnoptimizedImage(src)} />;
 }
 
 const idealImageDimensions: Record<SiteImageKey, string> = {
@@ -490,6 +490,7 @@ export default function AdminSettingsPage() {
                         width={120}
                         height={84}
                         className="h-full w-full object-contain"
+                        unoptimized={shouldUseUnoptimizedImage(certificate.image?.trim() || images.chapterHybrid)}
                       />
                     )}
                   </div>
