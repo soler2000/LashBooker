@@ -150,7 +150,20 @@ export default function AdminCalendarPage() {
           }),
         });
 
-        if (!presignResponse.ok) throw new Error("Unable to generate upload URL for image.");
+        if (!presignResponse.ok) {
+          const errorData = (await presignResponse.json().catch(() => ({}))) as {
+            error?: string;
+            detail?: string;
+            message?: string;
+          };
+          const serverError = errorData.error ?? errorData.detail ?? errorData.message;
+          const fallbackError = "Unable to generate upload URL for image.";
+          throw new Error(
+            serverError
+              ? `Upload URL generation failed (${presignResponse.status}): ${serverError}`
+              : `${fallbackError} (status ${presignResponse.status})`,
+          );
+        }
         const presignJson = await presignResponse.json();
 
         const uploadResponse = await fetch(presignJson.uploadUrl, {
