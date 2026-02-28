@@ -17,6 +17,7 @@ const MAX_ADDRESS_LINE_LENGTH = 120;
 const MAX_ADDRESS_CITY_LENGTH = 80;
 const MAX_ADDRESS_POSTCODE_LENGTH = 24;
 const MAX_ADDRESS_COUNTRY_LENGTH = 80;
+const MAX_CERTIFICATE_IMAGE_LENGTH = 2_000_000;
 
 function normalizeOptionalText(value: string | null | undefined) {
   if (typeof value !== "string") return value;
@@ -87,6 +88,7 @@ const updateSchema = z
         z.object({
           title: z.string().trim().min(1).max(120),
           description: z.string().trim().min(1).max(320),
+          image: z.string().trim().min(1).max(MAX_CERTIFICATE_IMAGE_LENGTH).optional(),
         }),
       )
       .min(1)
