@@ -44,6 +44,8 @@ const videoEnabledImageFields: Partial<Record<SiteImageKey, boolean>> = {
   bookingCta: true,
 };
 
+const videoUploadAccept = "image/*,.mp4,video/mp4,video/*";
+
 function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
   if (isVideoAsset(src)) {
     return <video src={src} className="h-full w-full object-contain" muted loop playsInline controls preload="metadata" />;
@@ -258,7 +260,7 @@ export default function AdminSettingsPage() {
             <div className="flex items-center gap-3">
               <input
                 type="file"
-                accept={videoEnabledImageFields[field.key] ? "image/*,video/mp4" : "image/*"}
+                accept={videoEnabledImageFields[field.key] ? videoUploadAccept : "image/*"}
                 className="w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
                 onChange={(event) => uploadImage(field.key, event.target.files?.[0] ?? null)}
               />
