@@ -33,6 +33,10 @@ const updateSchema = z.object({
   message: "At least one field must be updated",
 });
 
+const deleteSchema = z.object({
+  bookingId: z.string().uuid(),
+});
+
 async function guard() {
   const session = await auth();
   return !!session && roleAllowlist.includes(session.user.role);
@@ -204,4 +208,24 @@ export async function PUT(request: Request) {
   }
 
   return NextResponse.json(updated);
+}
+
+export async function DELETE(request: Request) {
+  if (!(await guard())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const parsed = deleteSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+
+  const existing = await prisma.booking.findUnique({
+    where: { id: parsed.data.bookingId },
+    select: { id: true },
+  });
+
+  if (!existing) return NextResponse.json({ error: "Booking missing" }, { status: 404 });
+
+  await prisma.booking.delete({
+    where: { id: parsed.data.bookingId },
+  });
+
+  return NextResponse.json({ ok: true });
 }
