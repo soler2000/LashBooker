@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 let activeChild = null;
 let shuttingDown = false;
@@ -75,6 +77,20 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
 }
 
 async function main() {
+  const commitSha = process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMIT || process.env.SOURCE_COMMIT;
+  if (commitSha) {
+    console.info(`[startup] Commit SHA: ${commitSha}`);
+  }
+
+  try {
+    const buildId = readFileSync(join(process.cwd(), ".next", "BUILD_ID"), "utf8").trim();
+    if (buildId) {
+      console.info(`[startup] Next.js build ID: ${buildId}`);
+    }
+  } catch {
+    console.warn("[startup] Next.js BUILD_ID not found. Ensure the app is built before starting production.");
+  }
+
   const resolvedDatabaseUrl = resolveDatabaseUrl();
   if (!process.env.DATABASE_URL && resolvedDatabaseUrl) {
     process.env.DATABASE_URL = resolvedDatabaseUrl;
