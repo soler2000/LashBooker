@@ -16,6 +16,17 @@ export type SiteImageKey = keyof typeof defaultSiteImages;
 export type SiteImages = Record<SiteImageKey, string>;
 
 export const MAX_SITE_IMAGE_VALUE_LENGTH = 8_000_000;
+export const MAX_HERO_VIDEO_FILE_BYTES = 10 * 1024 * 1024;
+const BASE64_DATA_URL_OVERHEAD_BYTES = 64;
+export const MAX_HERO_VIDEO_DATA_URL_LENGTH = Math.ceil(MAX_HERO_VIDEO_FILE_BYTES / 3) * 4 + BASE64_DATA_URL_OVERHEAD_BYTES;
+
+function getMaxSiteImageValueLength(key: SiteImageKey, value: string) {
+  if (key === "hero" && value.startsWith("data:video/mp4")) {
+    return MAX_HERO_VIDEO_DATA_URL_LENGTH;
+  }
+
+  return MAX_SITE_IMAGE_VALUE_LENGTH;
+}
 
 const deprecatedUnsplashPhotoIds = new Set([
   "1583241800698-90a4f4d29f4a",
@@ -50,7 +61,7 @@ export function sanitizeSiteImages(input: Partial<SiteImages> | null | undefined
 
     const trimmed = value.trim();
 
-    if (!trimmed || trimmed.length > MAX_SITE_IMAGE_VALUE_LENGTH) {
+    if (!trimmed || trimmed.length > getMaxSiteImageValueLength(key, trimmed)) {
       continue;
     }
 

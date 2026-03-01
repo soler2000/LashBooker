@@ -5,6 +5,7 @@ import Image from "next/image";
 import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import {
   defaultSiteImages,
+  MAX_HERO_VIDEO_FILE_BYTES,
   sanitizeSiteImages,
   siteImageUsage,
   type SiteImageKey,
@@ -51,6 +52,7 @@ const videoUploadAccept = "image/*,video/mp4,video/quicktime,video/x-m4v,video/*
 
 const imageFileNamePattern = /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const videoFileNamePattern = /\.(mp4|mov|m4v|webm|ogv)$/i;
+const mbFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
 
 function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
   if (isVideoAsset(src)) {
@@ -173,6 +175,11 @@ export default function AdminSettingsPage() {
           ? "Please choose an image or video file for this section."
           : "This section only supports image files.",
       );
+      return;
+    }
+
+    if (key === "hero" && isVideoFile && file.size > MAX_HERO_VIDEO_FILE_BYTES) {
+      setImageUploadStatus(`Hero MP4 uploads must be ${mbFormatter.format(MAX_HERO_VIDEO_FILE_BYTES / (1024 * 1024))}MB or smaller.`);
       return;
     }
 
