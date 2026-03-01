@@ -6,6 +6,7 @@ const links = [
   ["Dashboard", "/admin/dashboard"],
   ["Calendar", "/admin/calendar"],
   ["Services", "/admin/services"],
+  ["Payments", "/admin/payments"],
   ["Consumables", "/admin/consumables"],
   ["Clients", "/admin/clients"],
   ["Marketing", "/admin/marketing"],
@@ -14,7 +15,6 @@ const links = [
 ];
 
 const systemSettingsLinks = [
-  ["Payments", "/admin/payments"],
   ["Contact Information", "/admin/contact-information"],
   ["Website UI", "/admin/settings"],
   ["Admin Accounts", "/admin/accounts"],
