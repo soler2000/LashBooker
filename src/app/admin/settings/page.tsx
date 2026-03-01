@@ -312,9 +312,9 @@ export default function AdminSettingsPage() {
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Landing media</h2>
-          <p className="text-sm text-slate-300">Upload all homepage and landing media assets, including story scene visuals, in this section.</p>
-          <p className="text-xs text-slate-400">All uploads here are saved together with homepage copy using the Save website UI + business settings button below.</p>
+          <h2 className="text-lg font-semibold">Landing media + homepage content</h2>
+          <p className="text-sm text-slate-300">Manage homepage media, copy, and qualification content in one place.</p>
+          <p className="text-xs text-slate-400">All updates in this section are saved together using the Save website UI + business settings button below.</p>
           <p className="text-xs text-slate-400">For iOS video uploads, use the Files picker and MP4/MOV files when available.</p>
         </div>
 
@@ -400,14 +400,14 @@ export default function AdminSettingsPage() {
           </label>
         ))}
 
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Homepage media + copy</h3>
+          <p className="text-xs text-slate-400">Each copy field is grouped under its matching media asset above.</p>
+        </div>
+
         {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
-      </section>
 
-      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
-        <h2 className="text-lg font-semibold">Homepage content</h2>
-        <p className="text-sm text-slate-300">Manage homepage copy, media, and qualification content in one place.</p>
-
-        <div className="space-y-3">
+        <div className="space-y-3 rounded border border-slate-800 bg-slate-900/20 p-3">
           <p className="text-sm font-medium text-slate-100">Homepage qualification certificates</p>
           <p className="text-xs text-slate-400">Edit the titles and descriptions shown in the qualifications section.</p>
 
@@ -456,10 +456,6 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           ))}
-        </div>
-        <div className="space-y-2 rounded border border-slate-800 bg-slate-900/30 p-4">
-          <p className="text-sm font-medium text-slate-100">Homepage copy</p>
-          <p className="text-xs text-slate-400">Each homepage copy item is now grouped under its matching image in the Landing media section above.</p>
         </div>
 
         <button
