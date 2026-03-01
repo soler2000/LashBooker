@@ -162,6 +162,7 @@ DATABASE_PUBLIC_URL="postgresql://<USER>:<PASSWORD>@metro.proxy.rlwy.net:52424/<
 Then configure the rest of the app variables:
 
 - `NEXTAUTH_SECRET` (strong random secret)
+- `AUTH_SECRET` (optional alias for Auth.js; set to the same value as `NEXTAUTH_SECRET`)
 - `NEXTAUTH_URL` (e.g. `https://app.yourdomain.com`)
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
