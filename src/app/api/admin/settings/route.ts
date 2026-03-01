@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   defaultSiteImages,
+  MAX_HERO_VIDEO_DATA_URL_LENGTH,
   MAX_SITE_IMAGE_VALUE_LENGTH,
   sanitizeSiteImages,
   type SiteImages,
@@ -47,7 +48,19 @@ function normalizeInstagramUrl(value: string | null | undefined) {
 
 
 const siteImagesSchema = z.object({
-  hero: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
+  hero: z
+    .string()
+    .trim()
+    .min(1)
+    .max(MAX_HERO_VIDEO_DATA_URL_LENGTH)
+    .refine(
+      (value) => !value.startsWith("data:video/mp4") || value.length <= MAX_HERO_VIDEO_DATA_URL_LENGTH,
+      "Hero MP4 uploads must be 10MB or smaller.",
+    )
+    .refine(
+      (value) => value.startsWith("data:video/mp4") || value.length <= MAX_SITE_IMAGE_VALUE_LENGTH,
+      "Hero image is too large.",
+    ),
   scene2Story: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
   scene3Story: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
   chapterClassic: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
