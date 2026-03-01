@@ -13,6 +13,7 @@ import {
   defaultQualificationCertificates,
   type QualificationCertificateContent,
 } from "@/lib/qualification-certificates";
+import { defaultSiteContent, sanitizeSiteContent, type SiteContent } from "@/lib/site-content";
 
 type PublicSettingsResponse = {
   instagramUrl: string | null;
@@ -25,6 +26,7 @@ type PublicSettingsResponse = {
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
   siteImages: SiteImages;
+  siteContent: SiteContent;
 };
 
 const defaultPublicSettings: PublicSettingsResponse = {
@@ -38,6 +40,7 @@ const defaultPublicSettings: PublicSettingsResponse = {
   addressCountry: null,
   qualificationCertificates: defaultQualificationCertificates,
   siteImages: defaultSiteImages,
+  siteContent: defaultSiteContent,
 };
 
 export default function Home() {
@@ -60,7 +63,12 @@ export default function Home() {
       }
 
       const data = (await response.json()) as PublicSettingsResponse;
-      setPublicSettings({ ...defaultPublicSettings, ...data, siteImages: sanitizeSiteImages(data.siteImages) });
+      setPublicSettings({
+        ...defaultPublicSettings,
+        ...data,
+        siteImages: sanitizeSiteImages(data.siteImages),
+        siteContent: sanitizeSiteContent(data.siteContent),
+      });
       setImages(sanitizeSiteImages(data.siteImages));
     };
 
@@ -79,23 +87,24 @@ export default function Home() {
         addressCity={publicSettings.addressCity}
         addressPostcode={publicSettings.addressPostcode}
         addressCountry={publicSettings.addressCountry}
+        content={publicSettings.siteContent}
       />
 
       <StickyStoryScene
-        eyebrow="Scene 2"
-        title="Designed around your features."
-        description="Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them."
+        eyebrow={publicSettings.siteContent.scene2Eyebrow}
+        title={publicSettings.siteContent.scene2Title}
+        description={publicSettings.siteContent.scene2Description}
         image={images.scene2Story}
       />
 
       <StickyStoryScene
-        eyebrow="Scene 3"
-        title="Studio calm, editorial results."
-        description="From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail."
+        eyebrow={publicSettings.siteContent.scene3Eyebrow}
+        title={publicSettings.siteContent.scene3Title}
+        description={publicSettings.siteContent.scene3Description}
         image={images.scene3Story}
       />
 
-      <HorizontalChapter images={images} />
+      <HorizontalChapter images={images} content={publicSettings.siteContent} />
 
       <QualificationCertificates items={certificateItems} />
 
@@ -109,12 +118,10 @@ export default function Home() {
         sectionClassName="relative flex h-screen w-full items-center justify-center overflow-hidden px-6 md:px-12"
         contentClassName="relative z-10 text-center"
       >
-        <h2 className="text-4xl font-semibold md:text-7xl">Ready for your next set?</h2>
-        <p className="mx-auto mt-5 max-w-2xl text-white/80 md:text-lg">
-          Reserve your appointment in minutes and we&apos;ll guide you to the perfect service choice.
-        </p>
+        <h2 className="text-4xl font-semibold md:text-7xl">{publicSettings.siteContent.bookingCtaTitle}</h2>
+        <p className="mx-auto mt-5 max-w-2xl text-white/80 md:text-lg">{publicSettings.siteContent.bookingCtaDescription}</p>
         <Link href="/book" className="mt-8 inline-flex rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition hover:bg-white/85">
-          Start booking
+          {publicSettings.siteContent.bookingCtaButtonLabel}
         </Link>
       </Scene>
     </main>

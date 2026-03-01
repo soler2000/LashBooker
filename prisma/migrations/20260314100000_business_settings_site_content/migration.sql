@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "BusinessSettings"
+ADD COLUMN "siteContentJson" TEXT;
+
+UPDATE "BusinessSettings"
+SET "siteContentJson" = '{"heroEyebrow":"Lashed and Lifted","heroTitle":"Lash design in motion.","heroDescription":"A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.","scene2Eyebrow":"Scene 2","scene2Title":"Designed around your features.","scene2Description":"Every appointment starts with personalized mapping so curl, density, and length complement your eyes—not overwhelm them.","scene3Eyebrow":"Scene 3","scene3Title":"Studio calm, editorial results.","scene3Description":"From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.","chapterClassic":{"title":"Classic sets","copy":"Soft definition for an elegant everyday finish."},"chapterHybrid":{"title":"Hybrid blends","copy":"The balance between texture and featherlight volume."},"chapterVolume":{"title":"Volume artistry","copy":"Full-bodied drama designed to still feel weightless."},"chapterRefill":{"title":"Refill rhythm","copy":"A maintenance cadence that keeps your look immaculate."},"bookingCtaTitle":"Ready for your next set?","bookingCtaDescription":"Reserve your appointment in minutes and we''ll guide you to the perfect service choice.","bookingCtaButtonLabel":"Start booking"}'
+WHERE "id" = 'default' AND "siteContentJson" IS NULL;

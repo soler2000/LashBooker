@@ -220,39 +220,40 @@ model Payment {
 }
 
 model BusinessSettings {
-  id                          String      @id @default("default")
-  businessName                String
-  timezone                    String
-  currency                    String
-  depositDefaultType          DepositType
-  depositDefaultValue         Int
-  mailProviderType            String?
-  smtpHost                    String?
-  smtpPort                    Int?
-  smtpUsername                String?
-  smtpPasswordEncrypted       String?
-  smtpSecretRef               String?
-  mailFromName                String?
-  mailFromEmail               String?
-  mailReplyTo                 String?
-  smtpUseTls                  Boolean?
-  smtpUseStarttls             Boolean?
-  rescheduleCutoffHours       Int         @default(24)
-  cancelCutoffHours           Int         @default(24)
-  pendingPaymentExpiryMinutes Int         @default(30)
-  instagramUrl                String?
-  contactPhone                String?
-  contactEmail                String?
-  addressLine1                String?
-  addressLine2                String?
-  addressCity                 String?
-  addressPostcode             String?
-  addressCountry              String?
+  id                            String      @id @default("default")
+  businessName                  String
+  timezone                      String
+  currency                      String
+  depositDefaultType            DepositType
+  depositDefaultValue           Int
+  mailProviderType              String?
+  smtpHost                      String?
+  smtpPort                      Int?
+  smtpUsername                  String?
+  smtpPasswordEncrypted         String?
+  smtpSecretRef                 String?
+  mailFromName                  String?
+  mailFromEmail                 String?
+  mailReplyTo                   String?
+  smtpUseTls                    Boolean?
+  smtpUseStarttls               Boolean?
+  rescheduleCutoffHours         Int         @default(24)
+  cancelCutoffHours             Int         @default(24)
+  pendingPaymentExpiryMinutes   Int         @default(30)
+  instagramUrl                  String?
+  contactPhone                  String?
+  contactEmail                  String?
+  addressLine1                  String?
+  addressLine2                  String?
+  addressCity                   String?
+  addressPostcode               String?
+  addressCountry                String?
   qualificationCertificatesJson String?
-  siteImagesJson              String?
-  reminderScheduleJson        String
-  createdAt                   DateTime    @default(now())
-  updatedAt                   DateTime    @updatedAt
+  siteImagesJson                String?
+  siteContentJson               String?
+  reminderScheduleJson          String
+  createdAt                     DateTime    @default(now())
+  updatedAt                     DateTime    @updatedAt
 }
 
 model TransactionalEmailTemplate {

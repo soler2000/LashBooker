@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Scene from "@/components/landing/Scene";
+import type { SiteContent } from "@/lib/site-content";
 
 type HeroProps = {
   image: string;
@@ -13,6 +14,7 @@ type HeroProps = {
   addressCity?: string | null;
   addressPostcode?: string | null;
   addressCountry?: string | null;
+  content: SiteContent;
 };
 
 function getSafeUrl(value: string | null | undefined, allowedProtocols: string[]) {
@@ -40,6 +42,7 @@ export default function Hero({
   addressCity,
   addressPostcode,
   addressCountry,
+  content,
 }: HeroProps) {
   const safeInstagramUrl = getSafeUrl(instagramUrl, ["http:", "https:"]);
   const safeMailtoUrl = getSafeUrl(contactEmail ? `mailto:${contactEmail}` : null, ["mailto:"]);
@@ -58,7 +61,7 @@ export default function Hero({
       contentClassName="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col justify-between px-6 pb-14 pt-8 md:px-12 md:pb-20"
     >
       <header className="flex items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/75">Lashed and Lifted</p>
+        <p className="text-xs uppercase tracking-[0.35em] text-white/75">{content.heroEyebrow}</p>
         <div className="flex items-center gap-3">
           {safeInstagramUrl ? (
             <a
@@ -76,10 +79,8 @@ export default function Hero({
         </div>
       </header>
       <div className="max-w-3xl">
-        <h1 className="text-5xl font-semibold leading-tight md:text-8xl">Lash design in motion.</h1>
-        <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">
-          A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.
-        </p>
+        <h1 className="text-5xl font-semibold leading-tight md:text-8xl">{content.heroTitle}</h1>
+        <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">{content.heroDescription}</p>
         {hasContactDetails ? (
           <div className="mt-5 space-y-1 text-sm text-white/80">
             {safeTelUrl ? (
