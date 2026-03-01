@@ -229,7 +229,7 @@ export default function AdminSettingsPage() {
 
       setImages((current) => ({ ...current, [key]: dataUrl }));
       setImageUploadStatus(
-        `${imageFields.find((field) => field.key === key)?.label ?? "Media"} uploaded. Click Save website UI + business settings to apply.`,
+        `${imageFields.find((field) => field.key === key)?.label ?? "Media"} uploaded. Click Save landing media + homepage content to apply.`,
       );
     } catch {
       setImageUploadStatus("Could not upload media. Please try a different file.");
@@ -267,7 +267,7 @@ export default function AdminSettingsPage() {
     try {
       const dataUrl = await fileToDataUrl(file);
       updateCertificateField(index, "image", dataUrl);
-      setImageUploadStatus(`Certificate ${index + 1} file uploaded. Click Save website UI + business settings to apply.`);
+      setImageUploadStatus(`Certificate ${index + 1} file uploaded. Click Save landing media + homepage content to apply.`);
     } catch {
       setImageUploadStatus("Could not upload certificate file. Please try a different file.");
     }
@@ -292,7 +292,7 @@ export default function AdminSettingsPage() {
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       const errorDetail = data.detail ? ` ${data.detail}` : "";
-      setSettingsStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save website UI + business settings.");
+      setSettingsStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save landing media + homepage content.");
       return;
     }
 
@@ -300,7 +300,7 @@ export default function AdminSettingsPage() {
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
     setSiteContent(sanitizeSiteContent(data));
-    setSettingsStatus("Website UI + business settings saved. Story media + content saved together.");
+    setSettingsStatus("Landing media + homepage content saved.");
   };
 
   return (
@@ -314,7 +314,7 @@ export default function AdminSettingsPage() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Landing media + homepage content</h2>
           <p className="text-sm text-slate-300">Manage homepage media, copy, and qualification content in one place.</p>
-          <p className="text-xs text-slate-400">All updates in this section are saved together using the Save website UI + business settings button below.</p>
+          <p className="text-xs text-slate-400">All updates in this section are saved together using the Save landing media + homepage content button below.</p>
           <p className="text-xs text-slate-400">For iOS video uploads, use the Files picker and MP4/MOV files when available.</p>
         </div>
 
@@ -400,10 +400,7 @@ export default function AdminSettingsPage() {
           </label>
         ))}
 
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Homepage media + copy</h3>
-          <p className="text-xs text-slate-400">Each copy field is grouped under its matching media asset above.</p>
-        </div>
+        <p className="text-xs text-slate-400">Each copy field is grouped directly under its matching media asset above.</p>
 
         {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
 
@@ -463,7 +460,7 @@ export default function AdminSettingsPage() {
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
           onClick={saveBusinessSettings}
         >
-          Save website UI + business settings
+          Save landing media + homepage content
         </button>
         {settingsStatus ? <p className="text-sm text-slate-200">{settingsStatus}</p> : null}
       </section>
