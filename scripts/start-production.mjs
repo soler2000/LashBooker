@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
 
+let activeChild = null;
+
 const DATABASE_URL_ENV_KEYS = [
   "DATABASE_URL",
   "DATABASE_PRIVATE_URL",
@@ -33,12 +35,29 @@ function run(command, args) {
       shell: false,
     });
 
+    activeChild = child;
+
     child.on("exit", (code) => {
+      activeChild = null;
       if (code === 0) resolve();
       else reject(new Error(`${command} ${args.join(" ")} exited with code ${code ?? "unknown"}`));
     });
 
-    child.on("error", reject);
+    child.on("error", (error) => {
+      activeChild = null;
+      reject(error);
+    });
+  });
+}
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, () => {
+    if (activeChild && !activeChild.killed) {
+      activeChild.kill(signal);
+      return;
+    }
+
+    process.exit(0);
   });
 }
 
@@ -56,7 +75,7 @@ async function main() {
     await run("npx", ["prisma", "migrate", "deploy"]);
 
     console.info("[startup] Running prisma seed to ensure default data exists...");
-    await run("npm", ["run", "prisma:seed"]);
+    await run("npx", ["tsx", "prisma/seed.ts"]);
   }
 
   console.info("[startup] Starting Next.js server...");
