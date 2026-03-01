@@ -144,7 +144,6 @@ export default function AdminSettingsPage() {
   const [savedMessage, setSavedMessage] = useState("");
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
-  const [depositRequired, setDepositRequired] = useState(true);
   const [instagramUrl, setInstagramUrl] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -174,7 +173,6 @@ export default function AdminSettingsPage() {
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
-    setDepositRequired(data.depositRequired);
     setInstagramUrl(data.instagramUrl ?? "");
     setContactPhone(data.contactPhone ?? "");
     setContactEmail(data.contactEmail ?? "");
@@ -199,17 +197,17 @@ export default function AdminSettingsPage() {
     const response = await fetch("/api/admin/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ siteImages: images }),
+      body: JSON.stringify({ siteImages: images, ...siteContent }),
     });
 
     if (!response.ok) {
-      setSavedMessage("Could not save landing media.");
+      setSavedMessage("Could not save homepage content.");
       return;
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
     setImages(sanitizeSiteImages(data.siteImages));
-    setSavedMessage("Landing media saved and now syncs across devices.");
+    setSavedMessage("Homepage content saved and now syncs across devices.");
   };
 
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
@@ -305,7 +303,6 @@ export default function AdminSettingsPage() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        depositRequired,
         instagramUrl: normalizeInstagramInput(instagramUrl) || null,
         contactPhone: contactPhone.trim() || null,
         contactEmail: contactEmail.trim() || null,
@@ -342,11 +339,7 @@ export default function AdminSettingsPage() {
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
     setSiteContent(sanitizeSiteContent(data));
-    setDepositStatus(
-      depositRequired
-        ? "Settings saved. Deposits are required for new bookings."
-        : "Settings saved. Deposits are disabled; bookings confirm immediately.",
-    );
+    setDepositStatus("Business settings saved.");
   };
 
   return (
@@ -357,8 +350,8 @@ export default function AdminSettingsPage() {
 
       <form onSubmit={save} className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Landing media</h2>
-          <p className="text-sm text-slate-300">Upload all homepage and landing media assets, including story scene visuals, in this section.</p>
+          <h2 className="text-lg font-semibold">Homepage content</h2>
+          <p className="text-sm text-slate-300">Manage homepage media and copy together in this section.</p>
           <p className="text-xs text-slate-400">For iOS video uploads, use the Files picker and MP4/MOV files when available.</p>
         </div>
 
@@ -396,29 +389,120 @@ export default function AdminSettingsPage() {
           </label>
         ))}
 
+        <div className="space-y-4 rounded border border-slate-800 bg-slate-900/30 p-4">
+          <p className="text-sm font-medium text-slate-100">Homepage copy</p>
+          <p className="text-xs text-slate-400">Edit the text used across the hero, story scenes, chapter cards, and booking call-to-action.</p>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Hero eyebrow</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroEyebrow} onChange={(event) => updateSiteContentField("heroEyebrow", event.target.value)} />
+            </label>
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Hero title</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroTitle} onChange={(event) => updateSiteContentField("heroTitle", event.target.value)} />
+            </label>
+          </div>
+
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Hero description</span>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroSubtitle} onChange={(event) => updateSiteContentField("heroSubtitle", event.target.value)} />
+          </label>
+
+          {([
+            ["chapter1", "Classic"],
+            ["chapter2", "Hybrid"],
+            ["chapter3", "Volume"],
+            ["chapter4", "Refill"],
+          ] as const).map(([panelKey, panelLabel]) => (
+            <div key={panelKey} className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1 text-sm text-slate-100">
+                <span>{panelLabel} title</span>
+                <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Title`]} onChange={(event) => updateSiteContentField(`${panelKey}Title` as keyof SiteContent, event.target.value)} />
+              </label>
+              <label className="space-y-1 text-sm text-slate-100">
+                <span>{panelLabel} description</span>
+                <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Copy`]} onChange={(event) => updateSiteContentField(`${panelKey}Copy` as keyof SiteContent, event.target.value)} />
+              </label>
+            </div>
+          ))}
+
+          <div className="space-y-4">
+            <p className="text-sm font-medium text-slate-100">Story scenes</p>
+            <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media is managed in the Homepage content section above.</p>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {storySceneConfigs.map((scene) => (
+                <article key={scene.id} className="space-y-3 rounded-lg border border-slate-700/70 bg-slate-900/60 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-white">{scene.label}</h3>
+                    <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={siteContent[scene.enabledField] as boolean}
+                        onChange={(event) => updateSiteContentField(scene.enabledField, event.target.checked)}
+                      />
+                      Show scene
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input
+                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                      maxLength={320}
+                      value={siteContent[scene.eyebrowField]}
+                      onChange={(event) => updateSiteContentField(scene.eyebrowField, event.target.value)}
+                      placeholder="Eyebrow"
+                    />
+                    <input
+                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                      maxLength={320}
+                      value={siteContent[scene.titleField]}
+                      onChange={(event) => updateSiteContentField(scene.titleField, event.target.value)}
+                      placeholder="Title"
+                    />
+                    <textarea
+                      className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                      maxLength={320}
+                      value={siteContent[scene.descriptionField]}
+                      onChange={(event) => updateSiteContentField(scene.descriptionField, event.target.value)}
+                      placeholder="Description"
+                    />
+                  </div>
+
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Booking CTA title</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaTitle} onChange={(event) => updateSiteContentField("bookingCtaTitle", event.target.value)} />
+            </label>
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Booking CTA button label</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaButtonLabel} onChange={(event) => updateSiteContentField("bookingCtaButtonLabel", event.target.value)} />
+            </label>
+          </div>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Booking CTA description</span>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaBody} onChange={(event) => updateSiteContentField("bookingCtaBody", event.target.value)} />
+          </label>
+        </div>
+
         <button
           type="submit"
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
         >
-          Save landing media
+          Save homepage content
         </button>
         {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
         {savedMessage ? <p className="text-sm text-green-300">{savedMessage}</p> : null}
       </form>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
-        <h2 className="text-lg font-semibold">Booking deposits</h2>
-        <p className="text-sm text-slate-300">
-          Choose whether clients must pay a Stripe deposit before a booking is confirmed.
-        </p>
-        <label className="flex items-center gap-2 text-sm text-slate-100">
-          <input
-            type="checkbox"
-            checked={depositRequired}
-            onChange={(event) => setDepositRequired(event.target.checked)}
-          />
-          Require deposit payment for new bookings
-        </label>
+        <h2 className="text-lg font-semibold">Contact details</h2>
+        <p className="text-sm text-slate-300">Manage homepage contact and location details in this section.</p>
         <div className="space-y-1">
           <label htmlFor="instagram-url" className="text-sm font-medium text-slate-100">Instagram profile URL</label>
           <input
@@ -528,9 +612,21 @@ export default function AdminSettingsPage() {
         </div>
         <p className="text-xs text-slate-400">Address fields are shown on the homepage. Leave any field blank to hide it.</p>
 
+        <button
+          type="button"
+          className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
+          onClick={saveBusinessSettings}
+        >
+          Save contact details
+        </button>
+        {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
+      </section>
+
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
+        <h2 className="text-lg font-semibold">Certifications</h2>
+        <p className="text-sm text-slate-300">Edit the titles, descriptions, and files shown in the qualifications section.</p>
+
         <div className="space-y-3">
-          <p className="text-sm font-medium text-slate-100">Homepage qualification certificates</p>
-          <p className="text-xs text-slate-400">Edit the titles and descriptions shown in the qualifications section.</p>
 
           {qualificationCertificates.map((certificate, index) => (
             <div key={index} className="space-y-2 rounded border border-slate-800 bg-slate-900/30 p-3">
@@ -579,115 +675,13 @@ export default function AdminSettingsPage() {
           ))}
         </div>
 
-        <div className="space-y-4 rounded border border-slate-800 bg-slate-900/30 p-4">
-          <p className="text-sm font-medium text-slate-100">Homepage copy</p>
-          <p className="text-xs text-slate-400">Edit the text used across the hero, story scenes, chapter cards, and booking call-to-action.</p>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Hero eyebrow</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroEyebrow} onChange={(event) => updateSiteContentField("heroEyebrow", event.target.value)} />
-            </label>
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Hero title</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroTitle} onChange={(event) => updateSiteContentField("heroTitle", event.target.value)} />
-            </label>
-          </div>
-
-          <label className="space-y-1 text-sm text-slate-100">
-            <span>Hero description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroSubtitle} onChange={(event) => updateSiteContentField("heroSubtitle", event.target.value)} />
-          </label>
-
-          {([
-            ["chapter1", "Classic"],
-            ["chapter2", "Hybrid"],
-            ["chapter3", "Volume"],
-            ["chapter4", "Refill"],
-          ] as const).map(([panelKey, panelLabel]) => (
-            <div key={panelKey} className="grid gap-3 md:grid-cols-2">
-              <label className="space-y-1 text-sm text-slate-100">
-                <span>{panelLabel} title</span>
-                <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Title`]} onChange={(event) => updateSiteContentField(`${panelKey}Title` as keyof SiteContent, event.target.value)} />
-              </label>
-              <label className="space-y-1 text-sm text-slate-100">
-                <span>{panelLabel} description</span>
-                <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Copy`]} onChange={(event) => updateSiteContentField(`${panelKey}Copy` as keyof SiteContent, event.target.value)} />
-              </label>
-            </div>
-          ))}
-
-          <div className="space-y-4">
-            <p className="text-sm font-medium text-slate-100">Story scenes</p>
-            <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media is managed in the Landing media section above.</p>
-            <div className="grid gap-4 lg:grid-cols-2">
-              {storySceneConfigs.map((scene) => (
-                <article key={scene.id} className="space-y-3 rounded-lg border border-slate-700/70 bg-slate-900/60 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">{scene.label}</h3>
-                    <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={siteContent[scene.enabledField] as boolean}
-                        onChange={(event) => updateSiteContentField(scene.enabledField, event.target.checked)}
-                      />
-                      Show scene
-                    </label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                      maxLength={320}
-                      value={siteContent[scene.eyebrowField]}
-                      onChange={(event) => updateSiteContentField(scene.eyebrowField, event.target.value)}
-                      placeholder="Eyebrow"
-                    />
-                    <input
-                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                      maxLength={320}
-                      value={siteContent[scene.titleField]}
-                      onChange={(event) => updateSiteContentField(scene.titleField, event.target.value)}
-                      placeholder="Title"
-                    />
-                    <textarea
-                      className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                      maxLength={320}
-                      value={siteContent[scene.descriptionField]}
-                      onChange={(event) => updateSiteContentField(scene.descriptionField, event.target.value)}
-                      placeholder="Description"
-                    />
-                  </div>
-
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Booking CTA title</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaTitle} onChange={(event) => updateSiteContentField("bookingCtaTitle", event.target.value)} />
-            </label>
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Booking CTA button label</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaButtonLabel} onChange={(event) => updateSiteContentField("bookingCtaButtonLabel", event.target.value)} />
-            </label>
-          </div>
-          <label className="space-y-1 text-sm text-slate-100">
-            <span>Booking CTA description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaBody} onChange={(event) => updateSiteContentField("bookingCtaBody", event.target.value)} />
-          </label>
-        </div>
-
         <button
           type="button"
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
           onClick={saveBusinessSettings}
         >
-          Save business settings
+          Save certifications
         </button>
-        {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
       </section>
 
     </section>

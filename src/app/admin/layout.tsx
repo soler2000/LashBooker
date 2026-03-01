@@ -15,6 +15,7 @@ const links = [
 
 const systemSettingsLinks = [
   ["Website UI", "/admin/settings"],
+  ["Payments", "/admin/payments"],
   ["Admin Accounts", "/admin/accounts"],
   ["Email Templates", "/admin/email-templates"],
   ["Email Settings", "/admin/email-settings"],
