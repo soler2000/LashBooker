@@ -134,7 +134,7 @@ export default function AdminSettingsPage() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
-  const [depositStatus, setDepositStatus] = useState("");
+  const [settingsStatus, setSettingsStatus] = useState("");
   const [qualificationCertificates, setQualificationCertificates] = useState<QualificationCertificateContent[]>(
     defaultQualificationCertificates,
   );
@@ -143,7 +143,7 @@ export default function AdminSettingsPage() {
   const loadSettings = async () => {
     const response = await fetch("/api/admin/settings", { cache: "no-store" });
     if (!response.ok) {
-      setDepositStatus("Could not load settings.");
+      setSettingsStatus("Could not load settings.");
       return;
     }
 
@@ -245,7 +245,7 @@ export default function AdminSettingsPage() {
   };
 
   const saveBusinessSettings = async () => {
-    setDepositStatus("");
+    setSettingsStatus("");
     const response = await fetch("/api/admin/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -263,7 +263,7 @@ export default function AdminSettingsPage() {
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       const errorDetail = data.detail ? ` ${data.detail}` : "";
-      setDepositStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save website UI + business settings.");
+      setSettingsStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save website UI + business settings.");
       return;
     }
 
@@ -271,7 +271,7 @@ export default function AdminSettingsPage() {
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
     setSiteContent(sanitizeSiteContent(data));
-    setDepositStatus("Website UI + business settings saved. Story media + content saved together.");
+    setSettingsStatus("Website UI + business settings saved. Story media + content saved together.");
   };
 
   return (
@@ -418,9 +418,10 @@ export default function AdminSettingsPage() {
             </div>
           ))}
 
+
           <div className="space-y-3 rounded border border-slate-800 bg-slate-900/40 p-4">
-            <p className="text-sm font-medium text-slate-100">Booking call-to-action</p>
-            <p className="text-xs text-slate-400">Edit the booking call-to-action shown in the homepage booking section.</p>
+            <p className="text-sm font-medium text-slate-100">Website UI booking call-to-action</p>
+            <p className="text-xs text-slate-400">Edit the homepage booking call-to-action shown on the public website.</p>
 
             <div className="grid gap-3 md:grid-cols-2">
               <label className="space-y-1 text-sm text-slate-100">
@@ -510,7 +511,7 @@ export default function AdminSettingsPage() {
         >
           Save website UI + business settings
         </button>
-        {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
+        {settingsStatus ? <p className="text-sm text-slate-200">{settingsStatus}</p> : null}
       </section>
 
     </section>
