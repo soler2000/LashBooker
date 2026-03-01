@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasValidCronSecret } from "@/lib/cron-auth";
 import { sendBookingReminderEmail } from "@/lib/email";
-
-function hasValidCronSecret(req: Request) {
-  const configured = process.env.CRON_SECRET;
-  if (!configured) return true;
-
-  const incoming = req.headers.get("x-cron-secret");
-  return incoming === configured;
-}
 
 export async function POST(req: Request) {
   if (!hasValidCronSecret(req)) {

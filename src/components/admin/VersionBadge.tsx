@@ -3,7 +3,7 @@ type VersionBadgeProps = {
 };
 
 const displayVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION ?? process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "local-dev";
+  process.env.NEXT_PUBLIC_APP_VERSION ?? process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? "local-dev";
 
 export default function VersionBadge({ className = "" }: VersionBadgeProps) {
   const normalizedVersion = displayVersion.length > 12 ? displayVersion.slice(0, 12) : displayVersion;
