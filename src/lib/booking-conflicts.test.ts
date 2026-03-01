@@ -18,7 +18,8 @@ test("detects overlap when existing booking's buffer-after reaches into requeste
     {
       startAt: new Date("2026-01-15T09:30:00.000Z"),
       endAt: new Date("2026-01-15T10:00:00.000Z"),
-      service: { bufferBeforeMinutes: 0, bufferAfterMinutes: 30 },
+      serviceBufferBeforeMinutes: 0,
+      serviceBufferAfterMinutes: 30,
     },
   ]);
 
@@ -39,7 +40,8 @@ test("detects overlap when requested booking buffer-before reaches into existing
     {
       startAt: new Date("2026-01-15T10:20:00.000Z"),
       endAt: new Date("2026-01-15T10:50:00.000Z"),
-      service: { bufferBeforeMinutes: 0, bufferAfterMinutes: 0 },
+      serviceBufferBeforeMinutes: 0,
+      serviceBufferAfterMinutes: 0,
     },
   ]);
 
@@ -60,7 +62,8 @@ test("does not flag conflict when buffered windows only touch at boundary", () =
     {
       startAt: new Date("2026-01-15T09:30:00.000Z"),
       endAt: new Date("2026-01-15T10:00:00.000Z"),
-      service: { bufferBeforeMinutes: 0, bufferAfterMinutes: 30 },
+      serviceBufferBeforeMinutes: 0,
+      serviceBufferAfterMinutes: 30,
     },
   ]);
 

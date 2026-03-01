@@ -2,6 +2,7 @@ import { PaymentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
+import { hasValidCronSecret } from "@/lib/cron-auth";
 
 const CANCELLABLE_INTENT_STATUSES = new Set([
   "requires_payment_method",
@@ -10,14 +11,6 @@ const CANCELLABLE_INTENT_STATUSES = new Set([
   "requires_capture",
   "processing",
 ]);
-
-function hasValidCronSecret(req: Request) {
-  const configured = process.env.CRON_SECRET;
-  if (!configured) return true;
-
-  const incoming = req.headers.get("x-cron-secret");
-  return incoming === configured;
-}
 
 function paymentStatusFromStripeStatus(status: string): PaymentStatus | null {
   if (status === "succeeded") return "SUCCEEDED";
