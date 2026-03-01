@@ -20,7 +20,7 @@ export const MAX_HERO_VIDEO_FILE_BYTES = 10 * 1024 * 1024;
 const BASE64_DATA_URL_OVERHEAD_BYTES = 64;
 export const MAX_HERO_VIDEO_DATA_URL_LENGTH = Math.ceil(MAX_HERO_VIDEO_FILE_BYTES / 3) * 4 + BASE64_DATA_URL_OVERHEAD_BYTES;
 
-function getMaxSiteImageValueLength(key: SiteImageKey, value: string) {
+export function getMaxSiteImageValueLength(key: SiteImageKey, value: string) {
   if (key === "hero" && value.startsWith("data:video/mp4")) {
     return MAX_HERO_VIDEO_DATA_URL_LENGTH;
   }

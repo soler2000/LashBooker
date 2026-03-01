@@ -5,8 +5,8 @@ import Image from "next/image";
 import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import {
   defaultSiteImages,
+  getMaxSiteImageValueLength,
   MAX_HERO_VIDEO_FILE_BYTES,
-  MAX_SITE_IMAGE_VALUE_LENGTH,
   sanitizeSiteImages,
   siteImageUsage,
   type SiteImageKey,
@@ -186,7 +186,7 @@ export default function AdminSettingsPage() {
     try {
       const dataUrl = await fileToDataUrl(file);
 
-      if (dataUrl.length > MAX_SITE_IMAGE_VALUE_LENGTH) {
+      if (dataUrl.length > getMaxSiteImageValueLength(key, dataUrl)) {
         setImageUploadStatus("This media file is too large to save. Please choose a smaller file.");
         return;
       }
