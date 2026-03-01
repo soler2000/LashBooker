@@ -14,7 +14,7 @@ export async function GET() {
 
   const bookings = await prisma.booking.findMany({
     where: { startAt: { gte: ranges.month.start, lt: ranges.month.end } },
-    select: { id: true, startAt: true, endAt: true, status: true, clientId: true, payments: true },
+    select: { id: true, startAt: true, endAt: true, status: true, clientId: true, paidAmountCents: true, payments: true },
   });
 
   return NextResponse.json({

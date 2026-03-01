@@ -13,6 +13,7 @@ const bookings: BookingWithPayments[] = [
     startAt: new Date("2026-03-18T09:00:00.000Z"),
     endAt: new Date("2026-03-18T10:00:00.000Z"),
     status: "COMPLETED",
+    paidAmountCents: 7000,
     payments: [{ amountCents: 7000, status: "SUCCEEDED", capturedAt: new Date("2026-03-18T10:05:00.000Z") }],
   },
   {
@@ -21,6 +22,7 @@ const bookings: BookingWithPayments[] = [
     startAt: new Date("2026-03-18T11:00:00.000Z"),
     endAt: new Date("2026-03-18T12:30:00.000Z"),
     status: "CONFIRMED",
+    paidAmountCents: 2100,
     payments: [{ amountCents: 2100, status: "SUCCEEDED", capturedAt: new Date("2026-03-16T08:00:00.000Z") }],
   },
   {
@@ -29,6 +31,7 @@ const bookings: BookingWithPayments[] = [
     startAt: new Date("2026-03-17T13:00:00.000Z"),
     endAt: new Date("2026-03-17T14:00:00.000Z"),
     status: "NO_SHOW",
+    paidAmountCents: 6500,
     payments: [],
   },
   {
@@ -37,6 +40,7 @@ const bookings: BookingWithPayments[] = [
     startAt: new Date("2026-03-20T13:00:00.000Z"),
     endAt: new Date("2026-03-20T14:00:00.000Z"),
     status: "CANCELLED_BY_CLIENT",
+    paidAmountCents: 0,
     payments: [],
   },
   {
@@ -45,6 +49,7 @@ const bookings: BookingWithPayments[] = [
     startAt: new Date("2026-03-25T14:00:00.000Z"),
     endAt: new Date("2026-03-25T15:00:00.000Z"),
     status: "PENDING_PAYMENT",
+    paidAmountCents: 0,
     payments: [{ amountCents: 1500, status: "REQUIRES_PAYMENT_METHOD", capturedAt: null }],
   },
 ];
@@ -75,8 +80,8 @@ test("admin metrics snapshot stays stable for deterministic fixture", () => {
   assert.deepEqual(snapshot, {
     today: {
       bookingCount: 2,
-      revenueCents: 9100,
-      depositRevenueCents: 2100,
+      revenueCents: 15600,
+      depositRevenueCents: 8600,
       completedRevenueCents: 7000,
       cancelledCount: 0,
       noShowCount: 0,
@@ -86,8 +91,8 @@ test("admin metrics snapshot stays stable for deterministic fixture", () => {
     },
     week: {
       bookingCount: 4,
-      revenueCents: 9100,
-      depositRevenueCents: 2100,
+      revenueCents: 15600,
+      depositRevenueCents: 8600,
       completedRevenueCents: 7000,
       cancelledCount: 1,
       noShowCount: 1,
@@ -97,8 +102,8 @@ test("admin metrics snapshot stays stable for deterministic fixture", () => {
     },
     month: {
       bookingCount: 5,
-      revenueCents: 9100,
-      depositRevenueCents: 2100,
+      revenueCents: 15600,
+      depositRevenueCents: 8600,
       completedRevenueCents: 7000,
       cancelledCount: 1,
       noShowCount: 1,

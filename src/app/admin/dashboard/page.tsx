@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
   const [bookings, blockouts, workingHours] = await Promise.all([
     prisma.booking.findMany({
       where: { startAt: { gte: dataWindowStart, lt: dataWindowEnd } },
-      select: { id: true, startAt: true, endAt: true, status: true, clientId: true, payments: true },
+      select: { id: true, startAt: true, endAt: true, status: true, clientId: true, paidAmountCents: true, payments: true },
     }),
     prisma.blockout.findMany({
       where: { endAt: { gt: dataWindowStart }, startAt: { lt: dataWindowEnd } },

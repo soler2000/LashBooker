@@ -17,7 +17,7 @@ export async function GET() {
   const [bookings, blockouts, workingHours] = await Promise.all([
     prisma.booking.findMany({
       where: { startAt: { gte: from, lt: to } },
-      select: { id: true, startAt: true, endAt: true, status: true, clientId: true, payments: true },
+      select: { id: true, startAt: true, endAt: true, status: true, clientId: true, paidAmountCents: true, payments: true },
     }),
     prisma.blockout.findMany({ where: { endAt: { gt: from }, startAt: { lt: to } }, select: { startAt: true, endAt: true } }),
     prisma.workingHours.findMany({ select: { weekday: true, startTime: true, endTime: true, isClosed: true } }),
