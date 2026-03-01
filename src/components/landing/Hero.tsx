@@ -80,7 +80,7 @@ export default function Hero({
       </header>
       <div className="max-w-3xl">
         <h1 className="text-5xl font-semibold leading-tight md:text-8xl">{content.heroTitle}</h1>
-        <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">{content.heroDescription}</p>
+        <p className="mt-5 max-w-xl text-base text-white/80 md:text-xl">{content.heroSubtitle}</p>
         {hasContactDetails ? (
           <div className="mt-5 space-y-1 text-sm text-white/80">
             {safeTelUrl ? (
