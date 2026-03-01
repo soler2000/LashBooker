@@ -28,6 +28,15 @@ export default function MarketingPage() {
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("<p>We miss you! Book your next appointment today.</p>");
   const [loading, setLoading] = useState(false);
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [status, setStatus] = useState("");
+
+  const normalizeInstagramInput = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
 
   const selectedSegmentLabel = useMemo(
     () => segmentOptions.find((s) => s.value === segmentType)?.label ?? segmentType,
@@ -41,6 +50,13 @@ export default function MarketingPage() {
     setCampaigns(data.campaigns ?? []);
   }
 
+  async function loadInstagram() {
+    const res = await fetch("/api/admin/settings", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    setInstagramUrl(data.instagramUrl ?? "");
+  }
+
   async function loadSegment(type: SegmentType) {
     const res = await fetch(`/api/admin/segments/${type}`);
     if (!res.ok) return;
@@ -50,6 +66,7 @@ export default function MarketingPage() {
 
   useEffect(() => {
     loadCampaigns();
+    loadInstagram();
   }, []);
 
   useEffect(() => {
@@ -85,6 +102,24 @@ export default function MarketingPage() {
     }
   }
 
+  async function saveInstagram() {
+    setStatus("");
+    const res = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        instagramUrl: normalizeInstagramInput(instagramUrl) || null,
+      }),
+    });
+
+    if (!res.ok) {
+      setStatus("Could not save Instagram URL.");
+      return;
+    }
+
+    setStatus("Instagram URL saved.");
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -93,6 +128,27 @@ export default function MarketingPage() {
           Build and send segmented campaigns to consented clients.
         </p>
       </div>
+
+      <section className="rounded-lg border bg-white p-4">
+        <h2 className="text-lg font-medium">Instagram</h2>
+        <p className="mt-1 text-sm text-slate-600">Set the Instagram profile URL shown on the website header.</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <label className="space-y-1 text-sm text-slate-700">
+            <span>Instagram profile URL</span>
+            <input
+              type="url"
+              placeholder="https://instagram.com/yourhandle"
+              className="w-full rounded border px-3 py-2"
+              value={instagramUrl}
+              onChange={(event) => setInstagramUrl(event.target.value)}
+            />
+          </label>
+          <button className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-60" disabled={loading} onClick={saveInstagram}>
+            Save Instagram
+          </button>
+        </div>
+        {status ? <p className="mt-3 text-sm text-slate-600">{status}</p> : null}
+      </section>
 
       <section className="rounded-lg border bg-white p-4">
         <h2 className="text-lg font-medium">Create campaign</h2>
