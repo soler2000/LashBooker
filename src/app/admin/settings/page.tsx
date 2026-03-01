@@ -83,6 +83,43 @@ function fileToDataUrl(file: File) {
   });
 }
 
+function inferVideoMimeType(file: File) {
+  if (file.type.startsWith("video/")) {
+    return file.type;
+  }
+
+  const lowerName = file.name.toLowerCase();
+  if (lowerName.endsWith(".mp4") || lowerName.endsWith(".m4v")) return "video/mp4";
+  if (lowerName.endsWith(".mov")) return "video/quicktime";
+  if (lowerName.endsWith(".webm")) return "video/webm";
+  if (lowerName.endsWith(".ogv")) return "video/ogg";
+  return null;
+}
+
+function normalizeVideoDataUrl(dataUrl: string, file: File) {
+  if (!dataUrl.startsWith("data:")) {
+    return dataUrl;
+  }
+
+  const commaIndex = dataUrl.indexOf(",");
+  if (commaIndex === -1) {
+    return dataUrl;
+  }
+
+  const header = dataUrl.slice(0, commaIndex);
+  if (header.startsWith("data:video/")) {
+    return dataUrl;
+  }
+
+  const inferredMimeType = inferVideoMimeType(file);
+  if (!inferredMimeType) {
+    return dataUrl;
+  }
+
+  const encodedBody = dataUrl.slice(commaIndex + 1);
+  return `data:${inferredMimeType};base64,${encodedBody}`;
+}
+
 export default function AdminSettingsPage() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [savedMessage, setSavedMessage] = useState("");
@@ -184,7 +221,8 @@ export default function AdminSettingsPage() {
     }
 
     try {
-      const dataUrl = await fileToDataUrl(file);
+      const rawDataUrl = await fileToDataUrl(file);
+      const dataUrl = isVideoFile ? normalizeVideoDataUrl(rawDataUrl, file) : rawDataUrl;
 
       if (dataUrl.length > getMaxSiteImageValueLength(key, dataUrl)) {
         setImageUploadStatus("This media file is too large to save. Please choose a smaller file.");
