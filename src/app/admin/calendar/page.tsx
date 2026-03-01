@@ -89,6 +89,7 @@ export default function AdminCalendarPage() {
   const [appointmentStartedAtInput, setAppointmentStartedAtInput] = useState("");
   const [appointmentFinishedAtInput, setAppointmentFinishedAtInput] = useState("");
   const [savingAppointmentDetails, setSavingAppointmentDetails] = useState(false);
+  const [deletingBooking, setDeletingBooking] = useState(false);
 
   function fileToDataUrl(file: File) {
     return new Promise<string>((resolve, reject) => {
@@ -296,6 +297,35 @@ export default function AdminCalendarPage() {
     }
   }
 
+  async function deleteBooking() {
+    if (!selectedBooking || deletingBooking) return;
+    const confirmed = window.confirm("Delete this appointment? This action cannot be undone.");
+    if (!confirmed) return;
+
+    setDeletingBooking(true);
+    setModalError(null);
+
+    try {
+      const response = await fetch("/api/admin/bookings", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ bookingId: selectedBooking.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errorData.error ?? "Unable to delete appointment.");
+      }
+
+      closeAppointmentDetails();
+      await load();
+    } catch (error) {
+      setModalError(error instanceof Error ? error.message : "Unable to delete appointment.");
+    } finally {
+      setDeletingBooking(false);
+    }
+  }
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-semibold">Calendar</h1>
@@ -457,6 +487,19 @@ export default function AdminCalendarPage() {
                 className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
               >
                 {savingPostResults ? "Saving…" : "Save to client journal"}
+              </button>
+            </section>
+
+            <section className="mt-4 space-y-2 rounded border border-red-200 bg-red-50 p-3">
+              <h3 className="font-medium text-red-800">Danger zone</h3>
+              <p className="text-sm text-red-700">Delete this appointment from the calendar.</p>
+              <button
+                type="button"
+                onClick={deleteBooking}
+                disabled={deletingBooking}
+                className="rounded bg-red-700 px-4 py-2 text-sm text-white disabled:opacity-50"
+              >
+                {deletingBooking ? "Deleting…" : "Delete appointment"}
               </button>
             </section>
           </div>
