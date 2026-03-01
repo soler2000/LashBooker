@@ -33,12 +33,9 @@ type AdminSettingsResponse = {
   siteImages: SiteImages;
 } & SiteContent;
 
-const storySceneImageKeys: SiteImageKey[] = ["scene2Story", "scene3Story"];
-
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
   Object.keys(defaultSiteImages) as SiteImageKey[]
 )
-  .filter((key) => !storySceneImageKeys.includes(key))
   .map((key) => ({
     key,
     label: siteImageUsage[key].label,
@@ -68,7 +65,6 @@ function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
 const storySceneConfigs = [
   {
     id: "scene2",
-    imageKey: "scene2Story",
     enabledField: "scene2Enabled",
     eyebrowField: "scene2Eyebrow",
     titleField: "scene2Title",
@@ -77,7 +73,6 @@ const storySceneConfigs = [
   },
   {
     id: "scene3",
-    imageKey: "scene3Story",
     enabledField: "scene3Enabled",
     eyebrowField: "scene3Eyebrow",
     titleField: "scene3Title",
@@ -208,13 +203,13 @@ export default function AdminSettingsPage() {
     });
 
     if (!response.ok) {
-      setSavedMessage("Could not save image settings.");
+      setSavedMessage("Could not save landing media.");
       return;
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
     setImages(sanitizeSiteImages(data.siteImages));
-    setSavedMessage("Image settings saved and now sync across devices.");
+    setSavedMessage("Landing media saved and now syncs across devices.");
   };
 
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
@@ -362,8 +357,8 @@ export default function AdminSettingsPage() {
 
       <form onSubmit={save} className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Landing page images</h2>
-          <p className="text-sm text-slate-300">Upload media for global website areas. Story scene media is managed in the Website UI section below.</p>
+          <h2 className="text-lg font-semibold">Landing media</h2>
+          <p className="text-sm text-slate-300">Upload all homepage and landing media assets, including story scene visuals, in this section.</p>
           <p className="text-xs text-slate-400">For iOS video uploads, use the Files picker and MP4/MOV files when available.</p>
         </div>
 
@@ -405,7 +400,7 @@ export default function AdminSettingsPage() {
           type="submit"
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
         >
-          Save image settings
+          Save landing media
         </button>
         {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
         {savedMessage ? <p className="text-sm text-green-300">{savedMessage}</p> : null}
@@ -624,6 +619,7 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-4">
             <p className="text-sm font-medium text-slate-100">Story scenes</p>
+            <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media is managed in the Landing media section above.</p>
             <div className="grid gap-4 lg:grid-cols-2">
               {storySceneConfigs.map((scene) => (
                 <article key={scene.id} className="space-y-3 rounded-lg border border-slate-700/70 bg-slate-900/60 p-4">
@@ -637,12 +633,6 @@ export default function AdminSettingsPage() {
                       />
                       Show scene
                     </label>
-                  </div>
-
-                  <div className="overflow-hidden rounded border border-slate-700 bg-black/40">
-                    <div className="aspect-[3/2] w-full">
-                      <SiteMediaPreview src={images[scene.imageKey]} alt={`${scene.label} preview`} />
-                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -669,24 +659,6 @@ export default function AdminSettingsPage() {
                     />
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <input
-                      type="file"
-                      accept={videoUploadAccept}
-                      className="w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
-                      onChange={(event) => {
-                        uploadImage(scene.imageKey, event.target.files?.[0] ?? null);
-                        event.currentTarget.value = "";
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="rounded border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-100 hover:bg-slate-700"
-                      onClick={() => selectMp4ForField(scene.imageKey)}
-                    >
-                      Select MP4
-                    </button>
-                  </div>
                 </article>
               ))}
             </div>
