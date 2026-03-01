@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 
 let activeChild = null;
+let shuttingDown = false;
 
 const DATABASE_URL_ENV_KEYS = [
   "DATABASE_URL",
@@ -37,10 +38,20 @@ function run(command, args) {
 
     activeChild = child;
 
-    child.on("exit", (code) => {
+    child.on("exit", (code, signal) => {
       activeChild = null;
+      if (shuttingDown && (signal === "SIGTERM" || signal === "SIGINT")) {
+        resolve();
+        return;
+      }
+
       if (code === 0) resolve();
-      else reject(new Error(`${command} ${args.join(" ")} exited with code ${code ?? "unknown"}`));
+      else {
+        const details = signal
+          ? `signal ${signal}`
+          : `code ${code ?? "unknown"}`;
+        reject(new Error(`${command} ${args.join(" ")} exited with ${details}`));
+      }
     });
 
     child.on("error", (error) => {
@@ -52,6 +63,8 @@ function run(command, args) {
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => {
+    shuttingDown = true;
+
     if (activeChild && !activeChild.killed) {
       activeChild.kill(signal);
       return;
