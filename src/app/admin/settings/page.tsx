@@ -20,15 +20,6 @@ import {
 import { defaultSiteContent, sanitizeSiteContent, type SiteContent } from "@/lib/site-content";
 
 type AdminSettingsResponse = {
-  depositRequired: boolean;
-  instagramUrl: string | null;
-  contactPhone: string | null;
-  contactEmail: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  addressCity: string | null;
-  addressPostcode: string | null;
-  addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
   siteImages: SiteImages;
 } & SiteContent;
@@ -143,27 +134,11 @@ export default function AdminSettingsPage() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
-  const [depositRequired, setDepositRequired] = useState(true);
-  const [instagramUrl, setInstagramUrl] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [addressLine1, setAddressLine1] = useState("");
-  const [addressLine2, setAddressLine2] = useState("");
-  const [addressCity, setAddressCity] = useState("");
-  const [addressPostcode, setAddressPostcode] = useState("");
-  const [addressCountry, setAddressCountry] = useState("");
   const [depositStatus, setDepositStatus] = useState("");
   const [qualificationCertificates, setQualificationCertificates] = useState<QualificationCertificateContent[]>(
     defaultQualificationCertificates,
   );
   const [siteContent, setSiteContent] = useState<SiteContent>(defaultSiteContent);
-
-  const normalizeInstagramInput = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return "";
-    if (/^https?:\/\//i.test(trimmed)) return trimmed;
-    return `https://${trimmed}`;
-  };
 
   const loadSettings = async () => {
     const response = await fetch("/api/admin/settings", { cache: "no-store" });
@@ -173,15 +148,6 @@ export default function AdminSettingsPage() {
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
-    setDepositRequired(data.depositRequired);
-    setInstagramUrl(data.instagramUrl ?? "");
-    setContactPhone(data.contactPhone ?? "");
-    setContactEmail(data.contactEmail ?? "");
-    setAddressLine1(data.addressLine1 ?? "");
-    setAddressLine2(data.addressLine2 ?? "");
-    setAddressCity(data.addressCity ?? "");
-    setAddressPostcode(data.addressPostcode ?? "");
-    setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
     setSiteContent(sanitizeSiteContent(data));
@@ -284,15 +250,6 @@ export default function AdminSettingsPage() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        depositRequired,
-        instagramUrl: normalizeInstagramInput(instagramUrl) || null,
-        contactPhone: contactPhone.trim() || null,
-        contactEmail: contactEmail.trim() || null,
-        addressLine1: addressLine1.trim() || null,
-        addressLine2: addressLine2.trim() || null,
-        addressCity: addressCity.trim() || null,
-        addressPostcode: addressPostcode.trim() || null,
-        addressCountry: addressCountry.trim() || null,
         qualificationCertificates: qualificationCertificates.map((certificate) => ({
           title: certificate.title.trim(),
           description: certificate.description.trim(),
@@ -311,14 +268,6 @@ export default function AdminSettingsPage() {
     }
 
     const data = (await response.json()) as AdminSettingsResponse;
-    setInstagramUrl(data.instagramUrl ?? "");
-    setContactPhone(data.contactPhone ?? "");
-    setContactEmail(data.contactEmail ?? "");
-    setAddressLine1(data.addressLine1 ?? "");
-    setAddressLine2(data.addressLine2 ?? "");
-    setAddressCity(data.addressCity ?? "");
-    setAddressPostcode(data.addressPostcode ?? "");
-    setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
     setSiteContent(sanitizeSiteContent(data));
@@ -377,126 +326,8 @@ export default function AdminSettingsPage() {
       </section>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
-        <h2 className="text-lg font-semibold">Booking deposits</h2>
-        <p className="text-sm text-slate-300">
-          Choose whether clients must pay a Stripe deposit before a booking is confirmed.
-        </p>
-        <label className="flex items-center gap-2 text-sm text-slate-100">
-          <input
-            type="checkbox"
-            checked={depositRequired}
-            onChange={(event) => setDepositRequired(event.target.checked)}
-          />
-          Require deposit payment for new bookings
-        </label>
-        <div className="space-y-1">
-          <label htmlFor="instagram-url" className="text-sm font-medium text-slate-100">Instagram profile URL</label>
-          <input
-            id="instagram-url"
-            type="url"
-            placeholder="https://instagram.com/yourhandle"
-            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-            value={instagramUrl}
-            onChange={(event) => setInstagramUrl(event.target.value)}
-          />
-          <p className="text-xs text-slate-400">Used on the public homepage header. Leave blank to hide the link.</p>
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="contact-phone" className="text-sm font-medium text-slate-100">Business phone number</label>
-          <input
-            id="contact-phone"
-            type="text"
-            maxLength={40}
-            placeholder="+44 7700 900123"
-            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-            value={contactPhone}
-            onChange={(event) => setContactPhone(event.target.value)}
-          />
-          <p className="text-xs text-slate-400">Displayed on the homepage contact section. Leave blank to hide it.</p>
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="contact-email" className="text-sm font-medium text-slate-100">Business email address</label>
-          <input
-            id="contact-email"
-            type="email"
-            maxLength={320}
-            placeholder="hello@example.com"
-            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-            value={contactEmail}
-            onChange={(event) => setContactEmail(event.target.value)}
-          />
-          <p className="text-xs text-slate-400">Used for the public contact section. Leave blank to hide it.</p>
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="address-line-1" className="text-sm font-medium text-slate-100">Address line 1</label>
-          <input
-            id="address-line-1"
-            type="text"
-            maxLength={120}
-            placeholder="123 Example Street"
-            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-            value={addressLine1}
-            onChange={(event) => setAddressLine1(event.target.value)}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="address-line-2" className="text-sm font-medium text-slate-100">Address line 2</label>
-          <input
-            id="address-line-2"
-            type="text"
-            maxLength={120}
-            placeholder="Suite, unit, or building"
-            className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-            value={addressLine2}
-            onChange={(event) => setAddressLine2(event.target.value)}
-          />
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="space-y-1">
-            <label htmlFor="address-city" className="text-sm font-medium text-slate-100">Town/City</label>
-            <input
-              id="address-city"
-              type="text"
-              maxLength={80}
-              placeholder="London"
-              className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              value={addressCity}
-              onChange={(event) => setAddressCity(event.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="address-postcode" className="text-sm font-medium text-slate-100">Postcode</label>
-            <input
-              id="address-postcode"
-              type="text"
-              maxLength={24}
-              placeholder="SW1A 1AA"
-              className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              value={addressPostcode}
-              onChange={(event) => setAddressPostcode(event.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="address-country" className="text-sm font-medium text-slate-100">Country</label>
-            <input
-              id="address-country"
-              type="text"
-              maxLength={80}
-              placeholder="United Kingdom"
-              className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-              value={addressCountry}
-              onChange={(event) => setAddressCountry(event.target.value)}
-            />
-          </div>
-        </div>
-        <p className="text-xs text-slate-400">Address fields are shown on the homepage. Leave any field blank to hide it.</p>
+        <h2 className="text-lg font-semibold">Homepage content</h2>
+        <p className="text-sm text-slate-300">Manage homepage copy, media, and qualification content in one place.</p>
 
         <div className="space-y-3">
           <p className="text-sm font-medium text-slate-100">Homepage qualification certificates</p>
@@ -551,7 +382,7 @@ export default function AdminSettingsPage() {
 
         <div className="space-y-4 rounded border border-slate-800 bg-slate-900/30 p-4">
           <p className="text-sm font-medium text-slate-100">Homepage copy</p>
-          <p className="text-xs text-slate-400">Edit the text used across the hero, story scenes, chapter cards, and booking call-to-action.</p>
+          <p className="text-xs text-slate-400">Edit the text used across the hero, story scenes, and chapter cards.</p>
 
           <div className="grid gap-3 md:grid-cols-2">
             <label className="space-y-1 text-sm text-slate-100">
@@ -634,20 +465,6 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Booking CTA title</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaTitle} onChange={(event) => updateSiteContentField("bookingCtaTitle", event.target.value)} />
-            </label>
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Booking CTA button label</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaButtonLabel} onChange={(event) => updateSiteContentField("bookingCtaButtonLabel", event.target.value)} />
-            </label>
-          </div>
-          <label className="space-y-1 text-sm text-slate-100">
-            <span>Booking CTA description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaBody} onChange={(event) => updateSiteContentField("bookingCtaBody", event.target.value)} />
-          </label>
         </div>
 
         <button
