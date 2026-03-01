@@ -5,6 +5,7 @@ import Image from "next/image";
 import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import {
   defaultSiteImages,
+  MAX_SITE_IMAGE_VALUE_LENGTH,
   sanitizeSiteImages,
   siteImageUsage,
   type SiteImageKey,
@@ -178,6 +179,11 @@ export default function AdminSettingsPage() {
 
     try {
       const dataUrl = await fileToDataUrl(file);
+
+      if (dataUrl.length > MAX_SITE_IMAGE_VALUE_LENGTH) {
+        setImageUploadStatus("This media file is too large to save. Please choose a smaller file.");
+        return;
+      }
 
       if (isVideoAsset(dataUrl) && !videoEnabledImageFields[key]) {
         setImageUploadStatus("This section only supports images. Please choose an image file.");
