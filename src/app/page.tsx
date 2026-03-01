@@ -90,19 +90,23 @@ export default function Home() {
         content={publicSettings.homepageContent}
       />
 
-      <StickyStoryScene
-        eyebrow={publicSettings.homepageContent.scene2Eyebrow}
-        title={publicSettings.homepageContent.scene2Title}
-        description={publicSettings.homepageContent.scene2Description}
-        image={images.scene2Story}
-      />
+      {publicSettings.homepageContent.scene2Enabled ? (
+        <StickyStoryScene
+          eyebrow={publicSettings.homepageContent.scene2Eyebrow}
+          title={publicSettings.homepageContent.scene2Title}
+          description={publicSettings.homepageContent.scene2Description}
+          image={images.scene2Story}
+        />
+      ) : null}
 
-      <StickyStoryScene
-        eyebrow={publicSettings.homepageContent.scene3Eyebrow}
-        title={publicSettings.homepageContent.scene3Title}
-        description={publicSettings.homepageContent.scene3Description}
-        image={images.scene3Story}
-      />
+      {publicSettings.homepageContent.scene3Enabled ? (
+        <StickyStoryScene
+          eyebrow={publicSettings.homepageContent.scene3Eyebrow}
+          title={publicSettings.homepageContent.scene3Title}
+          description={publicSettings.homepageContent.scene3Description}
+          image={images.scene3Story}
+        />
+      ) : null}
 
       <HorizontalChapter images={images} content={publicSettings.homepageContent} />
 

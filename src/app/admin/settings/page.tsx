@@ -33,13 +33,16 @@ type AdminSettingsResponse = {
   siteImages: SiteImages;
 } & SiteContent;
 
+const storySceneImageKeys: SiteImageKey[] = ["scene2Story", "scene3Story"];
+
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
   Object.keys(defaultSiteImages) as SiteImageKey[]
-).map((key) => ({
-  key,
-  label: siteImageUsage[key].label,
-}));
-
+)
+  .filter((key) => !storySceneImageKeys.includes(key))
+  .map((key) => ({
+    key,
+    label: siteImageUsage[key].label,
+  }));
 
 const videoEnabledImageFields: Partial<Record<SiteImageKey, boolean>> = {
   hero: true,
@@ -61,6 +64,27 @@ function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
 
   return <Image src={src} alt={alt} width={240} height={160} className="h-full w-full object-contain" unoptimized={shouldUseUnoptimizedImage(src)} />;
 }
+
+const storySceneConfigs = [
+  {
+    id: "scene2",
+    imageKey: "scene2Story",
+    enabledField: "scene2Enabled",
+    eyebrowField: "scene2Eyebrow",
+    titleField: "scene2Title",
+    descriptionField: "scene2Description",
+    label: "Scene 2",
+  },
+  {
+    id: "scene3",
+    imageKey: "scene3Story",
+    enabledField: "scene3Enabled",
+    eyebrowField: "scene3Eyebrow",
+    titleField: "scene3Title",
+    descriptionField: "scene3Description",
+    label: "Scene 3",
+  },
+] as const;
 
 const idealImageDimensions: Record<SiteImageKey, string> = {
   hero: "2000 × 1200 px",
@@ -224,7 +248,7 @@ export default function AdminSettingsPage() {
     );
   };
 
-  const updateSiteContentField = (field: keyof SiteContent, value: string) => {
+  const updateSiteContentField = <K extends keyof SiteContent>(field: K, value: SiteContent[K]) => {
     setSiteContent((current) => ({ ...current, [field]: value }));
   };
 
@@ -295,13 +319,13 @@ export default function AdminSettingsPage() {
   return (
     <section className="max-w-4xl space-y-10 text-slate-100">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Settings</h1>
+        <h1 className="text-2xl font-semibold text-white">Website UI</h1>
       </div>
 
       <form onSubmit={save} className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Landing page images</h2>
-          <p className="text-sm text-slate-300">Upload custom images for key sections on the public site.</p>
+          <p className="text-sm text-slate-300">Upload media for global website areas. Story scene media is managed in the Website UI section below.</p>
           <p className="text-xs text-slate-400">For iOS video uploads, use the Files picker and MP4/MOV files when available.</p>
         </div>
 
@@ -560,35 +584,75 @@ export default function AdminSettingsPage() {
             </div>
           ))}
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Scene 2 eyebrow</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene2Eyebrow} onChange={(event) => updateSiteContentField("scene2Eyebrow", event.target.value)} />
-            </label>
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Scene 2 title</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene2Title} onChange={(event) => updateSiteContentField("scene2Title", event.target.value)} />
-            </label>
-          </div>
-          <label className="space-y-1 text-sm text-slate-100">
-            <span>Scene 2 description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene2Description} onChange={(event) => updateSiteContentField("scene2Description", event.target.value)} />
-          </label>
+          <div className="space-y-4">
+            <p className="text-sm font-medium text-slate-100">Story scenes</p>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {storySceneConfigs.map((scene) => (
+                <article key={scene.id} className="space-y-3 rounded-lg border border-slate-700/70 bg-slate-900/60 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-white">{scene.label}</h3>
+                    <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={siteContent[scene.enabledField] as boolean}
+                        onChange={(event) => updateSiteContentField(scene.enabledField, event.target.checked)}
+                      />
+                      Show scene
+                    </label>
+                  </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Scene 3 eyebrow</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene3Eyebrow} onChange={(event) => updateSiteContentField("scene3Eyebrow", event.target.value)} />
-            </label>
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Scene 3 title</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene3Title} onChange={(event) => updateSiteContentField("scene3Title", event.target.value)} />
-            </label>
+                  <div className="overflow-hidden rounded border border-slate-700 bg-black/40">
+                    <div className="aspect-[3/2] w-full">
+                      <SiteMediaPreview src={images[scene.imageKey]} alt={`${scene.label} preview`} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input
+                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                      maxLength={320}
+                      value={siteContent[scene.eyebrowField]}
+                      onChange={(event) => updateSiteContentField(scene.eyebrowField, event.target.value)}
+                      placeholder="Eyebrow"
+                    />
+                    <input
+                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                      maxLength={320}
+                      value={siteContent[scene.titleField]}
+                      onChange={(event) => updateSiteContentField(scene.titleField, event.target.value)}
+                      placeholder="Title"
+                    />
+                    <textarea
+                      className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                      maxLength={320}
+                      value={siteContent[scene.descriptionField]}
+                      onChange={(event) => updateSiteContentField(scene.descriptionField, event.target.value)}
+                      placeholder="Description"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="file"
+                      accept={videoUploadAccept}
+                      className="w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 file:mr-3 file:rounded file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-slate-200"
+                      onChange={(event) => {
+                        uploadImage(scene.imageKey, event.target.files?.[0] ?? null);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="rounded border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-100 hover:bg-slate-700"
+                      onClick={() => selectMp4ForField(scene.imageKey)}
+                    >
+                      Select MP4
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-          <label className="space-y-1 text-sm text-slate-100">
-            <span>Scene 3 description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene3Description} onChange={(event) => updateSiteContentField("scene3Description", event.target.value)} />
-          </label>
 
           <div className="grid gap-3 md:grid-cols-2">
             <label className="space-y-1 text-sm text-slate-100">
