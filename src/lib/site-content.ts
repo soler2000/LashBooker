@@ -2,9 +2,11 @@ export type SiteContent = {
   heroEyebrow: string;
   heroTitle: string;
   heroSubtitle: string;
+  scene2Enabled: boolean;
   scene2Eyebrow: string;
   scene2Title: string;
   scene2Description: string;
+  scene3Enabled: boolean;
   scene3Eyebrow: string;
   scene3Title: string;
   scene3Description: string;
@@ -25,9 +27,11 @@ export const defaultSiteContent: SiteContent = {
   heroEyebrow: "Lashed and Lifted",
   heroTitle: "Lash design in motion.",
   heroSubtitle: "A cinematic, luxury booking experience crafted for clients who want precision styling and seamless service.",
+  scene2Enabled: true,
   scene2Eyebrow: "Scene 2",
   scene2Title: "Designed around your features.",
   scene2Description: "Every appointment starts with personalized mapping so curl, density, and length complement your eyes-not overwhelm them.",
+  scene3Enabled: true,
   scene3Eyebrow: "Scene 3",
   scene3Title: "Studio calm, editorial results.",
   scene3Description: "From consultation to final mirror reveal, each step is paced for comfort while delivering camera-ready detail.",
@@ -53,6 +57,11 @@ function normalizeCopyValue(value: unknown, fallback: string) {
   return trimmed.slice(0, MAX_COPY_LENGTH);
 }
 
+function normalizeBooleanValue(value: unknown, fallback: boolean) {
+  if (typeof value !== "boolean") return fallback;
+  return value;
+}
+
 export function sanitizeSiteContent(value: unknown): SiteContent {
   if (!value || typeof value !== "object") {
     return defaultSiteContent;
@@ -64,9 +73,11 @@ export function sanitizeSiteContent(value: unknown): SiteContent {
     heroEyebrow: normalizeCopyValue(candidate.heroEyebrow, defaultSiteContent.heroEyebrow),
     heroTitle: normalizeCopyValue(candidate.heroTitle, defaultSiteContent.heroTitle),
     heroSubtitle: normalizeCopyValue(candidate.heroSubtitle, defaultSiteContent.heroSubtitle),
+    scene2Enabled: normalizeBooleanValue(candidate.scene2Enabled, defaultSiteContent.scene2Enabled),
     scene2Eyebrow: normalizeCopyValue(candidate.scene2Eyebrow, defaultSiteContent.scene2Eyebrow),
     scene2Title: normalizeCopyValue(candidate.scene2Title, defaultSiteContent.scene2Title),
     scene2Description: normalizeCopyValue(candidate.scene2Description, defaultSiteContent.scene2Description),
+    scene3Enabled: normalizeBooleanValue(candidate.scene3Enabled, defaultSiteContent.scene3Enabled),
     scene3Eyebrow: normalizeCopyValue(candidate.scene3Eyebrow, defaultSiteContent.scene3Eyebrow),
     scene3Title: normalizeCopyValue(candidate.scene3Title, defaultSiteContent.scene3Title),
     scene3Description: normalizeCopyValue(candidate.scene3Description, defaultSiteContent.scene3Description),

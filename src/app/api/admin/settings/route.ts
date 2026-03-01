@@ -50,9 +50,11 @@ async function ensureSettings() {
       heroEyebrow: defaultHomepageContent.heroEyebrow,
       heroTitle: defaultHomepageContent.heroTitle,
       heroSubtitle: defaultHomepageContent.heroSubtitle,
+      scene2Enabled: defaultHomepageContent.scene2Enabled,
       scene2Eyebrow: defaultHomepageContent.scene2Eyebrow,
       scene2Title: defaultHomepageContent.scene2Title,
       scene2Description: defaultHomepageContent.scene2Description,
+      scene3Enabled: defaultHomepageContent.scene3Enabled,
       scene3Eyebrow: defaultHomepageContent.scene3Eyebrow,
       scene3Title: defaultHomepageContent.scene3Title,
       scene3Description: defaultHomepageContent.scene3Description,
@@ -90,12 +92,14 @@ function toHomepageContent(settings: {
   heroEyebrow: string;
   heroTitle: string;
   heroSubtitle: string;
+  scene2Enabled: boolean;
   scene2Eyebrow: string;
   scene2Title: string;
   scene2Description: string;
   scene3Eyebrow: string;
   scene3Title: string;
   scene3Description: string;
+  scene3Enabled: boolean;
   chapter1Title: string;
   chapter1Copy: string;
   chapter2Title: string;
@@ -112,12 +116,14 @@ function toHomepageContent(settings: {
     heroEyebrow: settings.heroEyebrow,
     heroTitle: settings.heroTitle,
     heroSubtitle: settings.heroSubtitle,
+    scene2Enabled: settings.scene2Enabled,
     scene2Eyebrow: settings.scene2Eyebrow,
     scene2Title: settings.scene2Title,
     scene2Description: settings.scene2Description,
     scene3Eyebrow: settings.scene3Eyebrow,
     scene3Title: settings.scene3Title,
     scene3Description: settings.scene3Description,
+    scene3Enabled: settings.scene3Enabled,
     chapter1Title: settings.chapter1Title,
     chapter1Copy: settings.chapter1Copy,
     chapter2Title: settings.chapter2Title,
@@ -227,12 +233,14 @@ export async function PUT(request: Request) {
     "heroEyebrow",
     "heroTitle",
     "heroSubtitle",
+    "scene2Enabled",
     "scene2Eyebrow",
     "scene2Title",
     "scene2Description",
     "scene3Eyebrow",
     "scene3Title",
     "scene3Description",
+    "scene3Enabled",
     "chapter1Title",
     "chapter1Copy",
     "chapter2Title",

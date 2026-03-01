@@ -14,9 +14,11 @@ export type HomepageContentFields = {
   heroEyebrow: string;
   heroTitle: string;
   heroSubtitle: string;
+  scene2Enabled: boolean;
   scene2Eyebrow: string;
   scene2Title: string;
   scene2Description: string;
+  scene3Enabled: boolean;
   scene3Eyebrow: string;
   scene3Title: string;
   scene3Description: string;
@@ -98,9 +100,11 @@ export const adminSettingsUpdateSchema = z
     heroEyebrow: contentField.optional(),
     heroTitle: contentField.optional(),
     heroSubtitle: contentField.optional(),
+    scene2Enabled: z.boolean().optional(),
     scene2Eyebrow: contentField.optional(),
     scene2Title: contentField.optional(),
     scene2Description: contentField.optional(),
+    scene3Enabled: z.boolean().optional(),
     scene3Eyebrow: contentField.optional(),
     scene3Title: contentField.optional(),
     scene3Description: contentField.optional(),

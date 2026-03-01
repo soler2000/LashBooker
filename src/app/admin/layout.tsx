@@ -14,7 +14,7 @@ const links = [
 ];
 
 const systemSettingsLinks = [
-  ["Owner Settings", "/admin/settings"],
+  ["Website UI", "/admin/settings"],
   ["Admin Accounts", "/admin/accounts"],
   ["Email Templates", "/admin/email-templates"],
   ["Email Settings", "/admin/email-settings"],

@@ -1,0 +1,3 @@
+ALTER TABLE "BusinessSettings"
+  ADD COLUMN "scene2Enabled" BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN "scene3Enabled" BOOLEAN NOT NULL DEFAULT true;

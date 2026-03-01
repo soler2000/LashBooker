@@ -20,9 +20,11 @@ type PublicSettingsInput = {
   heroEyebrow?: string | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  scene2Enabled?: boolean | null;
   scene2Eyebrow?: string | null;
   scene2Title?: string | null;
   scene2Description?: string | null;
+  scene3Enabled?: boolean | null;
   scene3Eyebrow?: string | null;
   scene3Title?: string | null;
   scene3Description?: string | null;
@@ -51,6 +53,10 @@ function normalizeCopy(value: string | null | undefined, fallback: string) {
   return trimmed || fallback;
 }
 
+function normalizeBoolean(value: boolean | null | undefined, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
 export function toPublicSettings(settings: PublicSettingsInput | null | undefined) {
   const qualificationCertificates = sanitizeQualificationCertificates(
     (() => {
@@ -67,9 +73,11 @@ export function toPublicSettings(settings: PublicSettingsInput | null | undefine
     heroEyebrow: normalizeCopy(settings?.heroEyebrow, defaultHomepageContent.heroEyebrow),
     heroTitle: normalizeCopy(settings?.heroTitle, defaultHomepageContent.heroTitle),
     heroSubtitle: normalizeCopy(settings?.heroSubtitle, defaultHomepageContent.heroSubtitle),
+    scene2Enabled: normalizeBoolean(settings?.scene2Enabled, defaultHomepageContent.scene2Enabled),
     scene2Eyebrow: normalizeCopy(settings?.scene2Eyebrow, defaultHomepageContent.scene2Eyebrow),
     scene2Title: normalizeCopy(settings?.scene2Title, defaultHomepageContent.scene2Title),
     scene2Description: normalizeCopy(settings?.scene2Description, defaultHomepageContent.scene2Description),
+    scene3Enabled: normalizeBoolean(settings?.scene3Enabled, defaultHomepageContent.scene3Enabled),
     scene3Eyebrow: normalizeCopy(settings?.scene3Eyebrow, defaultHomepageContent.scene3Eyebrow),
     scene3Title: normalizeCopy(settings?.scene3Title, defaultHomepageContent.scene3Title),
     scene3Description: normalizeCopy(settings?.scene3Description, defaultHomepageContent.scene3Description),
