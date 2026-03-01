@@ -53,25 +53,6 @@ function SiteMediaPreview({ src, alt }: { src: string; alt: string }) {
   return <Image src={src} alt={alt} width={240} height={160} className="h-full w-full object-contain" unoptimized={shouldUseUnoptimizedImage(src)} />;
 }
 
-const storySceneConfigs = [
-  {
-    id: "scene2",
-    enabledField: "scene2Enabled",
-    eyebrowField: "scene2Eyebrow",
-    titleField: "scene2Title",
-    descriptionField: "scene2Description",
-    label: "Scene 2",
-  },
-  {
-    id: "scene3",
-    enabledField: "scene3Enabled",
-    eyebrowField: "scene3Eyebrow",
-    titleField: "scene3Title",
-    descriptionField: "scene3Description",
-    label: "Scene 3",
-  },
-] as const;
-
 const idealImageDimensions: Record<SiteImageKey, string> = {
   hero: "2000 × 1200 px",
   scene2Story: "1800 × 1200 px",
@@ -82,6 +63,53 @@ const idealImageDimensions: Record<SiteImageKey, string> = {
   chapterRefill: "1800 × 1200 px",
   bookingCta: "1800 × 1200 px",
   policies: "1800 × 1200 px",
+};
+
+type HomepageCopyFieldConfig = {
+  label: string;
+  field: keyof SiteContent;
+  control?: "text" | "textarea" | "checkbox";
+};
+
+const homepageCopyByImageField: Partial<Record<SiteImageKey, HomepageCopyFieldConfig[]>> = {
+  hero: [
+    { label: "Hero eyebrow", field: "heroEyebrow" },
+    { label: "Hero title", field: "heroTitle" },
+    { label: "Hero description", field: "heroSubtitle", control: "textarea" },
+  ],
+  scene2Story: [
+    { label: "Show scene", field: "scene2Enabled", control: "checkbox" },
+    { label: "Scene eyebrow", field: "scene2Eyebrow" },
+    { label: "Scene title", field: "scene2Title" },
+    { label: "Scene description", field: "scene2Description", control: "textarea" },
+  ],
+  scene3Story: [
+    { label: "Show scene", field: "scene3Enabled", control: "checkbox" },
+    { label: "Scene eyebrow", field: "scene3Eyebrow" },
+    { label: "Scene title", field: "scene3Title" },
+    { label: "Scene description", field: "scene3Description", control: "textarea" },
+  ],
+  chapterClassic: [
+    { label: "Classic title", field: "chapter1Title" },
+    { label: "Classic description", field: "chapter1Copy", control: "textarea" },
+  ],
+  chapterHybrid: [
+    { label: "Hybrid title", field: "chapter2Title" },
+    { label: "Hybrid description", field: "chapter2Copy", control: "textarea" },
+  ],
+  chapterVolume: [
+    { label: "Volume title", field: "chapter3Title" },
+    { label: "Volume description", field: "chapter3Copy", control: "textarea" },
+  ],
+  chapterRefill: [
+    { label: "Refill title", field: "chapter4Title" },
+    { label: "Refill description", field: "chapter4Copy", control: "textarea" },
+  ],
+  bookingCta: [
+    { label: "Booking CTA title", field: "bookingCtaTitle" },
+    { label: "Booking CTA button label", field: "bookingCtaButtonLabel" },
+    { label: "Booking CTA description", field: "bookingCtaBody", control: "textarea" },
+  ],
 };
 
 function fileToDataUrl(file: File) {
@@ -319,6 +347,54 @@ export default function AdminSettingsPage() {
                 <SiteMediaPreview src={images[field.key]} alt={`${field.label} small preview`} />
               </div>
             </div>
+
+            {homepageCopyByImageField[field.key]?.length ? (
+              <div className="space-y-2 rounded border border-slate-700/70 bg-slate-950/40 p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-300">Homepage copy for this image</p>
+                {homepageCopyByImageField[field.key]?.map((copyField) => {
+                  const controlType = copyField.control ?? "text";
+
+                  if (controlType === "checkbox") {
+                    return (
+                      <label key={copyField.field} className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(siteContent[copyField.field])}
+                          onChange={(event) => updateSiteContentField(copyField.field, event.target.checked)}
+                        />
+                        {copyField.label}
+                      </label>
+                    );
+                  }
+
+                  if (controlType === "textarea") {
+                    return (
+                      <label key={copyField.field} className="space-y-1 text-sm text-slate-100">
+                        <span>{copyField.label}</span>
+                        <textarea
+                          className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                          maxLength={320}
+                          value={String(siteContent[copyField.field])}
+                          onChange={(event) => updateSiteContentField(copyField.field, event.target.value)}
+                        />
+                      </label>
+                    );
+                  }
+
+                  return (
+                    <label key={copyField.field} className="space-y-1 text-sm text-slate-100">
+                      <span>{copyField.label}</span>
+                      <input
+                        className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                        maxLength={320}
+                        value={String(siteContent[copyField.field])}
+                        onChange={(event) => updateSiteContentField(copyField.field, event.target.value)}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            ) : null}
           </label>
         ))}
 
@@ -379,129 +455,9 @@ export default function AdminSettingsPage() {
             </div>
           ))}
         </div>
-
-        <div className="space-y-4 rounded border border-slate-800 bg-slate-900/30 p-4">
+        <div className="space-y-2 rounded border border-slate-800 bg-slate-900/30 p-4">
           <p className="text-sm font-medium text-slate-100">Homepage copy</p>
-          <p className="text-xs text-slate-400">Edit the text used across the hero, story scenes, and chapter cards.</p>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Hero eyebrow</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroEyebrow} onChange={(event) => updateSiteContentField("heroEyebrow", event.target.value)} />
-            </label>
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Hero title</span>
-              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroTitle} onChange={(event) => updateSiteContentField("heroTitle", event.target.value)} />
-            </label>
-          </div>
-
-          <label className="space-y-1 text-sm text-slate-100">
-            <span>Hero description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroSubtitle} onChange={(event) => updateSiteContentField("heroSubtitle", event.target.value)} />
-          </label>
-
-          {([
-            ["chapter1", "Classic"],
-            ["chapter2", "Hybrid"],
-            ["chapter3", "Volume"],
-            ["chapter4", "Refill"],
-          ] as const).map(([panelKey, panelLabel]) => (
-            <div key={panelKey} className="grid gap-3 md:grid-cols-2">
-              <label className="space-y-1 text-sm text-slate-100">
-                <span>{panelLabel} title</span>
-                <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Title`]} onChange={(event) => updateSiteContentField(`${panelKey}Title` as keyof SiteContent, event.target.value)} />
-              </label>
-              <label className="space-y-1 text-sm text-slate-100">
-                <span>{panelLabel} description</span>
-                <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Copy`]} onChange={(event) => updateSiteContentField(`${panelKey}Copy` as keyof SiteContent, event.target.value)} />
-              </label>
-            </div>
-          ))}
-
-
-          <div className="space-y-3 rounded border border-slate-800 bg-slate-900/40 p-4">
-            <p className="text-sm font-medium text-slate-100">Website UI booking call-to-action</p>
-            <p className="text-xs text-slate-400">Edit the homepage booking call-to-action shown on the public website.</p>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="space-y-1 text-sm text-slate-100">
-                <span>Booking CTA title</span>
-                <input
-                  className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                  maxLength={320}
-                  value={siteContent.bookingCtaTitle}
-                  onChange={(event) => updateSiteContentField("bookingCtaTitle", event.target.value)}
-                />
-              </label>
-              <label className="space-y-1 text-sm text-slate-100">
-                <span>Booking CTA button label</span>
-                <input
-                  className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                  maxLength={320}
-                  value={siteContent.bookingCtaButtonLabel}
-                  onChange={(event) => updateSiteContentField("bookingCtaButtonLabel", event.target.value)}
-                />
-              </label>
-            </div>
-
-            <label className="space-y-1 text-sm text-slate-100">
-              <span>Booking CTA description</span>
-              <textarea
-                className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                maxLength={320}
-                value={siteContent.bookingCtaBody}
-                onChange={(event) => updateSiteContentField("bookingCtaBody", event.target.value)}
-              />
-            </label>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-sm font-medium text-slate-100">Story scenes</p>
-            <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media and copy are saved together through the Save website UI + business settings action.</p>
-            <div className="grid gap-4 lg:grid-cols-2">
-              {storySceneConfigs.map((scene) => (
-                <article key={scene.id} className="space-y-3 rounded-lg border border-slate-700/70 bg-slate-900/60 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">{scene.label}</h3>
-                    <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={siteContent[scene.enabledField] as boolean}
-                        onChange={(event) => updateSiteContentField(scene.enabledField, event.target.checked)}
-                      />
-                      Show scene
-                    </label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                      maxLength={320}
-                      value={siteContent[scene.eyebrowField]}
-                      onChange={(event) => updateSiteContentField(scene.eyebrowField, event.target.value)}
-                      placeholder="Eyebrow"
-                    />
-                    <input
-                      className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                      maxLength={320}
-                      value={siteContent[scene.titleField]}
-                      onChange={(event) => updateSiteContentField(scene.titleField, event.target.value)}
-                      placeholder="Title"
-                    />
-                    <textarea
-                      className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-                      maxLength={320}
-                      value={siteContent[scene.descriptionField]}
-                      onChange={(event) => updateSiteContentField(scene.descriptionField, event.target.value)}
-                      placeholder="Description"
-                    />
-                  </div>
-
-                </article>
-              ))}
-            </div>
-          </div>
-
+          <p className="text-xs text-slate-400">Each homepage copy item is now grouped under its matching image in the Landing media section above.</p>
         </div>
 
         <button
