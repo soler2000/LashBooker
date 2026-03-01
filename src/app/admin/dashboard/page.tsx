@@ -9,6 +9,14 @@ function pct(v: number) {
   return `${(v * 100).toFixed(1)}%`;
 }
 
+function dayKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function shortDayLabel(key: string) {
+  return new Date(`${key}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
@@ -43,6 +51,22 @@ export default async function AdminDashboardPage() {
     ["Month", metrics.month],
   ] as const;
 
+  const earningsByDay = new Map<string, number>();
+  for (const booking of bookings) {
+    const key = dayKey(booking.startAt);
+    earningsByDay.set(key, (earningsByDay.get(key) ?? 0) + booking.paidAmountCents);
+  }
+
+  const earningsSeries: { day: string; amountCents: number }[] = [];
+  const cursor = new Date(ranges.month.start);
+  while (cursor < ranges.month.end) {
+    const key = dayKey(cursor);
+    earningsSeries.push({ day: key, amountCents: earningsByDay.get(key) ?? 0 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const maxDailyEarnings = Math.max(...earningsSeries.map((point) => point.amountCents), 1);
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-semibold text-white">Dashboard</h1>
@@ -64,6 +88,25 @@ export default async function AdminDashboardPage() {
           </section>
         ))}
       </div>
+
+      <section className="mt-6 rounded border border-slate-800 bg-slate-950 p-4 shadow-sm">
+        <h2 className="mb-2 text-lg font-semibold text-white">Monthly earnings graph</h2>
+        <p className="mb-4 text-xs text-slate-400">Daily totals for paid amounts in the current month.</p>
+
+        <div className="flex h-52 items-end gap-1 overflow-x-auto pb-2">
+          {earningsSeries.map((point) => {
+            const heightPct = Math.max((point.amountCents / maxDailyEarnings) * 100, point.amountCents > 0 ? 3 : 0);
+
+            return (
+              <div key={point.day} className="flex min-w-8 flex-1 flex-col items-center justify-end gap-2">
+                <div className="text-[10px] text-slate-400">{money(point.amountCents)}</div>
+                <div className="w-full rounded-t bg-emerald-500/90" style={{ height: `${heightPct}%` }} title={`${shortDayLabel(point.day)}: ${money(point.amountCents)}`} />
+                <div className="text-[10px] text-slate-400">{shortDayLabel(point.day)}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
