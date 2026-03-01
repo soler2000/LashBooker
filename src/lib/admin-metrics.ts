@@ -1,6 +1,7 @@
 import { BookingStatus, PaymentStatus, type Blockout, type Booking, type Payment, type WorkingHours } from "@prisma/client";
 
 export type BookingWithPayments = Pick<Booking, "id" | "startAt" | "endAt" | "status" | "clientId"> & {
+  paidAmountCents: number;
   payments: Pick<Payment, "amountCents" | "status" | "capturedAt">[];
 };
 
@@ -111,12 +112,12 @@ export function calculatePeriodMetrics(
     const successfulPayments = booking.payments.filter(
       (payment) => payment.status === PaymentStatus.SUCCEEDED && payment.capturedAt !== null,
     );
+    const successfulPaymentTotalCents = successfulPayments.reduce((total, payment) => total + payment.amountCents, 0);
+    const bookingPaidCents = Math.max(booking.paidAmountCents, successfulPaymentTotalCents);
 
-    for (const payment of successfulPayments) {
-      revenueCents += payment.amountCents;
-      if (booking.status === BookingStatus.COMPLETED) completedRevenueCents += payment.amountCents;
-      else depositRevenueCents += payment.amountCents;
-    }
+    revenueCents += bookingPaidCents;
+    if (booking.status === BookingStatus.COMPLETED) completedRevenueCents += bookingPaidCents;
+    else depositRevenueCents += bookingPaidCents;
   }
 
   const capacityMinutes = availabilityMinutesForRange(range, workingHours, blockouts);
