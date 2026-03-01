@@ -8,6 +8,9 @@ type Booking = {
   endAt: string;
   status: "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED_BY_CLIENT" | "CANCELLED_BY_ADMIN" | "NO_SHOW";
   notes: string | null;
+  paidAmountCents: number;
+  appointmentStartedAt: string | null;
+  appointmentFinishedAt: string | null;
   serviceName: string;
   servicePriceCents: number;
   serviceDepositType: "NONE" | "FIXED" | "PERCENT";
@@ -56,6 +59,20 @@ function getDepositRequiredCents(booking: Booking) {
   return Math.round((booking.servicePriceCents * booking.serviceDepositValue) / 100);
 }
 
+
+function toDateTimeLocalValue(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function moneyInputToCents(value: string) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric < 0) return null;
+  return Math.round(numeric * 100);
+}
+
 export default function AdminCalendarPage() {
   const [view, setView] = useState<"day" | "week">("week");
   const [anchor, setAnchor] = useState(() => new Date());
@@ -68,6 +85,10 @@ export default function AdminCalendarPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [journalImageUploadEnabled, setJournalImageUploadEnabled] = useState(false);
   const [journalImageStorageBackend, setJournalImageStorageBackend] = useState<"s3" | "database">("database");
+  const [paidAmountInput, setPaidAmountInput] = useState("0.00");
+  const [appointmentStartedAtInput, setAppointmentStartedAtInput] = useState("");
+  const [appointmentFinishedAtInput, setAppointmentFinishedAtInput] = useState("");
+  const [savingAppointmentDetails, setSavingAppointmentDetails] = useState(false);
 
   function fileToDataUrl(file: File) {
     return new Promise<string>((resolve, reject) => {
@@ -120,6 +141,13 @@ export default function AdminCalendarPage() {
     load();
   }, [range.startAt, range.endAt]);
 
+  useEffect(() => {
+    if (!selectedBooking) return;
+    setPaidAmountInput((selectedBooking.paidAmountCents / 100).toFixed(2));
+    setAppointmentStartedAtInput(toDateTimeLocalValue(selectedBooking.appointmentStartedAt));
+    setAppointmentFinishedAtInput(toDateTimeLocalValue(selectedBooking.appointmentFinishedAt));
+  }, [selectedBooking]);
+
   const days = useMemo(() => {
     const list: Date[] = [];
     let cursor = new Date(range.startAt);
@@ -137,6 +165,45 @@ export default function AdminCalendarPage() {
       body: JSON.stringify({ bookingId, status }),
     });
     await load();
+  }
+
+  async function saveAppointmentDetails() {
+    if (!selectedBooking) return;
+
+    const paidAmountCents = moneyInputToCents(paidAmountInput);
+    if (paidAmountCents === null) {
+      setModalError("Please enter a valid amount paid.");
+      return;
+    }
+
+    setSavingAppointmentDetails(true);
+    setModalError(null);
+
+    try {
+      const response = await fetch("/api/admin/bookings", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          bookingId: selectedBooking.id,
+          paidAmountCents,
+          appointmentStartedAt: appointmentStartedAtInput ? new Date(appointmentStartedAtInput).toISOString() : null,
+          appointmentFinishedAt: appointmentFinishedAtInput ? new Date(appointmentFinishedAtInput).toISOString() : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errorData.error ?? "Unable to save appointment details.");
+      }
+
+      const updated = (await response.json()) as Booking;
+      setSelectedBooking(updated);
+      setBookings((current) => current.map((booking) => (booking.id === updated.id ? updated : booking)));
+    } catch (error) {
+      setModalError(error instanceof Error ? error.message : "Unable to save appointment details.");
+    } finally {
+      setSavingAppointmentDetails(false);
+    }
   }
 
   async function uploadPostResult(booking: Booking) {
@@ -309,6 +376,7 @@ export default function AdminCalendarPage() {
               <p><span className="font-medium">Phone:</span> {selectedBooking.client.clientProfile?.phone || "Not provided"}</p>
               <p><span className="font-medium">Start time:</span> {new Date(selectedBooking.startAt).toLocaleString()}</p>
               <p><span className="font-medium">Price:</span> {formatCurrency(selectedBooking.servicePriceCents)}</p>
+              <p><span className="font-medium">Paid:</span> {formatCurrency(selectedBooking.paidAmountCents)}</p>
               <p>
                 <span className="font-medium">Deposit:</span>{" "}
                 {getDepositRequiredCents(selectedBooking) === 0
@@ -317,6 +385,52 @@ export default function AdminCalendarPage() {
               </p>
               {selectedBooking.notes ? <p><span className="font-medium">Notes:</span> {selectedBooking.notes}</p> : null}
             </div>
+
+            <section className="mt-4 space-y-3 rounded border p-3">
+              <h3 className="font-medium">Update appointment tracking</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Amount paid (£)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="rounded border px-3 py-2"
+                    value={paidAmountInput}
+                    onChange={(event) => setPaidAmountInput(event.target.value)}
+                  />
+                </label>
+                <div className="text-sm text-slate-600 sm:self-end">
+                  Remaining balance: {formatCurrency(Math.max(selectedBooking.servicePriceCents - (moneyInputToCents(paidAmountInput) ?? 0), 0))}
+                </div>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Appointment started</span>
+                  <input
+                    type="datetime-local"
+                    className="rounded border px-3 py-2"
+                    value={appointmentStartedAtInput}
+                    onChange={(event) => setAppointmentStartedAtInput(event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Appointment finished</span>
+                  <input
+                    type="datetime-local"
+                    className="rounded border px-3 py-2"
+                    value={appointmentFinishedAtInput}
+                    onChange={(event) => setAppointmentFinishedAtInput(event.target.value)}
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={saveAppointmentDetails}
+                disabled={savingAppointmentDetails}
+                className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+              >
+                {savingAppointmentDetails ? "Saving…" : "Save appointment details"}
+              </button>
+            </section>
 
             <section className="mt-4 space-y-2 rounded border p-3">
               <h3 className="font-medium">Capture post-result photos</h3>

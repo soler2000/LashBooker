@@ -26,7 +26,10 @@ const updateSchema = z.object({
   startAt: z.string().datetime().optional(),
   endAt: z.string().datetime().optional(),
   notes: z.string().optional(),
-}).refine((data) => data.status || data.startAt || data.endAt || data.notes !== undefined, {
+  paidAmountCents: z.number().int().min(0).optional(),
+  appointmentStartedAt: z.string().datetime().nullable().optional(),
+  appointmentFinishedAt: z.string().datetime().nullable().optional(),
+}).refine((data) => data.status || data.startAt || data.endAt || data.notes !== undefined || data.paidAmountCents !== undefined || data.appointmentStartedAt !== undefined || data.appointmentFinishedAt !== undefined, {
   message: "At least one field must be updated",
 });
 
@@ -96,6 +99,17 @@ export async function PUT(request: Request) {
   const nextEndAt = parsed.data.endAt ? new Date(parsed.data.endAt) : existing.endAt;
   if (nextStartAt >= nextEndAt) return NextResponse.json({ error: "startAt must be before endAt" }, { status: 400 });
 
+  const nextAppointmentStartedAt = parsed.data.appointmentStartedAt !== undefined
+    ? (parsed.data.appointmentStartedAt ? new Date(parsed.data.appointmentStartedAt) : null)
+    : existing.appointmentStartedAt;
+  const nextAppointmentFinishedAt = parsed.data.appointmentFinishedAt !== undefined
+    ? (parsed.data.appointmentFinishedAt ? new Date(parsed.data.appointmentFinishedAt) : null)
+    : existing.appointmentFinishedAt;
+
+  if (nextAppointmentStartedAt && nextAppointmentFinishedAt && nextAppointmentStartedAt > nextAppointmentFinishedAt) {
+    return NextResponse.json({ error: "appointmentStartedAt must be before appointmentFinishedAt" }, { status: 400 });
+  }
+
   const updated = await prisma.booking.update({
     where: { id: parsed.data.bookingId },
     data: {
@@ -103,6 +117,9 @@ export async function PUT(request: Request) {
       ...(parsed.data.notes !== undefined ? { notes: parsed.data.notes } : {}),
       ...(parsed.data.startAt ? { startAt: nextStartAt } : {}),
       ...(parsed.data.endAt ? { endAt: nextEndAt } : {}),
+      ...(parsed.data.paidAmountCents !== undefined ? { paidAmountCents: parsed.data.paidAmountCents } : {}),
+      ...(parsed.data.appointmentStartedAt !== undefined ? { appointmentStartedAt: nextAppointmentStartedAt } : {}),
+      ...(parsed.data.appointmentFinishedAt !== undefined ? { appointmentFinishedAt: nextAppointmentFinishedAt } : {}),
     },
     include: {
       client: { include: { clientProfile: true } },
