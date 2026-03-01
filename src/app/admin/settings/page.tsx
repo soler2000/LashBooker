@@ -31,8 +31,7 @@ type AdminSettingsResponse = {
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
   siteImages: SiteImages;
-  siteContent: SiteContent;
-};
+} & SiteContent;
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
   Object.keys(defaultSiteImages) as SiteImageKey[]
@@ -130,7 +129,7 @@ export default function AdminSettingsPage() {
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
-    setSiteContent(sanitizeSiteContent(data.siteContent));
+    setSiteContent(sanitizeSiteContent(data));
   };
 
   useEffect(() => {
@@ -229,20 +228,6 @@ export default function AdminSettingsPage() {
     setSiteContent((current) => ({ ...current, [field]: value }));
   };
 
-  const updateSiteContentPanelField = (
-    panel: keyof Pick<SiteContent, "chapterClassic" | "chapterHybrid" | "chapterVolume" | "chapterRefill">,
-    field: "title" | "copy",
-    value: string,
-  ) => {
-    setSiteContent((current) => ({
-      ...current,
-      [panel]: {
-        ...current[panel],
-        [field]: value,
-      },
-    }));
-  };
-
   const uploadCertificateImage = async (index: number, file: File | null) => {
     if (!file) {
       return;
@@ -277,7 +262,7 @@ export default function AdminSettingsPage() {
           description: certificate.description.trim(),
           ...(certificate.image?.trim() ? { image: certificate.image.trim() } : {}),
         })),
-        siteContent,
+        ...siteContent,
       }),
     });
 
@@ -299,7 +284,7 @@ export default function AdminSettingsPage() {
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
-    setSiteContent(sanitizeSiteContent(data.siteContent));
+    setSiteContent(sanitizeSiteContent(data));
     setDepositStatus(
       depositRequired
         ? "Settings saved. Deposits are required for new bookings."
@@ -554,23 +539,23 @@ export default function AdminSettingsPage() {
 
           <label className="space-y-1 text-sm text-slate-100">
             <span>Hero description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroDescription} onChange={(event) => updateSiteContentField("heroDescription", event.target.value)} />
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroSubtitle} onChange={(event) => updateSiteContentField("heroSubtitle", event.target.value)} />
           </label>
 
           {([
-            ["chapterClassic", "Classic"],
-            ["chapterHybrid", "Hybrid"],
-            ["chapterVolume", "Volume"],
-            ["chapterRefill", "Refill"],
+            ["chapter1", "Classic"],
+            ["chapter2", "Hybrid"],
+            ["chapter3", "Volume"],
+            ["chapter4", "Refill"],
           ] as const).map(([panelKey, panelLabel]) => (
             <div key={panelKey} className="grid gap-3 md:grid-cols-2">
               <label className="space-y-1 text-sm text-slate-100">
                 <span>{panelLabel} title</span>
-                <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[panelKey].title} onChange={(event) => updateSiteContentPanelField(panelKey, "title", event.target.value)} />
+                <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Title`]} onChange={(event) => updateSiteContentField(`${panelKey}Title` as keyof SiteContent, event.target.value)} />
               </label>
               <label className="space-y-1 text-sm text-slate-100">
                 <span>{panelLabel} description</span>
-                <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[panelKey].copy} onChange={(event) => updateSiteContentPanelField(panelKey, "copy", event.target.value)} />
+                <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[`${panelKey}Copy`]} onChange={(event) => updateSiteContentField(`${panelKey}Copy` as keyof SiteContent, event.target.value)} />
               </label>
             </div>
           ))}
@@ -617,7 +602,7 @@ export default function AdminSettingsPage() {
           </div>
           <label className="space-y-1 text-sm text-slate-100">
             <span>Booking CTA description</span>
-            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaDescription} onChange={(event) => updateSiteContentField("bookingCtaDescription", event.target.value)} />
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaBody} onChange={(event) => updateSiteContentField("bookingCtaBody", event.target.value)} />
           </label>
         </div>
 

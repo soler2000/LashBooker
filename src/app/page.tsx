@@ -26,7 +26,7 @@ type PublicSettingsResponse = {
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
   siteImages: SiteImages;
-  siteContent: SiteContent;
+  homepageContent: SiteContent;
 };
 
 const defaultPublicSettings: PublicSettingsResponse = {
@@ -40,7 +40,7 @@ const defaultPublicSettings: PublicSettingsResponse = {
   addressCountry: null,
   qualificationCertificates: defaultQualificationCertificates,
   siteImages: defaultSiteImages,
-  siteContent: defaultSiteContent,
+  homepageContent: defaultSiteContent,
 };
 
 export default function Home() {
@@ -67,7 +67,7 @@ export default function Home() {
         ...defaultPublicSettings,
         ...data,
         siteImages: sanitizeSiteImages(data.siteImages),
-        siteContent: sanitizeSiteContent(data.siteContent),
+        homepageContent: sanitizeSiteContent(data.homepageContent),
       });
       setImages(sanitizeSiteImages(data.siteImages));
     };
@@ -87,24 +87,24 @@ export default function Home() {
         addressCity={publicSettings.addressCity}
         addressPostcode={publicSettings.addressPostcode}
         addressCountry={publicSettings.addressCountry}
-        content={publicSettings.siteContent}
+        content={publicSettings.homepageContent}
       />
 
       <StickyStoryScene
-        eyebrow={publicSettings.siteContent.scene2Eyebrow}
-        title={publicSettings.siteContent.scene2Title}
-        description={publicSettings.siteContent.scene2Description}
+        eyebrow={publicSettings.homepageContent.scene2Eyebrow}
+        title={publicSettings.homepageContent.scene2Title}
+        description={publicSettings.homepageContent.scene2Description}
         image={images.scene2Story}
       />
 
       <StickyStoryScene
-        eyebrow={publicSettings.siteContent.scene3Eyebrow}
-        title={publicSettings.siteContent.scene3Title}
-        description={publicSettings.siteContent.scene3Description}
+        eyebrow={publicSettings.homepageContent.scene3Eyebrow}
+        title={publicSettings.homepageContent.scene3Title}
+        description={publicSettings.homepageContent.scene3Description}
         image={images.scene3Story}
       />
 
-      <HorizontalChapter images={images} content={publicSettings.siteContent} />
+      <HorizontalChapter images={images} content={publicSettings.homepageContent} />
 
       <QualificationCertificates items={certificateItems} />
 
@@ -118,10 +118,10 @@ export default function Home() {
         sectionClassName="relative flex h-screen w-full items-center justify-center overflow-hidden px-6 md:px-12"
         contentClassName="relative z-10 text-center"
       >
-        <h2 className="text-4xl font-semibold md:text-7xl">{publicSettings.siteContent.bookingCtaTitle}</h2>
-        <p className="mx-auto mt-5 max-w-2xl text-white/80 md:text-lg">{publicSettings.siteContent.bookingCtaDescription}</p>
+        <h2 className="text-4xl font-semibold md:text-7xl">{publicSettings.homepageContent.bookingCtaTitle}</h2>
+        <p className="mx-auto mt-5 max-w-2xl text-white/80 md:text-lg">{publicSettings.homepageContent.bookingCtaBody}</p>
         <Link href="/book" className="mt-8 inline-flex rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition hover:bg-white/85">
-          {publicSettings.siteContent.bookingCtaButtonLabel}
+          {publicSettings.homepageContent.bookingCtaButtonLabel}
         </Link>
       </Scene>
     </main>

@@ -19,10 +19,10 @@ export default function HorizontalChapter({ images, content }: HorizontalChapter
   const [imageLoadFailed, setImageLoadFailed] = useState<Record<string, boolean>>({});
 
   const panels = [
-    { title: content.chapterClassic.title, copy: content.chapterClassic.copy, image: images.chapterClassic, fallback: defaultSiteImages.chapterClassic },
-    { title: content.chapterHybrid.title, copy: content.chapterHybrid.copy, image: images.chapterHybrid, fallback: defaultSiteImages.chapterHybrid },
-    { title: content.chapterVolume.title, copy: content.chapterVolume.copy, image: images.chapterVolume, fallback: defaultSiteImages.chapterVolume },
-    { title: content.chapterRefill.title, copy: content.chapterRefill.copy, image: images.chapterRefill, fallback: defaultSiteImages.chapterRefill },
+    { title: content.chapter1Title, copy: content.chapter1Copy, image: images.chapterClassic, fallback: defaultSiteImages.chapterClassic },
+    { title: content.chapter2Title, copy: content.chapter2Copy, image: images.chapterHybrid, fallback: defaultSiteImages.chapterHybrid },
+    { title: content.chapter3Title, copy: content.chapter3Copy, image: images.chapterVolume, fallback: defaultSiteImages.chapterVolume },
+    { title: content.chapter4Title, copy: content.chapter4Copy, image: images.chapterRefill, fallback: defaultSiteImages.chapterRefill },
   ];
 
   const panelCount = panels.length;
