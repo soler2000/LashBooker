@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import VersionBadge from "@/components/admin/VersionBadge";
 
 type TransactionalEmailLog = {
   id: string;
@@ -38,9 +39,10 @@ export default function EmailDiagnosticsPage() {
 
   return (
     <section className="space-y-4 text-slate-100">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white">Transactional email diagnostics</h1>
-        <p className="mt-1 text-sm text-slate-300">Latest reminder and system email sends (read-only).</p>
+        <VersionBadge />
+        <p className="mt-1 w-full text-sm text-slate-300">Latest reminder and system email sends (read-only).</p>
       </div>
 
       {statusMessage ? <p className="text-sm text-slate-300">{statusMessage}</p> : null}

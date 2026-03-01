@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import VersionBadge from "@/components/admin/VersionBadge";
 
 type AdminContactResponse = {
   contactPhone: string | null;
@@ -69,9 +70,10 @@ export default function ContactInformationPage() {
 
   return (
     <section className="max-w-3xl space-y-6 text-slate-100">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white">Contact information</h1>
-        <p className="mt-1 text-sm text-slate-300">Manage the public phone, email, and address information shown on the website.</p>
+        <VersionBadge />
+        <p className="mt-1 w-full text-sm text-slate-300">Manage the public phone, email, and address information shown on the website.</p>
       </div>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">

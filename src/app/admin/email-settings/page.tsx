@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import VersionBadge from "@/components/admin/VersionBadge";
 
 type AdminSettingsResponse = {
   mailProviderType: string | null;
@@ -112,9 +113,10 @@ export default function AdminEmailSettingsPage() {
 
   return (
     <section className="max-w-4xl space-y-10 text-slate-100">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white">Email settings</h1>
-        <p className="mt-2 text-sm text-slate-300">Configure outbound email delivery for reminders and marketing campaigns.</p>
+        <VersionBadge />
+        <p className="mt-2 w-full text-sm text-slate-300">Configure outbound email delivery for reminders and marketing campaigns.</p>
       </div>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
