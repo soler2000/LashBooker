@@ -13,6 +13,7 @@ import {
   sanitizeSiteImages,
   type SiteImages,
 } from "@/lib/site-images";
+import { defaultSiteContent, sanitizeSiteContent, type SiteContent } from "@/lib/site-content";
 
 const roleAllowlist = ["ADMIN", "OWNER"];
 
@@ -24,6 +25,7 @@ const MAX_ADDRESS_CITY_LENGTH = 80;
 const MAX_ADDRESS_POSTCODE_LENGTH = 24;
 const MAX_ADDRESS_COUNTRY_LENGTH = 80;
 const MAX_CERTIFICATE_IMAGE_LENGTH = 2_000_000;
+const MAX_COPY_LENGTH = 320;
 
 function normalizeOptionalText(value: string | null | undefined) {
   if (typeof value !== "string") return value;
@@ -54,6 +56,31 @@ const siteImagesSchema = z.object({
   chapterRefill: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
   bookingCta: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
   policies: z.string().trim().min(1).max(MAX_SITE_IMAGE_VALUE_LENGTH),
+});
+
+
+const chapterPanelSchema = z.object({
+  title: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  copy: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+});
+
+const siteContentSchema = z.object({
+  heroEyebrow: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  heroTitle: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  heroDescription: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  scene2Eyebrow: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  scene2Title: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  scene2Description: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  scene3Eyebrow: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  scene3Title: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  scene3Description: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  chapterClassic: chapterPanelSchema,
+  chapterHybrid: chapterPanelSchema,
+  chapterVolume: chapterPanelSchema,
+  chapterRefill: chapterPanelSchema,
+  bookingCtaTitle: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  bookingCtaDescription: z.string().trim().min(1).max(MAX_COPY_LENGTH),
+  bookingCtaButtonLabel: z.string().trim().min(1).max(MAX_COPY_LENGTH),
 });
 
 const updateSchema = z
@@ -103,6 +130,7 @@ const updateSchema = z
     smtpUseTls: z.boolean().nullable().optional(),
     smtpUseStarttls: z.boolean().nullable().optional(),
     siteImages: siteImagesSchema.optional(),
+    siteContent: siteContentSchema.optional(),
     qualificationCertificates: z
       .array(
         z.object({
@@ -144,6 +172,7 @@ async function ensureSettings() {
       addressCountry: null,
       qualificationCertificatesJson: JSON.stringify(defaultQualificationCertificates),
       siteImagesJson: JSON.stringify(defaultSiteImages),
+      siteContentJson: JSON.stringify(defaultSiteContent),
       reminderScheduleJson: "[48,24]",
       smtpUseTls: false,
       smtpUseStarttls: false,
@@ -160,6 +189,19 @@ function parseSiteImages(siteImagesJson: string | null): SiteImages {
     return sanitizeSiteImages(JSON.parse(siteImagesJson) as Partial<SiteImages>);
   } catch {
     return defaultSiteImages;
+  }
+}
+
+
+function parseSiteContent(siteContentJson: string | null): SiteContent {
+  if (!siteContentJson) {
+    return defaultSiteContent;
+  }
+
+  try {
+    return sanitizeSiteContent(JSON.parse(siteContentJson));
+  } catch {
+    return defaultSiteContent;
   }
 }
 
@@ -199,6 +241,7 @@ function toPublicResponse(settings: Awaited<ReturnType<typeof ensureSettings>>) 
     smtpUseStarttls: settings.smtpUseStarttls ?? false,
     smtpPasswordConfigured: Boolean(settings.smtpPasswordEncrypted),
     siteImages: parseSiteImages(settings.siteImagesJson),
+    siteContent: parseSiteContent(settings.siteContentJson),
     qualificationCertificates,
   };
 }
@@ -260,6 +303,10 @@ export async function PUT(request: Request) {
 
   if (typeof parsed.data.qualificationCertificates !== "undefined") {
     data.qualificationCertificatesJson = JSON.stringify(parsed.data.qualificationCertificates);
+  }
+
+  if (typeof parsed.data.siteContent !== "undefined") {
+    data.siteContentJson = JSON.stringify(sanitizeSiteContent(parsed.data.siteContent));
   }
 
   if (typeof parsed.data.smtpPassword !== "undefined") {

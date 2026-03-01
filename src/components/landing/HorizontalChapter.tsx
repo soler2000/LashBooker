@@ -5,22 +5,24 @@ import { useRef, useState } from "react";
 import { usePrefersReducedMotion, useSectionProgress } from "@/components/landing/Scene";
 import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import { defaultSiteImages, type SiteImages } from "@/lib/site-images";
+import type { SiteContent } from "@/lib/site-content";
 
 type HorizontalChapterProps = {
   images: SiteImages;
+  content: SiteContent;
 };
 
-export default function HorizontalChapter({ images }: HorizontalChapterProps) {
+export default function HorizontalChapter({ images, content }: HorizontalChapterProps) {
   const chapterRef = useRef<HTMLElement | null>(null);
   const progress = useSectionProgress(chapterRef);
   const prefersReducedMotion = usePrefersReducedMotion();
   const [imageLoadFailed, setImageLoadFailed] = useState<Record<string, boolean>>({});
 
   const panels = [
-    { title: "Classic sets", copy: "Soft definition for an elegant everyday finish.", image: images.chapterClassic, fallback: defaultSiteImages.chapterClassic },
-    { title: "Hybrid blends", copy: "The balance between texture and featherlight volume.", image: images.chapterHybrid, fallback: defaultSiteImages.chapterHybrid },
-    { title: "Volume artistry", copy: "Full-bodied drama designed to still feel weightless.", image: images.chapterVolume, fallback: defaultSiteImages.chapterVolume },
-    { title: "Refill rhythm", copy: "A maintenance cadence that keeps your look immaculate.", image: images.chapterRefill, fallback: defaultSiteImages.chapterRefill },
+    { title: content.chapterClassic.title, copy: content.chapterClassic.copy, image: images.chapterClassic, fallback: defaultSiteImages.chapterClassic },
+    { title: content.chapterHybrid.title, copy: content.chapterHybrid.copy, image: images.chapterHybrid, fallback: defaultSiteImages.chapterHybrid },
+    { title: content.chapterVolume.title, copy: content.chapterVolume.copy, image: images.chapterVolume, fallback: defaultSiteImages.chapterVolume },
+    { title: content.chapterRefill.title, copy: content.chapterRefill.copy, image: images.chapterRefill, fallback: defaultSiteImages.chapterRefill },
   ];
 
   const panelCount = panels.length;

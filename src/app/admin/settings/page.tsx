@@ -15,6 +15,7 @@ import {
   isPdfCertificateAsset,
   type QualificationCertificateContent,
 } from "@/lib/qualification-certificates";
+import { defaultSiteContent, sanitizeSiteContent, type SiteContent } from "@/lib/site-content";
 
 type AdminSettingsResponse = {
   depositRequired: boolean;
@@ -28,6 +29,7 @@ type AdminSettingsResponse = {
   addressCountry: string | null;
   qualificationCertificates: QualificationCertificateContent[];
   siteImages: SiteImages;
+  siteContent: SiteContent;
 };
 
 const imageFields: Array<{ key: SiteImageKey; label: string }> = (
@@ -97,6 +99,7 @@ export default function AdminSettingsPage() {
   const [qualificationCertificates, setQualificationCertificates] = useState<QualificationCertificateContent[]>(
     defaultQualificationCertificates,
   );
+  const [siteContent, setSiteContent] = useState<SiteContent>(defaultSiteContent);
 
   const normalizeInstagramInput = (value: string) => {
     const trimmed = value.trim();
@@ -124,6 +127,7 @@ export default function AdminSettingsPage() {
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
+    setSiteContent(sanitizeSiteContent(data.siteContent));
   };
 
   useEffect(() => {
@@ -208,6 +212,24 @@ export default function AdminSettingsPage() {
     );
   };
 
+  const updateSiteContentField = (field: keyof SiteContent, value: string) => {
+    setSiteContent((current) => ({ ...current, [field]: value }));
+  };
+
+  const updateSiteContentPanelField = (
+    panel: keyof Pick<SiteContent, "chapterClassic" | "chapterHybrid" | "chapterVolume" | "chapterRefill">,
+    field: "title" | "copy",
+    value: string,
+  ) => {
+    setSiteContent((current) => ({
+      ...current,
+      [panel]: {
+        ...current[panel],
+        [field]: value,
+      },
+    }));
+  };
+
   const uploadCertificateImage = async (index: number, file: File | null) => {
     if (!file) {
       return;
@@ -242,6 +264,7 @@ export default function AdminSettingsPage() {
           description: certificate.description.trim(),
           ...(certificate.image?.trim() ? { image: certificate.image.trim() } : {}),
         })),
+        siteContent,
       }),
     });
 
@@ -263,6 +286,7 @@ export default function AdminSettingsPage() {
     setAddressCountry(data.addressCountry ?? "");
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
+    setSiteContent(sanitizeSiteContent(data.siteContent));
     setDepositStatus(
       depositRequired
         ? "Settings saved. Deposits are required for new bookings."
@@ -498,6 +522,90 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="space-y-4 rounded border border-slate-800 bg-slate-900/30 p-4">
+          <p className="text-sm font-medium text-slate-100">Homepage copy</p>
+          <p className="text-xs text-slate-400">Edit the text used across the hero, story scenes, chapter cards, and booking call-to-action.</p>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Hero eyebrow</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroEyebrow} onChange={(event) => updateSiteContentField("heroEyebrow", event.target.value)} />
+            </label>
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Hero title</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroTitle} onChange={(event) => updateSiteContentField("heroTitle", event.target.value)} />
+            </label>
+          </div>
+
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Hero description</span>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.heroDescription} onChange={(event) => updateSiteContentField("heroDescription", event.target.value)} />
+          </label>
+
+          {([
+            ["chapterClassic", "Classic"],
+            ["chapterHybrid", "Hybrid"],
+            ["chapterVolume", "Volume"],
+            ["chapterRefill", "Refill"],
+          ] as const).map(([panelKey, panelLabel]) => (
+            <div key={panelKey} className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1 text-sm text-slate-100">
+                <span>{panelLabel} title</span>
+                <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[panelKey].title} onChange={(event) => updateSiteContentPanelField(panelKey, "title", event.target.value)} />
+              </label>
+              <label className="space-y-1 text-sm text-slate-100">
+                <span>{panelLabel} description</span>
+                <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent[panelKey].copy} onChange={(event) => updateSiteContentPanelField(panelKey, "copy", event.target.value)} />
+              </label>
+            </div>
+          ))}
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Scene 2 eyebrow</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene2Eyebrow} onChange={(event) => updateSiteContentField("scene2Eyebrow", event.target.value)} />
+            </label>
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Scene 2 title</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene2Title} onChange={(event) => updateSiteContentField("scene2Title", event.target.value)} />
+            </label>
+          </div>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Scene 2 description</span>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene2Description} onChange={(event) => updateSiteContentField("scene2Description", event.target.value)} />
+          </label>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Scene 3 eyebrow</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene3Eyebrow} onChange={(event) => updateSiteContentField("scene3Eyebrow", event.target.value)} />
+            </label>
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Scene 3 title</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene3Title} onChange={(event) => updateSiteContentField("scene3Title", event.target.value)} />
+            </label>
+          </div>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Scene 3 description</span>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.scene3Description} onChange={(event) => updateSiteContentField("scene3Description", event.target.value)} />
+          </label>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Booking CTA title</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaTitle} onChange={(event) => updateSiteContentField("bookingCtaTitle", event.target.value)} />
+            </label>
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Booking CTA button label</span>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaButtonLabel} onChange={(event) => updateSiteContentField("bookingCtaButtonLabel", event.target.value)} />
+            </label>
+          </div>
+          <label className="space-y-1 text-sm text-slate-100">
+            <span>Booking CTA description</span>
+            <textarea className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm" maxLength={320} value={siteContent.bookingCtaDescription} onChange={(event) => updateSiteContentField("bookingCtaDescription", event.target.value)} />
+          </label>
         </div>
 
         <button
