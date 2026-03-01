@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import VersionBadge from "@/components/admin/VersionBadge";
 
 type TransactionalEmailTemplate = {
   id: string;
@@ -144,9 +145,10 @@ export default function AdminEmailTemplatesPage() {
 
   return (
     <section className="max-w-4xl space-y-4 rounded border border-slate-800 bg-slate-950 p-4 text-slate-100">
-      <div className="space-y-1">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white">Transactional email templates</h1>
-        <p className="text-sm text-slate-300">
+        <VersionBadge />
+        <p className="w-full text-sm text-slate-300">
           Select a template from the dropdown, then edit subject and body content for customer notifications.
         </p>
       </div>

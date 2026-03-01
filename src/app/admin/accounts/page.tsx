@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import VersionBadge from "@/components/admin/VersionBadge";
 
 type AccountRole = "STAFF" | "ADMIN" | "OWNER";
 
@@ -118,9 +119,10 @@ export default function AdminAccountsPage() {
 
   return (
     <section className="max-w-4xl space-y-6 text-slate-100">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white">Admin accounts</h1>
-        <p className="mt-2 text-sm text-slate-300">Create staff, admin, or owner accounts and manage password resets.</p>
+        <VersionBadge />
+        <p className="mt-2 w-full text-sm text-slate-300">Create staff, admin, or owner accounts and manage password resets.</p>
       </div>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">

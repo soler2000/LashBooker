@@ -18,6 +18,7 @@ import {
   type QualificationCertificateContent,
 } from "@/lib/qualification-certificates";
 import { defaultSiteContent, sanitizeSiteContent, type SiteContent } from "@/lib/site-content";
+import VersionBadge from "@/components/admin/VersionBadge";
 
 type AdminSettingsResponse = {
   qualificationCertificates: QualificationCertificateContent[];
@@ -304,8 +305,9 @@ export default function AdminSettingsPage() {
 
   return (
     <section className="max-w-4xl space-y-10 text-slate-100">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-semibold text-white">Website UI</h1>
+        <VersionBadge />
       </div>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
