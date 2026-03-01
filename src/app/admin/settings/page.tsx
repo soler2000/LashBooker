@@ -418,6 +418,42 @@ export default function AdminSettingsPage() {
             </div>
           ))}
 
+          <div className="space-y-3 rounded border border-slate-800 bg-slate-900/40 p-4">
+            <p className="text-sm font-medium text-slate-100">Booking call-to-action</p>
+            <p className="text-xs text-slate-400">Edit the booking call-to-action shown in the homepage booking section.</p>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1 text-sm text-slate-100">
+                <span>Booking CTA title</span>
+                <input
+                  className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                  maxLength={320}
+                  value={siteContent.bookingCtaTitle}
+                  onChange={(event) => updateSiteContentField("bookingCtaTitle", event.target.value)}
+                />
+              </label>
+              <label className="space-y-1 text-sm text-slate-100">
+                <span>Booking CTA button label</span>
+                <input
+                  className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                  maxLength={320}
+                  value={siteContent.bookingCtaButtonLabel}
+                  onChange={(event) => updateSiteContentField("bookingCtaButtonLabel", event.target.value)}
+                />
+              </label>
+            </div>
+
+            <label className="space-y-1 text-sm text-slate-100">
+              <span>Booking CTA description</span>
+              <textarea
+                className="min-h-20 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+                maxLength={320}
+                value={siteContent.bookingCtaBody}
+                onChange={(event) => updateSiteContentField("bookingCtaBody", event.target.value)}
+              />
+            </label>
+          </div>
+
           <div className="space-y-4">
             <p className="text-sm font-medium text-slate-100">Story scenes</p>
             <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media and copy are saved together through the Save website UI + business settings action.</p>
