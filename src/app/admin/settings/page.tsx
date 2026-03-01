@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { isVideoAsset, shouldUseUnoptimizedImage } from "@/lib/media";
 import {
@@ -141,7 +141,6 @@ function normalizeVideoDataUrl(dataUrl: string, file: File) {
 
 export default function AdminSettingsPage() {
   const [images, setImages] = useState<SiteImages>(defaultSiteImages);
-  const [savedMessage, setSavedMessage] = useState("");
   const [imageUploadStatus, setImageUploadStatus] = useState("");
 
   const [depositRequired, setDepositRequired] = useState(true);
@@ -192,26 +191,6 @@ export default function AdminSettingsPage() {
     loadSettings();
   }, []);
 
-  const save = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSavedMessage("");
-
-    const response = await fetch("/api/admin/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ siteImages: images }),
-    });
-
-    if (!response.ok) {
-      setSavedMessage("Could not save landing media.");
-      return;
-    }
-
-    const data = (await response.json()) as AdminSettingsResponse;
-    setImages(sanitizeSiteImages(data.siteImages));
-    setSavedMessage("Landing media saved and now syncs across devices.");
-  };
-
   const uploadImage = async (key: SiteImageKey, file: File | null) => {
     if (!file) {
       return;
@@ -255,7 +234,7 @@ export default function AdminSettingsPage() {
 
       setImages((current) => ({ ...current, [key]: dataUrl }));
       setImageUploadStatus(
-        `${imageFields.find((field) => field.key === key)?.label ?? "Media"} uploaded. Click save to apply.`,
+        `${imageFields.find((field) => field.key === key)?.label ?? "Media"} uploaded. Click Save website UI + business settings to apply.`,
       );
     } catch {
       setImageUploadStatus("Could not upload media. Please try a different file.");
@@ -293,7 +272,7 @@ export default function AdminSettingsPage() {
     try {
       const dataUrl = await fileToDataUrl(file);
       updateCertificateField(index, "image", dataUrl);
-      setImageUploadStatus(`Certificate ${index + 1} file uploaded. Click save to apply.`);
+      setImageUploadStatus(`Certificate ${index + 1} file uploaded. Click Save website UI + business settings to apply.`);
     } catch {
       setImageUploadStatus("Could not upload certificate file. Please try a different file.");
     }
@@ -319,6 +298,7 @@ export default function AdminSettingsPage() {
           description: certificate.description.trim(),
           ...(certificate.image?.trim() ? { image: certificate.image.trim() } : {}),
         })),
+        siteImages: images,
         ...siteContent,
       }),
     });
@@ -326,7 +306,7 @@ export default function AdminSettingsPage() {
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       const errorDetail = data.detail ? ` ${data.detail}` : "";
-      setDepositStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save settings.");
+      setDepositStatus(data.error ? `${data.error}.${errorDetail}`.trim() : "Could not save website UI + business settings.");
       return;
     }
 
@@ -342,11 +322,7 @@ export default function AdminSettingsPage() {
     setQualificationCertificates(data.qualificationCertificates ?? defaultQualificationCertificates);
     setImages(sanitizeSiteImages(data.siteImages));
     setSiteContent(sanitizeSiteContent(data));
-    setDepositStatus(
-      depositRequired
-        ? "Settings saved. Deposits are required for new bookings."
-        : "Settings saved. Deposits are disabled; bookings confirm immediately.",
-    );
+    setDepositStatus("Website UI + business settings saved. Story media + content saved together.");
   };
 
   return (
@@ -355,10 +331,11 @@ export default function AdminSettingsPage() {
         <h1 className="text-2xl font-semibold text-white">Website UI</h1>
       </div>
 
-      <form onSubmit={save} className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
+      <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Landing media</h2>
           <p className="text-sm text-slate-300">Upload all homepage and landing media assets, including story scene visuals, in this section.</p>
+          <p className="text-xs text-slate-400">All uploads here are saved together with homepage copy using the Save website UI + business settings button below.</p>
           <p className="text-xs text-slate-400">For iOS video uploads, use the Files picker and MP4/MOV files when available.</p>
         </div>
 
@@ -396,15 +373,8 @@ export default function AdminSettingsPage() {
           </label>
         ))}
 
-        <button
-          type="submit"
-          className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
-        >
-          Save landing media
-        </button>
         {imageUploadStatus ? <p className="text-sm text-slate-200">{imageUploadStatus}</p> : null}
-        {savedMessage ? <p className="text-sm text-green-300">{savedMessage}</p> : null}
-      </form>
+      </section>
 
       <section className="space-y-4 rounded border border-slate-800 bg-slate-950 p-4">
         <h2 className="text-lg font-semibold">Booking deposits</h2>
@@ -619,7 +589,7 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-4">
             <p className="text-sm font-medium text-slate-100">Story scenes</p>
-            <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media is managed in the Landing media section above.</p>
+            <p className="text-xs text-slate-400">Control scene visibility and copy here. Scene media and copy are saved together through the Save website UI + business settings action.</p>
             <div className="grid gap-4 lg:grid-cols-2">
               {storySceneConfigs.map((scene) => (
                 <article key={scene.id} className="space-y-3 rounded-lg border border-slate-700/70 bg-slate-900/60 p-4">
@@ -685,7 +655,7 @@ export default function AdminSettingsPage() {
           className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:bg-slate-200"
           onClick={saveBusinessSettings}
         >
-          Save business settings
+          Save website UI + business settings
         </button>
         {depositStatus ? <p className="text-sm text-slate-200">{depositStatus}</p> : null}
       </section>
