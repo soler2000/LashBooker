@@ -73,6 +73,22 @@ function moneyInputToCents(value: string) {
   return Math.round(numeric * 100);
 }
 
+function formatStopwatchDuration(start: string | null, end: string | null) {
+  if (!start) return "00:00:00";
+  const startMs = new Date(start).getTime();
+  const endMs = end ? new Date(end).getTime() : Date.now();
+  const elapsedMs = Math.max(endMs - startMs, 0);
+  const elapsedSeconds = Math.floor(elapsedMs / 1000);
+  const hours = Math.floor(elapsedSeconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (elapsedSeconds % 60).toString().padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
+}
+
 export default function AdminCalendarPage() {
   const [view, setView] = useState<"day" | "week">("week");
   const [anchor, setAnchor] = useState(() => new Date());
@@ -90,6 +106,7 @@ export default function AdminCalendarPage() {
   const [appointmentFinishedAtInput, setAppointmentFinishedAtInput] = useState("");
   const [savingAppointmentDetails, setSavingAppointmentDetails] = useState(false);
   const [deletingBooking, setDeletingBooking] = useState(false);
+  const [editingActualTimes, setEditingActualTimes] = useState(false);
 
   function fileToDataUrl(file: File) {
     return new Promise<string>((resolve, reject) => {
@@ -105,6 +122,7 @@ export default function AdminCalendarPage() {
     setPostResultFiles([]);
     setPostResultNotes("");
     setModalError(null);
+    setEditingActualTimes(false);
   }
 
   const range = useMemo(() => {
@@ -147,7 +165,33 @@ export default function AdminCalendarPage() {
     setPaidAmountInput((selectedBooking.paidAmountCents / 100).toFixed(2));
     setAppointmentStartedAtInput(toDateTimeLocalValue(selectedBooking.appointmentStartedAt));
     setAppointmentFinishedAtInput(toDateTimeLocalValue(selectedBooking.appointmentFinishedAt));
+    setEditingActualTimes(false);
   }, [selectedBooking]);
+
+  async function updateActualTime(type: "start" | "stop") {
+    if (!selectedBooking) return;
+    if (type === "stop" && !appointmentStartedAtInput) {
+      setModalError("Start the appointment before recording a stop time.");
+      return;
+    }
+
+    const nowInputValue = toDateTimeLocalValue(new Date().toISOString());
+    if (type === "start") {
+      setAppointmentStartedAtInput(nowInputValue);
+      let nextAppointmentFinishedAtInput = appointmentFinishedAtInput;
+      if (appointmentFinishedAtInput && new Date(appointmentFinishedAtInput) < new Date(nowInputValue)) {
+        setAppointmentFinishedAtInput("");
+        nextAppointmentFinishedAtInput = "";
+      }
+      await saveAppointmentDetails({
+        appointmentStartedAtInput: nowInputValue,
+        appointmentFinishedAtInput: nextAppointmentFinishedAtInput,
+      });
+    } else {
+      setAppointmentFinishedAtInput(nowInputValue);
+      await saveAppointmentDetails({ appointmentFinishedAtInput: nowInputValue });
+    }
+  }
 
   const days = useMemo(() => {
     const list: Date[] = [];
@@ -168,7 +212,10 @@ export default function AdminCalendarPage() {
     await load();
   }
 
-  async function saveAppointmentDetails() {
+  async function saveAppointmentDetails(overrides?: {
+    appointmentStartedAtInput?: string;
+    appointmentFinishedAtInput?: string;
+  }) {
     if (!selectedBooking) return;
 
     const paidAmountCents = moneyInputToCents(paidAmountInput);
@@ -176,6 +223,9 @@ export default function AdminCalendarPage() {
       setModalError("Please enter a valid amount paid.");
       return;
     }
+
+    const nextAppointmentStartedAtInput = overrides?.appointmentStartedAtInput ?? appointmentStartedAtInput;
+    const nextAppointmentFinishedAtInput = overrides?.appointmentFinishedAtInput ?? appointmentFinishedAtInput;
 
     setSavingAppointmentDetails(true);
     setModalError(null);
@@ -187,8 +237,8 @@ export default function AdminCalendarPage() {
         body: JSON.stringify({
           bookingId: selectedBooking.id,
           paidAmountCents,
-          appointmentStartedAt: appointmentStartedAtInput ? new Date(appointmentStartedAtInput).toISOString() : null,
-          appointmentFinishedAt: appointmentFinishedAtInput ? new Date(appointmentFinishedAtInput).toISOString() : null,
+          appointmentStartedAt: nextAppointmentStartedAtInput ? new Date(nextAppointmentStartedAtInput).toISOString() : null,
+          appointmentFinishedAt: nextAppointmentFinishedAtInput ? new Date(nextAppointmentFinishedAtInput).toISOString() : null,
         }),
       });
 
@@ -433,28 +483,68 @@ export default function AdminCalendarPage() {
                 <div className="text-sm text-slate-600 sm:self-end">
                   Remaining balance: {formatCurrency(Math.max(selectedBooking.servicePriceCents - (moneyInputToCents(paidAmountInput) ?? 0), 0))}
                 </div>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Appointment started</span>
-                  <input
-                    type="datetime-local"
-                    className="rounded border px-3 py-2"
-                    value={appointmentStartedAtInput}
-                    onChange={(event) => setAppointmentStartedAtInput(event.target.value)}
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Appointment finished</span>
-                  <input
-                    type="datetime-local"
-                    className="rounded border px-3 py-2"
-                    value={appointmentFinishedAtInput}
-                    onChange={(event) => setAppointmentFinishedAtInput(event.target.value)}
-                  />
-                </label>
+                <div className="space-y-3 rounded border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-medium">Appointment timer</h4>
+                    <p className="text-sm font-semibold tabular-nums text-slate-800">
+                      {formatStopwatchDuration(
+                        appointmentStartedAtInput ? new Date(appointmentStartedAtInput).toISOString() : null,
+                        appointmentFinishedAtInput ? new Date(appointmentFinishedAtInput).toISOString() : null,
+                      )}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      className="rounded bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-50"
+                      onClick={() => updateActualTime("start")}
+                      disabled={savingAppointmentDetails}
+                    >
+                      Start now
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded bg-rose-700 px-3 py-2 text-sm text-white disabled:opacity-50"
+                      onClick={() => updateActualTime("stop")}
+                      disabled={savingAppointmentDetails || !appointmentStartedAtInput}
+                    >
+                      Stop now
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingActualTimes((current) => !current)}
+                    className="text-sm font-medium text-slate-700 underline"
+                  >
+                    {editingActualTimes ? "Hide manual edits" : "Missed start/stop? Edit actual times"}
+                  </button>
+                  {editingActualTimes ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="flex flex-col gap-1 text-sm">
+                        <span className="font-medium">Actual start</span>
+                        <input
+                          type="datetime-local"
+                          className="rounded border px-3 py-2"
+                          value={appointmentStartedAtInput}
+                          onChange={(event) => setAppointmentStartedAtInput(event.target.value)}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm">
+                        <span className="font-medium">Actual stop</span>
+                        <input
+                          type="datetime-local"
+                          className="rounded border px-3 py-2"
+                          value={appointmentFinishedAtInput}
+                          onChange={(event) => setAppointmentFinishedAtInput(event.target.value)}
+                        />
+                      </label>
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <button
                 type="button"
-                onClick={saveAppointmentDetails}
+                onClick={() => saveAppointmentDetails()}
                 disabled={savingAppointmentDetails}
                 className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
               >
